@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/level/modifier.gd" id="1_lpep8"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_tdrae"]
+radius = 14.0
+
+[node name="SizeModifier" type="Area2D" unique_id=1111365943]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_lpep8")
+kind = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2083706853]
+shape = SubResource("CircleShape2D_tdrae")

@@ -1,0 +1,13 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/level/breakable.gd" id="1_f5wpq"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qqt12"]
+size = Vector2(32, 32)
+
+[node name="BreakableBlock" type="StaticBody2D" unique_id=1825726503]
+collision_mask = 0
+script = ExtResource("1_f5wpq")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=54660441]
+shape = SubResource("RectangleShape2D_qqt12")

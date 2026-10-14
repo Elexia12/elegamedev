@@ -7,10 +7,10 @@ extends CharacterBody2D
 
 enum Kind { WALKER, SPIKY, FLYER }
 
-var kind: Kind = Kind.WALKER
-var dir := -1
-var speed := 55.0
-var radius := 13.0
+@export var kind: Kind = Kind.WALKER
+@export var speed := 55.0
+@export_enum("Left:-1", "Right:1") var dir := -1
+@export var radius := 13.0  ## contact distance used for hitting the player
 var dead := false
 var spiky: bool:
 	get:
@@ -22,17 +22,8 @@ var _t := 0.0
 
 func _ready() -> void:
 	add_to_group("enemies")
-	collision_layer = GameConst.LAYER_ENEMY
-	collision_mask = GameConst.LAYER_WORLD | GameConst.LAYER_MESH
-	var cs := CollisionShape2D.new()
-	var rs := RectangleShape2D.new()
-	rs.size = Vector2(24, 24)
-	cs.shape = rs
-	add_child(cs)
 	_origin = global_position
 	_t = randf() * TAU
-	if kind == Kind.SPIKY:
-		speed = 40.0
 
 
 func _physics_process(delta: float) -> void:

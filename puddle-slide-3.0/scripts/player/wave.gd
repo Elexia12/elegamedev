@@ -2,24 +2,19 @@ class_name Wave
 extends Area2D
 ## Tidal wave thrown by the big (pond) form. Knocks out enemies and smashes breakable blocks.
 
+@export var speed := 420.0
+@export var lifetime := 1.1
+
 var direction := 1
 var height := 60.0
-var speed := 420.0
-var _life := 1.1
-var _max_life := 1.1
+var _life := 0.0
 var _done := false
 
 
 func _ready() -> void:
-	collision_layer = 0
-	collision_mask = GameConst.LAYER_WORLD | GameConst.LAYER_ENEMY
-	var cs := CollisionShape2D.new()
-	var rs := RectangleShape2D.new()
-	rs.size = Vector2(34, height)
-	cs.shape = rs
-	add_child(cs)
+	_life = lifetime
+	($CollisionShape2D.shape as RectangleShape2D).size = Vector2(34, height)
 	body_entered.connect(_on_body_entered)
-	z_index = 3
 
 
 func _physics_process(delta: float) -> void:
@@ -49,7 +44,7 @@ func _end() -> void:
 
 
 func _draw() -> void:
-	var a := clampf(_life / _max_life, 0.0, 1.0) * 0.5 + 0.5
+	var a := clampf(_life / lifetime, 0.0, 1.0) * 0.5 + 0.5
 	var h := height
 	var d := float(direction)
 	# A curling crest leaning in the travel direction.

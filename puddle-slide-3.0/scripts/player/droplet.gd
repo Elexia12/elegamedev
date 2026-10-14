@@ -12,31 +12,30 @@ signal meter_changed(ratio: float)
 enum Form { LIQUID, ICE, VAPOR, BIG }
 
 const BASE_RADIUS := 14.0
-const MAX_HP := 3
-const ICE_DURATION := 15.0
-const VAPOR_DURATION := 7.0
-const BIG_MASS := 4.0          # mass in "droplets"; radius grows with sqrt(mass)
-const MOVE_MASS_COST := 1.0    # each big move spends one droplet of mass
 const RIM_POINTS := 32
-
-const TUNING := {
-	Form.LIQUID: {"speed": 230.0, "accel": 1500.0, "air_accel": 1000.0, "friction": 1100.0,
-			"gravity": 1250.0, "jump": 600.0, "max_fall": 700.0},
-	Form.ICE: {"speed": 270.0, "accel": 520.0, "air_accel": 420.0, "friction": 110.0,
-			"gravity": 1500.0, "jump": 560.0, "max_fall": 850.0},
-	Form.VAPOR: {"speed": 140.0, "accel": 420.0, "air_accel": 420.0, "friction": 260.0,
-			"gravity": 0.0, "jump": 0.0, "max_fall": 160.0},
-	Form.BIG: {"speed": 175.0, "accel": 900.0, "air_accel": 650.0, "friction": 1300.0,
-			"gravity": 1400.0, "jump": 560.0, "max_fall": 900.0},
-}
 
 const COLOR_LIQUID := Color(0.35, 0.72, 1.0, 0.85)
 const COLOR_BIG := Color(0.12, 0.45, 0.92, 0.85)
 const COLOR_ICE := Color(0.78, 0.95, 1.0, 0.95)
 const COLOR_VAPOR := Color(0.93, 0.96, 1.0, 0.45)
 
+@export var max_hp := 3
+@export_group("Form Tuning")
+@export var liquid_tuning: FormTuning
+@export var ice_tuning: FormTuning
+@export var vapor_tuning: FormTuning  ## only speed/accel are used: vapor floats instead of falling
+@export var big_tuning: FormTuning
+@export_group("Modifiers")
+@export var ice_duration := 15.0
+@export var vapor_duration := 7.0
+@export var big_mass := 4.0           ## mass in "droplets"; radius grows with sqrt(mass)
+@export var move_mass_cost := 1.0     ## each big move spends this much mass
+@export_group("Attacks")
+@export var ice_shard_scene: PackedScene
+@export var wave_scene: PackedScene
+
 var form: Form = Form.LIQUID
-var hp := MAX_HP
+var hp := 3
 var mass := 1.0
 var form_time_left := 0.0
 var facing := 1
@@ -44,7 +43,10 @@ var radius := BASE_RADIUS
 var respawn_point := Vector2.ZERO
 var fall_limit := 100000.0
 var frozen := false  # input disabled (e.g. after winning)
-var camera: Camera2D
+
+@onready var camera: Camera2D = $Camera2D
+@onready var _shape: CollisionShape2D = $CollisionShape2D
+@onready var _circle: CircleShape2D = _shape.shape
 
 var _invuln := 0.0
 var _coyote := 0.0
@@ -56,8 +58,6 @@ var _shoot_cooldown := 0.0
 var _slamming := false
 var _shake := 0.0
 
-var _shape := CollisionShape2D.new()
-var _circle := CircleShape2D.new()
 var _box := RectangleShape2D.new()
 
 # Soft-body visuals
@@ -70,21 +70,11 @@ var _t := 0.0
 
 func _ready() -> void:
 	add_to_group("player")
-	collision_layer = GameConst.LAYER_PLAYER
-	floor_snap_length = 6.0
-	z_index = 2
+	hp = max_hp
 	_rim.resize(RIM_POINTS)
 	_rim_vel.resize(RIM_POINTS)
 	_box.size = Vector2(26, 26)
-	_shape.shape = _circle
-	add_child(_shape)
 	respawn_point = global_position
-
-	camera = Camera2D.new()
-	camera.zoom = Vector2(1.6, 1.6)
-	camera.position_smoothing_enabled = true
-	camera.position_smoothing_speed = 7.0
-	add_child(camera)
 	camera.make_current()
 	_apply_form_physics()
 
@@ -109,10 +99,10 @@ func set_form(f: Form) -> void:
 	var prev := form
 	form = f
 	_slamming = false
-	mass = BIG_MASS if f == Form.BIG else 1.0
+	mass = big_mass if f == Form.BIG else 1.0
 	match f:
-		Form.ICE: form_time_left = ICE_DURATION
-		Form.VAPOR: form_time_left = VAPOR_DURATION
+		Form.ICE: form_time_left = ice_duration
+		Form.VAPOR: form_time_left = vapor_duration
 		_: form_time_left = 0.0
 	_apply_form_physics()
 
@@ -155,7 +145,7 @@ func _apply_form_physics() -> void:
 
 
 func _spend_mass() -> void:
-	mass -= MOVE_MASS_COST
+	mass -= move_mass_cost
 	Splash.spawn(get_parent(), global_position, COLOR_BIG, 10, 200.0, TAU)
 	if mass <= 1.01:
 		set_form(Form.LIQUID)
@@ -164,11 +154,19 @@ func _spend_mass() -> void:
 		_emit_meter()
 
 
+func _tuning() -> FormTuning:
+	match form:
+		Form.ICE: return ice_tuning
+		Form.VAPOR: return vapor_tuning
+		Form.BIG: return big_tuning
+	return liquid_tuning
+
+
 func _emit_meter() -> void:
 	match form:
-		Form.ICE: meter_changed.emit(form_time_left / ICE_DURATION)
-		Form.VAPOR: meter_changed.emit(form_time_left / VAPOR_DURATION)
-		Form.BIG: meter_changed.emit((mass - 1.0) / (BIG_MASS - 1.0))
+		Form.ICE: meter_changed.emit(form_time_left / ice_duration)
+		Form.VAPOR: meter_changed.emit(form_time_left / vapor_duration)
+		Form.BIG: meter_changed.emit((mass - 1.0) / (big_mass - 1.0))
 		_: meter_changed.emit(0.0)
 
 
@@ -189,7 +187,7 @@ func _physics_process(delta: float) -> void:
 	_t += delta
 	_update_timers(delta)
 
-	var p: Dictionary = TUNING[form]
+	var p := _tuning()
 	var dir := 0.0 if frozen else Input.get_axis("move_left", "move_right")
 	if dir != 0.0:
 		facing = int(signf(dir))
@@ -229,7 +227,7 @@ func _update_timers(delta: float) -> void:
 			_emit_meter()
 
 
-func _move_ground(delta: float, dir: float, p: Dictionary) -> void:
+func _move_ground(delta: float, dir: float, p: FormTuning) -> void:
 	var on_floor := is_on_floor()
 	if on_floor:
 		_coyote = 0.1
@@ -277,7 +275,7 @@ func _move_ground(delta: float, dir: float, p: Dictionary) -> void:
 			_rim_kick(0.0 if _wall_side > 0 else PI, 6.0)
 
 
-func _move_vapor(delta: float, dir: float, p: Dictionary) -> void:
+func _move_vapor(delta: float, dir: float, p: FormTuning) -> void:
 	# Gas: drifts upward on its own; up/down change how fast it rises or sinks.
 	velocity.x = move_toward(velocity.x, dir * p.speed, p.accel * delta)
 	velocity.x += sin(_t * 2.3) * 30.0 * delta
@@ -321,7 +319,7 @@ func _attack() -> void:
 		Form.ICE:
 			if _shoot_cooldown <= 0.0:
 				_shoot_cooldown = 0.25
-				var shard := IceShard.new()
+				var shard := ice_shard_scene.instantiate() as IceShard
 				shard.velocity = Vector2(facing * 560.0 + velocity.x * 0.3, -60.0)
 				_spawn(shard, global_position + Vector2(facing * (radius + 6.0), -2.0))
 				velocity.x -= facing * 40.0  # recoil
@@ -330,7 +328,7 @@ func _attack() -> void:
 				set_form(Form.LIQUID)
 		Form.BIG:
 			if is_on_floor():
-				var wave := Wave.new()
+				var wave := wave_scene.instantiate() as Wave
 				wave.direction = facing
 				wave.height = radius * 2.2
 				_spawn(wave, global_position + Vector2(facing * (radius + 18.0), radius - 4.0 - wave.height / 2.0))
@@ -404,7 +402,7 @@ func hurt(from_pos: Vector2) -> void:
 	_shake = 8.0
 	velocity = Vector2(signf(global_position.x - from_pos.x) * 260.0, -320.0)
 	Splash.spawn(get_parent(), global_position, COLOR_LIQUID, 12, 220.0, TAU)
-	hp_changed.emit(hp, MAX_HP)
+	hp_changed.emit(hp, max_hp)
 	if hp <= 0:
 		_respawn()
 
@@ -417,11 +415,11 @@ func _fell() -> void:
 
 
 func _respawn() -> void:
-	hp = MAX_HP
+	hp = max_hp
 	set_form(Form.LIQUID)
 	_teleport(respawn_point)
 	_invuln = 1.5
-	hp_changed.emit(hp, MAX_HP)
+	hp_changed.emit(hp, max_hp)
 
 
 func _teleport(pos: Vector2) -> void:

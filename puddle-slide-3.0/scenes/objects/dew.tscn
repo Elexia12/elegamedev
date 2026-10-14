@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/level/pickups.gd" id="1_fj06b"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_5jr8q"]
+size = Vector2(14, 16)
+
+[node name="Dew" type="Area2D" unique_id=2063268307]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_fj06b")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2079684093]
+shape = SubResource("RectangleShape2D_5jr8q")

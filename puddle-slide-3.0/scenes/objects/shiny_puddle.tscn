@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/level/pickups.gd" id="1_882qy"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_u1qkn"]
+size = Vector2(56, 24)
+
+[node name="ShinyPuddle" type="Area2D" unique_id=310296452]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_882qy")
+kind = 3
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=990976522]
+position = Vector2(0, 4)
+shape = SubResource("RectangleShape2D_u1qkn")

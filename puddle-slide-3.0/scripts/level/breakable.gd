@@ -3,20 +3,13 @@ extends StaticBody2D
 ## Cracked block. Only big-water moves (wave / slam) can smash it.
 ## Smashing one block breaks the whole connected cluster.
 
-var cell := Vector2i.ZERO
+var cell := Vector2i.ZERO  # set by the Level from the block's position
 var level: Level
 var broken := false
 
 
 func _ready() -> void:
 	add_to_group("breakable")
-	collision_layer = GameConst.LAYER_WORLD
-	collision_mask = 0
-	var cs := CollisionShape2D.new()
-	var rs := RectangleShape2D.new()
-	rs.size = Vector2(GameConst.TILE, GameConst.TILE)
-	cs.shape = rs
-	add_child(cs)
 
 
 func smash() -> void:

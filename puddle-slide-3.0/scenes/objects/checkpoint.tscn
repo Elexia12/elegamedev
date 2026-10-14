@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/level/pickups.gd" id="1_dv8sr"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6xeev"]
+size = Vector2(20, 32)
+
+[node name="Checkpoint" type="Area2D" unique_id=314379054]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_dv8sr")
+kind = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1147733406]
+shape = SubResource("RectangleShape2D_6xeev")

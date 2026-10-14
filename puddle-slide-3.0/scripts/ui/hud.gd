@@ -20,15 +20,11 @@ var dew_total := 0
 var elapsed := 0.0
 var won := false
 
-var _canvas := Control.new()
+@onready var _canvas: Control = $Canvas
 
 
 func _ready() -> void:
-	layer = 10
-	_canvas.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_canvas.draw.connect(_on_draw)
-	add_child(_canvas)
 
 
 func _process(_delta: float) -> void:

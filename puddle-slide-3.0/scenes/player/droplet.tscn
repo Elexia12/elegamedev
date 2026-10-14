@@ -1,0 +1,64 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/player/droplet.gd" id="1_mgpnu"]
+[ext_resource type="Script" path="res://scripts/player/form_tuning.gd" id="2_1s6i6"]
+[ext_resource type="PackedScene" path="res://scenes/player/ice_shard.tscn" id="3_5w1fq"]
+[ext_resource type="PackedScene" path="res://scenes/player/wave.tscn" id="4_3gaip"]
+
+[sub_resource type="Resource" id="Resource_7kxm2"]
+script = ExtResource("2_1s6i6")
+
+[sub_resource type="Resource" id="Resource_i5sfs"]
+script = ExtResource("2_1s6i6")
+speed = 270.0
+accel = 520.0
+air_accel = 420.0
+friction = 110.0
+gravity = 1500.0
+jump = 560.0
+max_fall = 850.0
+
+[sub_resource type="Resource" id="Resource_j3cxv"]
+script = ExtResource("2_1s6i6")
+speed = 140.0
+accel = 420.0
+air_accel = 420.0
+friction = 260.0
+gravity = 0.0
+jump = 0.0
+max_fall = 160.0
+
+[sub_resource type="Resource" id="Resource_lk3k5"]
+script = ExtResource("2_1s6i6")
+speed = 175.0
+accel = 900.0
+air_accel = 650.0
+friction = 1300.0
+gravity = 1400.0
+jump = 560.0
+max_fall = 900.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_g0y7u"]
+resource_local_to_scene = true
+radius = 14.0
+
+[node name="Player" type="CharacterBody2D" unique_id=303680808]
+z_index = 2
+collision_layer = 2
+collision_mask = 9
+floor_snap_length = 6.0
+script = ExtResource("1_mgpnu")
+liquid_tuning = SubResource("Resource_7kxm2")
+ice_tuning = SubResource("Resource_i5sfs")
+vapor_tuning = SubResource("Resource_j3cxv")
+big_tuning = SubResource("Resource_lk3k5")
+ice_shard_scene = ExtResource("3_5w1fq")
+wave_scene = ExtResource("4_3gaip")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=565643927]
+shape = SubResource("CircleShape2D_g0y7u")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1047335003]
+zoom = Vector2(1.6, 1.6)
+position_smoothing_enabled = true
+position_smoothing_speed = 7.0

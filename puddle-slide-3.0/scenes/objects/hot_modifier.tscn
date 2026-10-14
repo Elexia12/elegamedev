@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/level/modifier.gd" id="1_wouum"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_edfqt"]
+radius = 14.0
+
+[node name="HotModifier" type="Area2D" unique_id=1449416439]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_wouum")
+kind = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=62291356]
+shape = SubResource("CircleShape2D_edfqt")

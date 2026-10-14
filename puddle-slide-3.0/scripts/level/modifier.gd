@@ -2,21 +2,13 @@ class_name Modifier
 extends Area2D
 ## Pickup that changes the droplet's physical state. Respawns after a short cooldown.
 
-const RESPAWN_TIME := 4.0
-
-var kind: GameConst.Mod = GameConst.Mod.COLD
+@export var kind: GameConst.Mod = GameConst.Mod.COLD
+@export var respawn_time := 4.0
 var _t := 0.0
 var _cooldown := 0.0
 
 
 func _ready() -> void:
-	collision_layer = 0
-	collision_mask = GameConst.LAYER_PLAYER
-	var cs := CollisionShape2D.new()
-	var c := CircleShape2D.new()
-	c.radius = 14.0
-	cs.shape = c
-	add_child(cs)
 	body_entered.connect(_on_body_entered)
 	_t = randf() * TAU
 
@@ -31,7 +23,7 @@ func _on_body_entered(body: Node) -> void:
 	if _cooldown > 0.0 or not body is Droplet:
 		return
 	body.apply_modifier.call_deferred(kind)  # changes collision shapes: not allowed mid-callback
-	_cooldown = RESPAWN_TIME
+	_cooldown = respawn_time
 	Splash.spawn(get_parent(), global_position, _color(), 16, 200.0, TAU)
 
 

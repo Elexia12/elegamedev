@@ -5,29 +5,17 @@ extends Area2D
 
 enum Kind { DEW, CHECKPOINT, SPIKES, GOAL }
 
-var kind: Kind = Kind.DEW
+@export var kind: Kind = Kind.DEW
+
 var active := false
 var _t := 0.0
 
 
 func _ready() -> void:
-	collision_layer = 0
-	collision_mask = GameConst.LAYER_PLAYER
-	var cs := CollisionShape2D.new()
-	var rs := RectangleShape2D.new()
-	match kind:
-		Kind.DEW: rs.size = Vector2(14, 16)
-		Kind.CHECKPOINT: rs.size = Vector2(20, 32)
-		Kind.SPIKES:
-			rs.size = Vector2(GameConst.TILE - 4, 14)
-			cs.position = Vector2(0, GameConst.TILE / 2.0 - 7)
-		Kind.GOAL:
-			rs.size = Vector2(56, 24)
-			cs.position = Vector2(0, 4)
-	cs.shape = rs
-	add_child(cs)
 	body_entered.connect(_on_body_entered)
 	_t = randf() * TAU
+	if kind == Kind.DEW:
+		add_to_group("dew")
 	if kind == Kind.SPIKES:
 		set_process(false)
 

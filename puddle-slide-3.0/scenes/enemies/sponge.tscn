@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy.gd" id="1_iqf1x"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sln8w"]
+size = Vector2(24, 24)
+
+[node name="Sponge" type="CharacterBody2D" unique_id=1604198578]
+collision_layer = 4
+collision_mask = 9
+script = ExtResource("1_iqf1x")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=870478703]
+shape = SubResource("RectangleShape2D_sln8w")

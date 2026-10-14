@@ -2,25 +2,19 @@ class_name IceShard
 extends Area2D
 ## Mini ice cube fired by the ice form.
 
+@export var fall_speed_gain := 120.0  ## downward acceleration of the cube
+
 var velocity := Vector2.ZERO
 var _life := 1.4
 var _done := false
 
 
 func _ready() -> void:
-	collision_layer = 0
-	collision_mask = GameConst.LAYER_WORLD | GameConst.LAYER_ENEMY
-	var cs := CollisionShape2D.new()
-	var rs := RectangleShape2D.new()
-	rs.size = Vector2(10, 10)
-	cs.shape = rs
-	add_child(cs)
 	body_entered.connect(_on_body_entered)
-	z_index = 3
 
 
 func _physics_process(delta: float) -> void:
-	velocity.y += 120.0 * delta
+	velocity.y += fall_speed_gain * delta
 	position += velocity * delta
 	rotation += 12.0 * delta * signf(velocity.x)
 	_life -= delta
