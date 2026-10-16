@@ -1,0 +1,98 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_mm"]
+[ext_resource type="Theme" path="res://scenes/ui/unstable_theme.tres" id="2_th"]
+
+[node name="MainMenu" type="ColorRect"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_th")
+color = Color(0.04, 0.05, 0.06, 1)
+script = ExtResource("1_mm")
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Card" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(520, 0)
+layout_mode = 2
+theme_type_variation = &"Card"
+
+[node name="VBox" type="VBoxContainer" parent="Center/Card"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Center/Card/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "UNSTABLE"
+horizontal_alignment = 1
+
+[node name="Tagline" type="Label" parent="Center/Card/VBox"]
+modulate = Color(0.3, 0.8, 0.8, 1)
+layout_mode = 2
+text = "The facility is collapsing. The cargo is worth a fortune.
+Your team is barely qualified."
+horizontal_alignment = 1
+
+[node name="Separator" type="HSeparator" parent="Center/Card/VBox"]
+layout_mode = 2
+
+[node name="SoloButton" type="Button" parent="Center/Card/VBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "Play solo"
+
+[node name="HostButton" type="Button" parent="Center/Card/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "Host online game"
+
+[node name="JoinRow" type="HBoxContainer" parent="Center/Card/VBox"]
+layout_mode = 2
+
+[node name="Address" type="LineEdit" parent="Center/Card/VBox/JoinRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "127.0.0.1"
+placeholder_text = "Host IP address"
+
+[node name="JoinButton" type="Button" parent="Center/Card/VBox/JoinRow"]
+custom_minimum_size = Vector2(90, 40)
+layout_mode = 2
+text = "Join"
+
+[node name="QuitButton" type="Button" parent="Center/Card/VBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "Quit"
+
+[node name="Status" type="Label" parent="Center/Card/VBox"]
+unique_name_in_owner = true
+modulate = Color(1, 0.8, 0.4, 1)
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Help" type="Label" parent="Center/Card/VBox"]
+modulate = Color(1, 1, 1, 0.5)
+layout_mode = 2
+text = "Mission: THE FLOODED REACTOR — prototype build
+Winch [1] · Brace [2] · Pressure [3] · E grab/use · R detach/recover"
+horizontal_alignment = 1
+
+[connection signal="pressed" from="Center/Card/VBox/SoloButton" to="." method="_on_solo_pressed"]
+[connection signal="pressed" from="Center/Card/VBox/HostButton" to="." method="_on_host_pressed"]
+[connection signal="pressed" from="Center/Card/VBox/JoinRow/JoinButton" to="." method="_on_join_pressed"]
+[connection signal="text_submitted" from="Center/Card/VBox/JoinRow/Address" to="." method="_on_join_pressed" unbinds=1]
+[connection signal="pressed" from="Center/Card/VBox/QuitButton" to="." method="_on_quit_pressed"]

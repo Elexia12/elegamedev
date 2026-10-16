@@ -2,9 +2,9 @@ class_name Support
 extends Node3D
 ## Authored structural support: STABLE -> STRAINED -> CRITICAL -> FAILED.
 ## Decays with facility instability and with cable tension on anchors bolted to
-## it. A brace slows decay (and slowly reverses it while unloaded). Failure
-## triggers a controlled event: snap its anchors' cables, wake debris, kill a
-## gate's hydraulics.
+## it. A brace slows decay (and slowly reverses it while unloaded). On failure
+## it snaps the cables on its anchors and emits `failed`. The level connects
+## that signal to whatever should happen next (drop a beam, cut a jack).
 
 signal failed
 
@@ -26,10 +26,6 @@ const STATE_COLORS := [
 @export var braced_factor := 0.2
 ## Health regained per second (%) while braced and (almost) unloaded, up to 70.
 @export var braced_recovery := 0.35
-## Props (e.g. the gantry beam) released when this support fails.
-@export var wake_on_fail: Array[NodePath] = []
-## Gate whose hydraulic jack is cut when this support fails.
-@export var gate_on_fail: NodePath
 
 var health := 100.0
 var mission: Mission
@@ -75,7 +71,7 @@ func _physics_process(delta: float) -> void:
 
 func _simulate(delta: float) -> void:
 	var load_n := load_newtons()
-	var rate := base_decay + instability_decay * mission.instability() + load_decay * load_n / 1000.0
+	var rate := base_decay + instability_decay * mission.clock.instability() + load_decay * load_n / 1000.0
 	if socket.braced:
 		socket.apply_load(rate * 0.8, delta)
 		rate *= braced_factor
@@ -85,7 +81,7 @@ func _simulate(delta: float) -> void:
 	var s := state()
 	if s != _last_state:
 		if s > _last_state and s != State.FAILED:
-			mission.broadcast("%s is %s" % [display_name, STATE_NAMES[s]], "warn")
+			mission.incident_log.broadcast("%s is %s" % [display_name, STATE_NAMES[s]], "warn")
 		_last_state = s
 	if health <= 0.0:
 		_fail()
@@ -94,17 +90,12 @@ func _simulate(delta: float) -> void:
 func _fail() -> void:
 	health = 0.0
 	_last_state = State.FAILED
-	mission.log_incident("%s FAILED" % display_name)
+	mission.incident_log.incident("%s FAILED" % display_name)
 	for a: Anchor in get_tree().get_nodes_in_group("anchors"):
 		if a.support() == self:
-			mission.snap_cables_at(a.point, "torn loose")
-	for p in wake_on_fail:
-		var prop := get_node_or_null(p) as Prop
-		if prop:
-			prop.wake()
-	var gate := get_node_or_null(gate_on_fail) as Gate
-	if gate:
-		gate.frame_failed()
+			mission.toolkit.snap_cable(a.point, "torn loose")
+	# What else breaks is wired in the level: see this node's `failed`
+	# connections in the Node dock (e.g. Gantry strut -> GantryBeam.wake).
 	failed.emit()
 
 

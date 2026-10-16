@@ -50,24 +50,80 @@ loses value while submerged. The facility collapses at 12:00; anything not extra
   can be dragged solo.
 - **Results**: Full / Successful / Partial / Failure, cargo value, objectives, duration, incident log.
 
-## Code map
+## How it's built: read the scene tree
 
+Every system is a node with one job. Its tuning is in the Inspector, and the
+reactions between nodes are signal connections you can see in the **Node → Signals** dock.
+
+**`scenes/main.tscn`**: session flow (`scripts/main.gd`)
 ```
-scripts/net.gd                    autoload: host / join / solo / leave
-scripts/main.gd                   menu, mission (re)spawn, results, pause
-scripts/facility/mission.gd       host simulation, request handling, replication snapshot
-scripts/facility/*.gd             gate, support, brace_socket, cable, anchor, valve, flood_zone, prop, …
-scripts/player/crew_member.gd     first-person movement, aiming, tool input, host-side holds
-scripts/ui/hud.gd                 HUD
-scenes/facility/flooded_reactor.tscn   the level (CSG greybox; move things in the editor)
-scenes/components/, scenes/props/      reusable pieces with tuning exposed as @export vars
+Main                      menu → solo/host/join → mission → results → restart
+├─ World                  the running mission is added here
+├─ MissionSpawner         replicates the mission to clients
+└─ UI
+   ├─ MainMenu            scenes/ui/main_menu.tscn   (signals → Main.start_solo/host/join)
+   ├─ ResultsScreen       scenes/ui/results_screen.tscn
+   └─ PauseMenu           scenes/ui/pause_menu.tscn
 ```
 
-**Networking model:** host-authoritative (GDD §11). Each peer moves its own crew member (MultiplayerSynchronizer). Tool
-use and grabs are RPC *requests* to the host (`Mission.request`). The host alone simulates physics props, the gate,
-supports, water and pressure. It packs all of that into one `net_state` snapshot replicated at 20 Hz. Clients render it
-with frozen, interpolated props. Players joining late get the current state. If a client disconnects it's logged as an
-incident. If the host leaves, everyone returns to the menu.
+**`scenes/facility/flooded_reactor.tscn`**: the level. The root `Mission` only handles player requests, the outcome and replication.
+```
+FloodedReactor (Mission)
+├─ MissionClock           time → instability (0→1) → phases; emits collapsed
+├─ PressureNetwork        pressure rises by itself; held at 100% it bursts → floods burst_zone
+├─ DrainPump              valve + network: moves water source → target, spends pressure
+├─ IncidentLog            broadcasts / toasts / incident list  (signals → HUD)
+├─ Toolkit                team equipment: Cable1-3 (add children for more) + team_braces
+├─ Crew (CrewRoster)      spawns a player per peer
+│  ├─ Members             players live here
+│  ├─ PlayerSpawner       replicates them
+│  └─ SpawnPoints         where they (re)spawn
+├─ StateSync              replicates Mission.net_state (snapshot of every "net" node)
+├─ HUD                    scenes/ui/hud.tscn
+├─ Environment, Geometry, Piping (CSG greybox, signs, burst steam)
+├─ Gate                   jack_valve + pressure_network wired in Inspector
+├─ Supports
+│  ├─ SupportGateFrame    failed → Gate.frame_failed
+│  └─ SupportGantry       failed → GantryBeam.wake
+├─ GantryBeam             dormant debris (+ AnchorGantry bolted to SupportGantry)
+├─ Anchors                cable end points (support_path = which support they strain)
+├─ Manifold               JackValve, DrainValve
+├─ Cargo                  ReactorCore (primary), BonusContainer (optional), salvage
+├─ Water                  LowerFlood, BonusFlood (FloodZones; their FloodVolume children preview in the editor)
+└─ Extraction             ExtractionZone (departed → Mission), ExtractionLever
+```
+Change `level` on a FloodZone in the editor to see the water. Change `collapse_time` on
+MissionClock, or a support's decay rates, to retune a run.
+
+**`scenes/player/player.tscn`**: one crew member (`scripts/player/`)
+```
+Player (CrewMember)       movement, mouse look, aiming, input routing
+├─ Head/Camera3D
+│  ├─ InteractRay         finds hooks/anchors/valves/levers (6 m, interact layer)
+│  └─ GrabRay             finds props and walls (4 m)
+├─ Head/ToolModel         the box in your hand, coloured by the current tool
+├─ Tools                  child order = hotkeys 1-3
+│  ├─ Winch (WinchTool)   hook → anchor, reel in/out
+│  ├─ Brace (BraceTool)   place / recover braces
+│  └─ Pressure (PressureTool)  turn valves, blast / pull props
+├─ Hands                  E to grab; grab_force decides what one person can move
+├─ Vitals                 breath & knockout  (knocked_out/recovered → CrewMember)
+└─ Sync                   replicates position, rotation, aim, tool, Vitals.knocked
+```
+
+**Components** (`scenes/components/`, `scenes/props/`): Gate, Support, BraceSocket, Anchor,
+Cable, Valve, ExtractionLever, InteractPoint (the generous aim sphere tools look for),
+FloodVolume, and the Prop scenes (core, container, salvage, beam).
+
+**How a click becomes an effect:** the player's tool calls `Mission.send(action, …)`. That RPC
+reaches the host's `Mission.request()`, which hands it to the node that owns the behaviour
+(Toolkit, Valve, ExtractionZone…). For held actions (grab, reel, blast), the host runs the matching player child
+(Hands / WinchTool / PressureTool) every physics frame using that player's replicated aim.
+
+**Replication:** any node in group `net` implements `net_get()` / `net_set()`. The host packs
+them all into `Mission.net_state` 60 times a second, and StateSync sends it at 20 Hz. Clients
+apply it, and their props stay frozen and interpolate. Player movement is the exception: each player's
+own `Sync` node sends it from their machine.
 
 ## Tests
 

@@ -1,0 +1,57 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_pm"]
+[ext_resource type="Theme" path="res://scenes/ui/unstable_theme.tres" id="2_th"]
+
+[node name="PauseMenu" type="ColorRect"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_th")
+color = Color(0, 0, 0, 0.5)
+script = ExtResource("1_pm")
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Card" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+theme_type_variation = &"Card"
+
+[node name="VBox" type="VBoxContainer" parent="Center/Card"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Center/Card/VBox"]
+layout_mode = 2
+text = "PAUSED (the facility isn't)"
+horizontal_alignment = 1
+
+[node name="ResumeButton" type="Button" parent="Center/Card/VBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "Resume"
+
+[node name="RestartButton" type="Button" parent="Center/Card/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "Restart mission"
+
+[node name="LeaveButton" type="Button" parent="Center/Card/VBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "Leave to menu"
+
+[connection signal="pressed" from="Center/Card/VBox/ResumeButton" to="." method="_on_resume_pressed"]
+[connection signal="pressed" from="Center/Card/VBox/RestartButton" to="." method="_on_restart_pressed"]
+[connection signal="pressed" from="Center/Card/VBox/LeaveButton" to="." method="_on_leave_pressed"]

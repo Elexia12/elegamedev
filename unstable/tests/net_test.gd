@@ -26,33 +26,32 @@ func _process(delta: float) -> bool:
 	t += delta
 	if t > 0.2 and t - delta <= 0.2:
 		if role == "host":
-			main._start_host()
+			main.start_host()
 		else:
-			main._address.text = "127.0.0.1"
-			main._start_join()
+			main.start_join("127.0.0.1")
 	var m: Mission = main.mission()
 	if m == null:
 		return t > RUN_SECONDS
 	if role == "host" and not _did_host_winch and root.multiplayer.get_peers().size() > 0 and t > 5.0:
 		_did_host_winch = true
-		var me := m.local_player()
+		var me := m.crew.local_member()
 		me.global_position = Vector3(-13.5, 0.05, -8.0)
-		m.request("winch_attach", "ReactorCore/HookNorth", "Anchors/AnchorReactor/Point", Vector3.ZERO, 0.0)
-		var c := m.cable_at(m.get_node("Anchors/AnchorReactor/Point"))
+		m.request("winch_attach", "Cargo/ReactorCore/HookNorth", "Anchors/AnchorReactor/Point", Vector3.ZERO, 0.0)
+		var c := m.toolkit.cable_at(m.get_node("Anchors/AnchorReactor/Point"))
 		if c:
 			c.reel = 1
 		print("[host] winch attached: ", c != null)
-	if role == "client" and not _did_client_request and t > 4.0 and m.local_player() != null:
+	if role == "client" and not _did_client_request and t > 4.0 and m.crew.local_member() != null:
 		_did_client_request = true
 		m.send("valve", "Manifold/DrainValve/Point", "", Vector3(0.5, 0, 0))
 		print("[client] sent drain valve request")
 	if t > RUN_SECONDS + (3.0 if role == "host" else 0.0):
-		var core := m.get_node("ReactorCore") as Prop
-		var cable := m.cable_at(m.get_node("Anchors/AnchorReactor/Point"))
+		var core := m.get_node("Cargo/ReactorCore") as Prop
+		var cable := m.toolkit.cable_at(m.get_node("Anchors/AnchorReactor/Point"))
 		print("[%s] peers=%d crew=%d core=(%.2f, %.2f, %.2f) drain=%.2f cable=%s pressure=%.1f elapsed=%.1f" % [
-			role, root.multiplayer.get_peers().size(), m.crew().size(),
+			role, root.multiplayer.get_peers().size(), m.crew.members().size(),
 			core.global_position.x, core.global_position.y, core.global_position.z,
-			(m.get_node("Manifold/DrainValve") as Valve).opening, cable != null, m.pressure, m.elapsed])
+			(m.get_node("Manifold/DrainValve") as Valve).opening, cable != null, m.pressure_network.pressure, m.clock.elapsed])
 		root.get_node("Net").leave()
 		return true
 	return false

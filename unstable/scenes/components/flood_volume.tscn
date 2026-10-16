@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/facility/flood_volume.gd" id="1_fv"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_water"]
+transparency = 1
+albedo_color = Color(0.12, 0.42, 0.7, 0.55)
+metallic = 0.2
+roughness = 0.08
+
+[sub_resource type="BoxMesh" id="Mesh_water"]
+material = SubResource("Mat_water")
+
+[node name="FloodVolume" type="Node3D"]
+script = ExtResource("1_fv")
+
+[node name="Water" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+mesh = SubResource("Mesh_water")

@@ -1,35 +1,34 @@
 class_name FloodZone
 extends Node3D
-## Controlled flooding (no fluid sim): one water level shared by its
-## FloodVolume children. The Mission moves water in and out of zones.
+## Controlled flooding (no fluid simulation): one water level shared by all of
+## its FloodVolume children. Water leaks in by itself (`inflow`), drains away
+## slowly (`sump`), and other nodes move water with add_water(): the
+## DrainPump, or a pressure burst.
 
 @export var display_name := "Flood zone"
 @export var max_level := 2.0
 @export var level := 0.0
-@export var water_color := Color(0.12, 0.42, 0.7, 0.55)
+## Level gained per second at zero / full instability (a leaking breach).
+@export var inflow := 0.0
+@export var inflow_unstable := 0.0
+## Level lost per second through floor drains.
+@export var sump := 0.0
 
-var _volumes: Array[FloodVolume] = []
-var _meshes: Array[MeshInstance3D] = []
+var mission: Mission
 
 
 func _ready() -> void:
 	add_to_group("net")
 	add_to_group("floods")
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = water_color
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.roughness = 0.08
-	mat.metallic = 0.2
-	var box := BoxMesh.new()
-	for child in get_children():
-		if child is FloodVolume:
-			var mi := MeshInstance3D.new()
-			mi.mesh = box
-			mi.material_override = mat
-			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			child.add_child(mi)
-			_volumes.append(child)
-			_meshes.append(mi)
+	mission = Mission.of(self)
+
+
+func volumes() -> Array[FloodVolume]:
+	var out: Array[FloodVolume] = []
+	for c in get_children():
+		if c is FloodVolume:
+			out.append(c)
+	return out
 
 
 func add_water(amount: float) -> void:
@@ -37,7 +36,7 @@ func add_water(amount: float) -> void:
 
 
 func covers(p: Vector3) -> bool:
-	for v in _volumes:
+	for v in volumes():
 		if v.covers(p):
 			return true
 	return false
@@ -50,12 +49,10 @@ func surface_at(p: Vector3) -> float:
 	return -INF
 
 
-func _process(_delta: float) -> void:
-	for i in _meshes.size():
-		var mi := _meshes[i]
-		mi.visible = level > 0.01
-		mi.scale = Vector3(_volumes[i].size.x, maxf(level, 0.01), _volumes[i].size.y)
-		mi.position.y = level / 2.0
+func _physics_process(delta: float) -> void:
+	if not multiplayer.is_server() or not mission.running():
+		return
+	add_water((inflow + inflow_unstable * mission.clock.instability() - sump) * delta)
 
 
 func net_get() -> Array:

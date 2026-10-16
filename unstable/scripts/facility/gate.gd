@@ -3,6 +3,8 @@ extends Node3D
 ## Heavy, jammed sliding gate. Not a free rigid body: the host integrates one
 ## height value from cable pull, hydraulic jack force (from the pressure
 ## network), gravity and rail friction. Controlled, readable, cheap to sync.
+## When its frame support fails, frame_failed() (wired to Support.failed in the
+## level) cuts the jack.
 
 @export var display_name := "Reactor gate"
 @export var max_height := 3.8
@@ -11,7 +13,8 @@ extends Node3D
 @export var jam_force := 600.0
 ## Jack force at 100% pressure with its valve fully open (N).
 @export var jack_max_force := 3600.0
-@export var jack_valve_path: NodePath
+@export var jack_valve: Valve
+@export var pressure_network: PressureNetwork
 ## Network pressure spent per metre the jack lifts the gate.
 @export var jack_pressure_cost := 5.0
 
@@ -44,21 +47,16 @@ func point_velocity(_at: Vector3) -> Vector3:
 	return Vector3(0.0, vel, 0.0)
 
 
-func jack_valve() -> Valve:
-	return get_node_or_null(jack_valve_path) as Valve
-
-
 func jack_force() -> float:
-	var v := jack_valve()
-	if not jack_enabled or v == null:
+	if not jack_enabled or jack_valve == null or pressure_network == null:
 		return 0.0
-	return v.opening * mission.pressure / 100.0 * jack_max_force
+	return jack_valve.opening * pressure_network.pressure / 100.0 * jack_max_force
 
 
 func frame_failed() -> void:
 	if jack_enabled:
 		jack_enabled = false
-		mission.log_incident("Gate hydraulics severed — the gate is coming down")
+		mission.incident_log.incident("Gate hydraulics severed — the gate is coming down")
 
 
 func _physics_process(delta: float) -> void:
@@ -93,7 +91,7 @@ func _simulate(delta: float) -> void:
 	height += vel * delta
 	if vel > 0.0 and jack > 0.0:
 		var share := jack / maxf(jack + maxf(_cable_force, 0.0), 1.0)
-		mission.pressure = maxf(0.0, mission.pressure - share * vel * delta * jack_pressure_cost)
+		pressure_network.spend(share * vel * delta * jack_pressure_cost)
 	if height <= floor_h:
 		height = floor_h
 		vel = 0.0
@@ -101,7 +99,7 @@ func _simulate(delta: float) -> void:
 			if brace_min >= 0.0:
 				socket.apply_load(-impact * 10.0, 1.0)
 			else:
-				mission.log_incident("%s slammed shut" % display_name)
+				mission.incident_log.incident("%s slammed shut" % display_name)
 	elif height >= max_height:
 		height = max_height
 		vel = minf(vel, 0.0)

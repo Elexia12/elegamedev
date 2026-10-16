@@ -1,4 +1,4 @@
-[gd_scene load_steps=40 format=3]
+[gd_scene load_steps=46 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/mission.gd" id="1_mi"]
 [ext_resource type="PackedScene" path="res://scenes/components/gate.tscn" id="2_gate"]
@@ -12,9 +12,16 @@
 [ext_resource type="PackedScene" path="res://scenes/props/salvage_crate.tscn" id="10_crate"]
 [ext_resource type="PackedScene" path="res://scenes/props/gantry_beam.tscn" id="11_beam"]
 [ext_resource type="Script" path="res://scripts/facility/flood_zone.gd" id="12_fz"]
-[ext_resource type="Script" path="res://scripts/facility/flood_volume.gd" id="13_fv"]
+[ext_resource type="PackedScene" path="res://scenes/components/flood_volume.tscn" id="13_fv"]
 [ext_resource type="Script" path="res://scripts/facility/extraction_zone.gd" id="14_ez"]
-[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="15_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="15_hud"]
+[ext_resource type="Script" path="res://scripts/facility/mission_clock.gd" id="16_clk"]
+[ext_resource type="Script" path="res://scripts/facility/pressure_network.gd" id="17_pn"]
+[ext_resource type="Script" path="res://scripts/facility/drain_pump.gd" id="18_dp"]
+[ext_resource type="Script" path="res://scripts/facility/incident_log.gd" id="19_il"]
+[ext_resource type="Script" path="res://scripts/facility/toolkit.gd" id="20_tk"]
+[ext_resource type="Script" path="res://scripts/facility/crew_roster.gd" id="21_cr"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="22_pl"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_mat"]
 sky_top_color = Color(0.16, 0.2, 0.26, 1)
@@ -98,15 +105,80 @@ properties/0/replication_mode = 1
 [node name="FloodedReactor" type="Node3D"]
 script = ExtResource("1_mi")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="MissionClock" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("16_clk")
+
+[node name="PressureNetwork" type="Node" parent="." node_paths=PackedStringArray("burst_zone", "burst_vent")]
+unique_name_in_owner = true
+script = ExtResource("17_pn")
+burst_zone = NodePath("../Water/LowerFlood")
+burst_vent = NodePath("../Piping/BurstVent")
+
+[node name="DrainPump" type="Node" parent="." node_paths=PackedStringArray("valve", "network", "source", "target")]
+script = ExtResource("18_dp")
+valve = NodePath("../Manifold/DrainValve")
+network = NodePath("../PressureNetwork")
+source = NodePath("../Water/BonusFlood")
+target = NodePath("../Water/LowerFlood")
+
+[node name="IncidentLog" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("19_il")
+
+[node name="Toolkit" type="Node3D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("20_tk")
+
+[node name="Cable1" parent="Toolkit" instance=ExtResource("5_cab")]
+
+[node name="Cable2" parent="Toolkit" instance=ExtResource("5_cab")]
+
+[node name="Cable3" parent="Toolkit" instance=ExtResource("5_cab")]
+
+[node name="Crew" type="Node3D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("21_cr")
+player_scene = ExtResource("22_pl")
+
+[node name="Members" type="Node3D" parent="Crew"]
+
+[node name="PlayerSpawner" type="MultiplayerSpawner" parent="Crew"]
+_spawnable_scenes = PackedStringArray("res://scenes/player/player.tscn")
+spawn_path = NodePath("../Members")
+
+[node name="SpawnPoints" type="Node3D" parent="Crew"]
+
+[node name="Spawn1" type="Marker3D" parent="Crew/SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.1, 10.5)
+
+[node name="Spawn2" type="Marker3D" parent="Crew/SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.1, 10.5)
+
+[node name="Spawn3" type="Marker3D" parent="Crew/SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.1, 10.5)
+
+[node name="Spawn4" type="Marker3D" parent="Crew/SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.1, 10.5)
+
+[node name="StateSync" type="MultiplayerSynchronizer" parent="."]
+replication_interval = 0.05
+replication_config = SubResource("Repl_mission")
+
+[node name="HUD" parent="." instance=ExtResource("15_hud")]
+
+[node name="Environment" type="Node3D" parent="."]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Environment"]
 environment = SubResource("Env")
 
-[node name="Sun" type="DirectionalLight3D" parent="."]
+[node name="Sun" type="DirectionalLight3D" parent="Environment"]
 transform = Transform3D(1, 0, 0, 0, 0.573, 0.819, 0, -0.819, 0.573, 0, 20, 0)
 light_energy = 1.1
 shadow_enabled = true
 
-[node name="OverviewCamera" type="Camera3D" parent="."]
+[node name="OverviewCamera" type="Camera3D" parent="Environment"]
+unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 0.808, 0.589, 0, -0.589, 0.808, 0, 16, 18)
 current = true
 fov = 70.0
@@ -217,10 +289,6 @@ use_collision = true
 size = Vector3(0.3, 2.6, 3.8)
 material = SubResource("Mat_panel")
 
-[node name="JackLine" type="MeshInstance3D" parent="Geometry"]
-transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 2.1, 4.8, -3.55)
-mesh = SubResource("Mesh_pipe")
-
 [node name="SignReactor" type="Label3D" parent="Geometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 5.1, -3.65)
 modulate = Color(0.5, 1, 0.85, 1)
@@ -242,19 +310,40 @@ font_size = 40
 outline_size = 10
 text = "CRAWLWAY"
 
-[node name="Gate" parent="." instance=ExtResource("2_gate")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, -4)
-jack_valve_path = NodePath("../Manifold/JackValve")
+[node name="Piping" type="Node3D" parent="."]
 
-[node name="SupportGateFrame" parent="." instance=ExtResource("3_sup")]
+[node name="JackLine" type="MeshInstance3D" parent="Piping"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 2.1, 4.8, -3.55)
+mesh = SubResource("Mesh_pipe")
+
+[node name="BurstVent" type="CPUParticles3D" parent="Piping"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 4.8, -3.55)
+emitting = false
+amount = 80
+lifetime = 1.2
+mesh = SubResource("Mesh_steam")
+direction = Vector3(0, -0.4, 1)
+spread = 25.0
+initial_velocity_min = 4.0
+initial_velocity_max = 7.0
+gravity = Vector3(0, -3, 0)
+scale_amount_min = 0.6
+scale_amount_max = 2.5
+
+[node name="Gate" parent="." node_paths=PackedStringArray("jack_valve", "pressure_network") instance=ExtResource("2_gate")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, -4)
+jack_valve = NodePath("../Manifold/JackValve")
+pressure_network = NodePath("../PressureNetwork")
+
+[node name="Supports" type="Node3D" parent="."]
+
+[node name="SupportGateFrame" parent="Supports" instance=ExtResource("3_sup")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 0, -3.25)
 display_name = "Gate frame"
-gate_on_fail = NodePath("../Gate")
 
-[node name="SupportGantry" parent="." instance=ExtResource("3_sup")]
+[node name="SupportGantry" parent="Supports" instance=ExtResource("3_sup")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0, 1)
 display_name = "Gantry strut"
-wake_on_fail = Array[NodePath]([NodePath("../GantryBeam")])
 
 [node name="GantryBeam" parent="." instance=ExtResource("11_beam")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 5.25, 1)
@@ -262,7 +351,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 5.25, 1)
 [node name="AnchorGantry" parent="GantryBeam" instance=ExtResource("4_anc")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, -0.45, 0)
 display_name = "Gantry"
-support_path = NodePath("../../SupportGantry")
+support_path = NodePath("../../Supports/SupportGantry")
 show_post = false
 
 [node name="Anchors" type="Node3D" parent="."]
@@ -270,7 +359,7 @@ show_post = false
 [node name="AnchorGateCeiling" parent="Anchors" instance=ExtResource("4_anc")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 5.8, -3.2)
 display_name = "Gate ceiling"
-support_path = NodePath("../../SupportGateFrame")
+support_path = NodePath("../../Supports/SupportGateFrame")
 show_post = false
 
 [node name="AnchorHall" parent="Anchors" instance=ExtResource("4_anc")]
@@ -293,14 +382,6 @@ display_name = "Storage bollard"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 0, -6.5)
 display_name = "Reactor bollard"
 
-[node name="Cables" type="Node3D" parent="."]
-
-[node name="Cable1" parent="Cables" instance=ExtResource("5_cab")]
-
-[node name="Cable2" parent="Cables" instance=ExtResource("5_cab")]
-
-[node name="Cable3" parent="Cables" instance=ExtResource("5_cab")]
-
 [node name="Manifold" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.6, 0, 0.25)
 
@@ -321,103 +402,80 @@ font_size = 44
 outline_size = 12
 text = "PRESSURE MANIFOLD"
 
-[node name="ReactorCore" parent="." instance=ExtResource("8_core")]
+[node name="Cargo" type="Node3D" parent="."]
+
+[node name="ReactorCore" parent="Cargo" instance=ExtResource("8_core")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.85, -11)
 
-[node name="BonusContainer" parent="." instance=ExtResource("9_bonus")]
+[node name="BonusContainer" parent="Cargo" instance=ExtResource("9_bonus")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.55, -12)
 
-[node name="SalvageReactor" parent="." instance=ExtResource("10_crate")]
+[node name="SalvageReactor" parent="Cargo" instance=ExtResource("10_crate")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0.4, -14)
 
-[node name="SalvageStorage" parent="." instance=ExtResource("10_crate")]
+[node name="SalvageStorage" parent="Cargo" instance=ExtResource("10_crate")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0.4, -7)
 
-[node name="SalvageHall" parent="." instance=ExtResource("10_crate")]
+[node name="SalvageHall" parent="Cargo" instance=ExtResource("10_crate")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.4, 4)
 
-[node name="LowerFlood" type="Node3D" parent="."]
+[node name="Water" type="Node3D" parent="."]
+
+[node name="LowerFlood" type="Node3D" parent="Water"]
+unique_name_in_owner = true
 script = ExtResource("12_fz")
 display_name = "Lower facility"
 max_level = 1.3
+sump = 0.0015
 
-[node name="ReactorWater" type="Node3D" parent="LowerFlood"]
+[node name="ReactorWater" parent="Water/LowerFlood" instance=ExtResource("13_fv")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.15, 0, -10.15)
-script = ExtResource("13_fv")
 size = Vector2(15.7, 11.7)
 
-[node name="HallWater" type="Node3D" parent="LowerFlood"]
+[node name="HallWater" parent="Water/LowerFlood" instance=ExtResource("13_fv")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.85)
-script = ExtResource("13_fv")
 size = Vector2(32, 10.3)
 
-[node name="BonusFlood" type="Node3D" parent="."]
+[node name="BonusFlood" type="Node3D" parent="Water"]
+unique_name_in_owner = true
 script = ExtResource("12_fz")
 display_name = "Storage"
 max_level = 2.6
 level = 0.3
+inflow = 0.002
+inflow_unstable = 0.011
 
-[node name="StorageWater" type="Node3D" parent="BonusFlood"]
+[node name="StorageWater" parent="Water/BonusFlood" instance=ExtResource("13_fv")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.15, 0, -10.15)
-script = ExtResource("13_fv")
 size = Vector2(15.7, 11.7)
 
-[node name="ExtractionZone" type="Node3D" parent="."]
+[node name="Extraction" type="Node3D" parent="."]
+
+[node name="ExtractionZone" type="Node3D" parent="Extraction"]
+unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9)
 script = ExtResource("14_ez")
 
-[node name="Pad" type="MeshInstance3D" parent="ExtractionZone"]
+[node name="Pad" type="MeshInstance3D" parent="Extraction/ExtractionZone"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
 cast_shadow = 0
 mesh = SubResource("Mesh_pad")
 
-[node name="Label" type="Label3D" parent="ExtractionZone"]
+[node name="Label" type="Label3D" parent="Extraction/ExtractionZone"]
 transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.06, 0)
 modulate = Color(0.4, 1, 0.55, 0.8)
 font_size = 160
 outline_size = 0
 text = "LIFT"
 
-[node name="ExtractionLever" parent="." instance=ExtResource("7_lev")]
+[node name="ExtractionLever" parent="Extraction" node_paths=PackedStringArray("zone") instance=ExtResource("7_lev")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, 9)
+zone = NodePath("../ExtractionZone")
 
-[node name="SpawnPoints" type="Node3D" parent="."]
-
-[node name="Spawn1" type="Marker3D" parent="SpawnPoints"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.1, 10.5)
-
-[node name="Spawn2" type="Marker3D" parent="SpawnPoints"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.1, 10.5)
-
-[node name="Spawn3" type="Marker3D" parent="SpawnPoints"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.1, 10.5)
-
-[node name="Spawn4" type="Marker3D" parent="SpawnPoints"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.1, 10.5)
-
-[node name="BurstVent" type="CPUParticles3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 4.8, -3.55)
-emitting = false
-amount = 80
-lifetime = 1.2
-mesh = SubResource("Mesh_steam")
-direction = Vector3(0, -0.4, 1)
-spread = 25.0
-initial_velocity_min = 4.0
-initial_velocity_max = 7.0
-gravity = Vector3(0, -3, 0)
-scale_amount_min = 0.6
-scale_amount_max = 2.5
-
-[node name="Players" type="Node3D" parent="."]
-
-[node name="PlayerSpawner" type="MultiplayerSpawner" parent="."]
-_spawnable_scenes = PackedStringArray("res://scenes/player/player.tscn")
-spawn_path = NodePath("../Players")
-
-[node name="StateSync" type="MultiplayerSynchronizer" parent="."]
-replication_interval = 0.05
-replication_config = SubResource("Repl_mission")
-
-[node name="HUD" type="CanvasLayer" parent="."]
-script = ExtResource("15_hud")
+[connection signal="phase_changed" from="MissionClock" to="." method="_on_phase_changed"]
+[connection signal="collapsed" from="MissionClock" to="." method="_on_facility_collapsed"]
+[connection signal="message" from="IncidentLog" to="HUD" method="_on_message"]
+[connection signal="client_event" from="IncidentLog" to="HUD" method="_on_client_event"]
+[connection signal="failed" from="Supports/SupportGateFrame" to="Gate" method="frame_failed"]
+[connection signal="failed" from="Supports/SupportGantry" to="GantryBeam" method="wake"]
+[connection signal="departed" from="Extraction/ExtractionZone" to="." method="_on_lift_departed"]

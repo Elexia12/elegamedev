@@ -90,7 +90,7 @@ func _simulate(delta: float) -> void:
 	var d := ap.global_position - hp
 	var dist := d.length()
 	if dist > max_length + 2.0:
-		mission.log_incident("Cable on %s ripped loose" % recv.display_name)
+		mission.incident_log.incident("Cable on %s ripped loose" % recv.display_name)
 		detach()
 		return
 	if dist < 0.01:
@@ -113,7 +113,7 @@ func _simulate(delta: float) -> void:
 	if tension > break_force:
 		_overload += delta
 		if _overload > break_time:
-			mission.log_incident("Winch cable on %s SNAPPED" % recv.display_name)
+			mission.incident_log.incident("Winch cable on %s SNAPPED" % recv.display_name)
 			detach()
 	else:
 		_overload = maxf(0.0, _overload - delta)

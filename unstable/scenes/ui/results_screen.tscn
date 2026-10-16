@@ -1,0 +1,53 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/results_screen.gd" id="1_rs"]
+[ext_resource type="Theme" path="res://scenes/ui/unstable_theme.tres" id="2_th"]
+
+[node name="ResultsScreen" type="ColorRect"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_th")
+color = Color(0, 0, 0, 0.75)
+script = ExtResource("1_rs")
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Card" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(640, 0)
+layout_mode = 2
+theme_type_variation = &"Card"
+
+[node name="VBox" type="VBoxContainer" parent="Center/Card"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Text" type="RichTextLabel" parent="Center/Card/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(600, 200)
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+
+[node name="RestartButton" type="Button" parent="Center/Card/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "Try again"
+
+[node name="LeaveButton" type="Button" parent="Center/Card/VBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "Leave to menu"
+
+[connection signal="pressed" from="Center/Card/VBox/RestartButton" to="." method="_on_restart_pressed"]
+[connection signal="pressed" from="Center/Card/VBox/LeaveButton" to="." method="_on_leave_pressed"]

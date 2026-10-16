@@ -1,6 +1,11 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/crew_member.gd" id="1_cm"]
+[ext_resource type="Script" path="res://scripts/player/winch_tool.gd" id="2_wt"]
+[ext_resource type="Script" path="res://scripts/player/brace_tool.gd" id="3_bt"]
+[ext_resource type="Script" path="res://scripts/player/pressure_tool.gd" id="4_pt"]
+[ext_resource type="Script" path="res://scripts/player/hands.gd" id="5_ha"]
+[ext_resource type="Script" path="res://scripts/player/vitals.gd" id="6_vi"]
 
 [sub_resource type="CapsuleShape3D" id="Shape_body"]
 radius = 0.35
@@ -20,7 +25,6 @@ material = SubResource("Mat_visor")
 size = Vector3(0.5, 0.18, 0.14)
 
 [sub_resource type="BoxMesh" id="Mesh_tool"]
-size = Vector3(1, 1, 1)
 
 [sub_resource type="SceneReplicationConfig" id="Repl_player"]
 properties/0/path = NodePath(".:position")
@@ -35,7 +39,7 @@ properties/2/replication_mode = 1
 properties/3/path = NodePath(".:tool")
 properties/3/spawn = true
 properties/3/replication_mode = 2
-properties/4/path = NodePath(".:knocked")
+properties/4/path = NodePath("Vitals:knocked")
 properties/4/spawn = true
 properties/4/replication_mode = 2
 
@@ -66,7 +70,17 @@ cull_mask = 1048573
 fov = 80.0
 near = 0.08
 
-[node name="Tool" type="MeshInstance3D" parent="Head"]
+[node name="InteractRay" type="RayCast3D" parent="Head/Camera3D"]
+target_position = Vector3(0, 0, -6)
+collision_mask = 8
+collide_with_areas = true
+collide_with_bodies = false
+
+[node name="GrabRay" type="RayCast3D" parent="Head/Camera3D"]
+target_position = Vector3(0, 0, -4)
+collision_mask = 5
+
+[node name="ToolModel" type="MeshInstance3D" parent="Head"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34, -0.32, -0.75)
 mesh = SubResource("Mesh_tool")
 
@@ -77,5 +91,37 @@ font_size = 40
 outline_size = 10
 text = "Crew"
 
+[node name="Tools" type="Node" parent="."]
+
+[node name="Winch" type="Node" parent="Tools"]
+script = ExtResource("2_wt")
+display_name = "WINCH"
+color = Color(1, 0.78, 0.1, 1)
+model_size = Vector3(0.1, 0.1, 0.3)
+handles = PackedStringArray("hook", "anchor")
+
+[node name="Brace" type="Node" parent="Tools"]
+script = ExtResource("3_bt")
+display_name = "BRACE"
+color = Color(1, 0.45, 0.1, 1)
+model_size = Vector3(0.05, 0.05, 0.5)
+handles = PackedStringArray("brace")
+
+[node name="Pressure" type="Node" parent="Tools"]
+script = ExtResource("4_pt")
+display_name = "PRESSURE"
+color = Color(0.2, 0.85, 1, 1)
+model_size = Vector3(0.08, 0.08, 0.4)
+handles = PackedStringArray("valve")
+
+[node name="Hands" type="Node" parent="."]
+script = ExtResource("5_ha")
+
+[node name="Vitals" type="Node" parent="."]
+script = ExtResource("6_vi")
+
 [node name="Sync" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("Repl_player")
+
+[connection signal="knocked_out" from="Vitals" to="." method="_on_knocked_out"]
+[connection signal="recovered" from="Vitals" to="." method="_on_recovered"]

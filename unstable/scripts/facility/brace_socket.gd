@@ -63,7 +63,7 @@ func apply_load(per_second: float, delta: float) -> void:
 	integrity -= per_second * delta
 	if integrity <= 0.0:
 		var t := target()
-		mission.log_incident("Brace on %s snapped under load" % (t.display_name if t else "?"))
+		mission.incident_log.incident("Brace on %s snapped under load" % (t.display_name if t else "?"))
 		remove()
 
 

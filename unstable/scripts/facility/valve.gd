@@ -1,9 +1,8 @@
 class_name Valve
 extends Node3D
 ## Pressure-network valve, turned in 25% steps with the Pressure tool.
-## The Mission reads valves by channel: "jack" feeds the gate's hydraulic jack,
-## "drain" runs the flood pump (bleeds pressure, empties the bonus chamber,
-## dumps that water into the lower facility).
+## Consumers reference the valve that controls them: the Gate (jack valve) and
+## the DrainPump. `channel` is just a label for the HUD and tests.
 
 @export var display_name := "Valve"
 @export_enum("jack", "drain") var channel := "jack"
@@ -16,6 +15,11 @@ extends Node3D
 func _ready() -> void:
 	add_to_group("net")
 	add_to_group("valves")
+
+
+## Host: open (positive) or close (negative) by `step`, snapped to 25%.
+func turn(step: float) -> void:
+	opening = clampf(snappedf(opening + step, 0.25), 0.0, 1.0)
 
 
 func _process(delta: float) -> void:
