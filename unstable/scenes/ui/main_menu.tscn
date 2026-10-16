@@ -88,7 +88,7 @@ autowrap_mode = 3
 modulate = Color(1, 1, 1, 0.5)
 layout_mode = 2
 text = "Mission: THE FLOODED REACTOR — prototype build
-Winch [1] · Brace [2] · Pressure [3] · E grab/use · R detach/recover"
+Winch [1] · Pressure [2] · E grab · LMB throw · R turn held item / detach cable"
 horizontal_alignment = 1
 
 [connection signal="pressed" from="Center/Card/VBox/SoloButton" to="." method="_on_solo_pressed"]

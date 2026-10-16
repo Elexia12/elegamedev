@@ -55,3 +55,7 @@ func _physics_process(_delta: float) -> void:
 			continue
 		p.sleeping = false
 		p.apply_central_force(to / d * blast_force * (1.0 - d / blast_range) * _blast)
+
+
+func surface_prompt() -> String:
+	return "hold LMB blast · hold RMB pull"

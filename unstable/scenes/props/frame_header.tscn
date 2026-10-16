@@ -1,0 +1,38 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/facility/prop.gd" id="1_pr"]
+
+[sub_resource type="PhysicsMaterial" id="Phys_header"]
+friction = 0.7
+
+[sub_resource type="BoxShape3D" id="Shape_header"]
+size = Vector3(4.8, 0.5, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="Mat_header"]
+albedo_color = Color(0.7, 0.3, 0.15, 1)
+metallic = 0.5
+roughness = 0.6
+
+[sub_resource type="BoxMesh" id="Mesh_header"]
+material = SubResource("Mat_header")
+size = Vector3(4.8, 0.5, 0.5)
+
+[node name="FrameHeader" type="RigidBody3D"]
+editor_description = "Steel header beam over the gate. The obvious place to hook a cable to lift the gate, but it's part of the gate frame support's structure, so pulling on it strains that support. Falls when the support fails."
+collision_layer = 4
+collision_mask = 23
+mass = 250.0
+physics_material_override = SubResource("Phys_header")
+script = ExtResource("1_pr")
+display_name = "Gate frame header"
+role = "debris"
+buoyancy = 0.2
+height = 0.5
+dormant = true
+hit_speed = 2.5
+
+[node name="Shape" type="CollisionShape3D" parent="."]
+shape = SubResource("Shape_header")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("Mesh_header")

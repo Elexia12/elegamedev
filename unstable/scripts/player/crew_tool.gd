@@ -1,10 +1,9 @@
 class_name CrewTool
 extends Node
 ## Base class for the hand tools. They are children of the player's Tools node,
-## and their order there is the 1/2/3 hotkey order.
+## and their order there is the hotkey order.
 ##
-## Owner side: primary() and secondary() turn clicks on the aimed InteractPoint
-## into Mission requests.
+## Owner side: primary() and secondary() turn clicks into Mission requests.
 ## Host side: host_start() and host_stop() run continuous effects (reeling,
 ## blasting) using the crew member's replicated aim.
 
@@ -36,8 +35,13 @@ func secondary(_target: InteractPoint) -> void:
 	pass
 
 
-## Owner: HUD text for a target this tool handles.
+## Owner: HUD text for an InteractPoint this tool handles.
 func prompt(_target: InteractPoint) -> String:
+	return ""
+
+
+## Owner: HUD text for whatever surface the crosshair is on (no InteractPoint).
+func surface_prompt() -> String:
 	return ""
 
 

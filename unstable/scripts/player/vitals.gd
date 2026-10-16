@@ -1,7 +1,8 @@
 class_name Vitals
 extends Node
 ## Breath and knockouts, run by the owning peer. With your head underwater,
-## breath drains. At zero you black out for `knockout_time`, then respawn at the
+## breath drains, and at zero you black out. A hard enough hit (rubble, a
+## falling gate) knocks you out too. After `knockout_time` you respawn at the
 ## lift. `knocked` is replicated so everyone sees you go down.
 
 signal knocked_out(reason: String)
@@ -23,6 +24,15 @@ func _ready() -> void:
 	breath = breath_max
 
 
+## Owner: black out now.
+func knock_out(reason: String) -> void:
+	if knocked:
+		return
+	knocked = true
+	_timer = knockout_time
+	knocked_out.emit(reason)
+
+
 func _physics_process(delta: float) -> void:
 	if crew.mission == null or not crew.is_multiplayer_authority():
 		return
@@ -37,8 +47,6 @@ func _physics_process(delta: float) -> void:
 	if crew.mission.water_surface_at(head) > head.y:
 		breath -= delta
 		if breath <= 0.0:
-			knocked = true
-			_timer = knockout_time
-			knocked_out.emit("%s blacked out underwater" % crew.display_name)
+			knock_out("%s blacked out underwater" % crew.display_name)
 	else:
 		breath = minf(breath_max, breath + recovery_rate * delta)

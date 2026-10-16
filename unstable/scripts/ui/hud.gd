@@ -71,21 +71,19 @@ func _update_objectives() -> void:
 					salvage += p.current_value
 	var toolkit := mission.toolkit
 	lines.append("Salvage on lift: $%d" % roundi(salvage))
-	lines.append("Braces left: %d   ·   Cables: %d/%d" % [toolkit.braces_left, toolkit.active_cable_count(), toolkit.cables().size()])
+	lines.append("Winch cables rigged: %d/%d" % [toolkit.active_cable_count(), toolkit.cables().size()])
 	objectives.text = "\n".join(lines)
 
 
 func _update_banner() -> void:
-	var network := mission.pressure_network
-	if mission.extraction.is_counting():
-		banner.text = "EXTRACTION IN %d — GET ON THE PAD" % ceili(mission.extraction.timer)
+	# Only the lift gets a banner: everything else you should see happen.
+	var lift := mission.extraction
+	if lift.is_counting():
+		banner.text = "LIFT IN %d — GET ON THE PAD" % ceili(lift.timer)
 		banner.modulate = Color(0.4, 1.0, 0.6)
-	elif network.burst_timer > 0.0:
-		banner.text = "PRESSURE LINE BURST — MAIN HALL FLOODING"
-		banner.modulate = Color(1.0, 0.4, 0.3)
-	elif network.pressure > network.warning_level:
-		banner.text = "OVERPRESSURE %d%% — OPEN THE DRAIN" % roundi(network.pressure)
-		banner.modulate = Color(1.0, 0.7, 0.2)
+	elif lift.is_rising():
+		banner.text = "LIFT RISING — HOLD ON"
+		banner.modulate = Color(0.4, 1.0, 0.6)
 	else:
 		banner.text = ""
 
@@ -99,9 +97,6 @@ func _update_player(me: CrewMember, delta: float) -> void:
 			label.text = " %d  %s " % [i + 1, me.tools[i].display_name]
 			label.modulate = me.tools[i].color if i == me.tool else Color(1, 1, 1, 0.45)
 	var text := me.prompt()
-	var winch := me.current_tool() as WinchTool
-	if winch and winch.pending_hook:
-		text += ("\n" if text != "" else "") + "Hook: %s — pick an anchor (RMB cancel)" % winch.pending_hook.describe()
 	prompt.text = text
 	_toast_time -= delta
 	toast.visible = _toast_time > 0.0

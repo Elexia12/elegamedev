@@ -1,8 +1,9 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/gate.gd" id="1_ga"]
-[ext_resource type="PackedScene" path="res://scenes/components/interact_point.tscn" id="2_ip"]
-[ext_resource type="PackedScene" path="res://scenes/components/brace_socket.tscn" id="3_bs"]
+
+[sub_resource type="PhysicsMaterial" id="Phys_door"]
+friction = 0.8
 
 [sub_resource type="StandardMaterial3D" id="Mat_door"]
 albedo_color = Color(0.55, 0.45, 0.38, 1)
@@ -45,25 +46,31 @@ top_radius = 0.08
 bottom_radius = 0.08
 height = 1.0
 
-[node name="Gate" type="Node3D"]
+[node name="Gate" type="RigidBody3D"]
+editor_description = "300 kg rigid gate on vertical rails (axis locks). Starts JAMMED; breaks free when cable pull + jack beats weight + jam_force. Falls on whatever is under it; a Brace post can hold it up."
+collision_layer = 16
+collision_mask = 6
+axis_lock_linear_x = true
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
+mass = 300.0
+physics_material_override = SubResource("Phys_door")
+linear_damp = 1.5
 script = ExtResource("1_ga")
 
-[node name="Door" type="AnimatableBody3D" parent="."]
+[node name="Mesh" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
-sync_to_physics = false
-
-[node name="Mesh" type="MeshInstance3D" parent="Door"]
 mesh = SubResource("Mesh_door")
 
-[node name="Stripe" type="MeshInstance3D" parent="Door"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.8, 0)
+[node name="Stripe" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
 mesh = SubResource("Mesh_stripe")
 
-[node name="Shape" type="CollisionShape3D" parent="Door"]
+[node name="Shape" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 shape = SubResource("Shape_door")
-
-[node name="Hook" parent="Door" instance=ExtResource("2_ip")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.3)
 
 [node name="JackHousing" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.35, 0.9, 0.45)
@@ -72,10 +79,6 @@ mesh = SubResource("Mesh_housing")
 [node name="JackRod" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.35, 1.9, 0.45)
 mesh = SubResource("Mesh_rod")
-
-[node name="BraceSocket" parent="." instance=ExtResource("3_bs")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, 0, 0.6)
-target_path = NodePath("..")
 
 [node name="Label" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 3.3, 0.6)

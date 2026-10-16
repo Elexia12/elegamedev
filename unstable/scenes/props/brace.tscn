@@ -1,0 +1,37 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/facility/brace.gd" id="1_br"]
+
+[sub_resource type="PhysicsMaterial" id="Phys_brace"]
+friction = 1.0
+
+[sub_resource type="BoxShape3D" id="Shape_brace"]
+size = Vector3(0.22, 2.1, 0.22)
+
+[sub_resource type="StandardMaterial3D" id="Mat_brace"]
+albedo_color = Color(1, 0.55, 0.1, 1)
+metallic = 0.6
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="Mesh_brace"]
+material = SubResource("Mat_brace")
+size = Vector3(0.22, 2.1, 0.22)
+
+[node name="Brace" type="RigidBody3D"]
+editor_description = "Steel brace post (35 kg). Carry with E, stand upright with R. Wedge it under the gate, or stand it in a support's BraceZone. Wears out under load and buckles."
+collision_layer = 4
+collision_mask = 23
+mass = 35.0
+physics_material_override = SubResource("Phys_brace")
+angular_damp = 1.0
+script = ExtResource("1_br")
+display_name = "Brace post"
+role = "debris"
+buoyancy = 0.3
+height = 2.1
+
+[node name="Shape" type="CollisionShape3D" parent="."]
+shape = SubResource("Shape_brace")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("Mesh_brace")

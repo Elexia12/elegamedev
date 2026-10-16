@@ -12,9 +12,12 @@ extends Node3D
 func _process(delta: float) -> void:
 	if zone == null:
 		return
-	var calling := zone.is_counting()
+	var calling := zone.is_counting() or zone.is_rising()
 	handle.rotation.x = lerpf(handle.rotation.x, -0.9 if calling else 0.6, 1.0 - exp(-8.0 * delta))
-	if calling:
+	if zone.is_rising():
+		label.text = "LIFT RISING"
+		label.modulate = Color(1.0, 0.85, 0.2)
+	elif calling:
 		label.text = "LIFT DEPARTS IN %d\n[E] cancel" % ceili(zone.timer)
 		label.modulate = Color(1.0, 0.85, 0.2)
 	else:

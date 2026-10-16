@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3]
+
+[sub_resource type="StandardMaterial3D" id="Mat_post"]
+albedo_color = Color(0.85, 0.68, 0.1, 1)
+metallic = 0.4
+roughness = 0.5
+
+[sub_resource type="CylinderMesh" id="Mesh_post"]
+material = SubResource("Mat_post")
+top_radius = 0.16
+bottom_radius = 0.26
+height = 0.9
+
+[sub_resource type="CylinderShape3D" id="Shape_post"]
+height = 0.9
+radius = 0.26
+
+[node name="Bollard" type="StaticBody3D"]
+editor_description = "A solid floor post. Nothing special to the winch (you can hook any surface), but it's a strong tie-off that never fails."
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+mesh = SubResource("Mesh_post")
+
+[node name="Shape" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+shape = SubResource("Shape_post")

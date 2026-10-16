@@ -1,18 +1,14 @@
 class_name Toolkit
 extends Node3D
-## The team's shared equipment: a fixed pool of winch cables (the Cable child
-## nodes; add or remove children to change how many) and a stock of braces.
+## The team's shared winch cables: the Cable child nodes. Add or remove
+## children to change how many the team has. (Braces aren't counted here any
+## more; they're physical posts you carry.)
 
-@export var team_braces := 3
-
-var braces_left := 3
 var mission: Mission
 
 
 func _ready() -> void:
-	add_to_group("net")
 	mission = Mission.of(self)
-	braces_left = team_braces
 
 
 func cables() -> Array[Cable]:
@@ -27,85 +23,57 @@ func active_cable_count() -> int:
 	return cables().filter(func(c: Cable) -> bool: return c.active).size()
 
 
-## The cable using this hook or anchor point, if any.
+## The cable whose end marker this is, if any.
 func cable_at(point: Node) -> Cable:
-	if point == null:
-		return null
-	var p := str(mission.get_path_to(point))
-	for c in cables():
-		if c.uses(p):
-			return c
+	if point is InteractPoint and point.kind == "cable":
+		var c := point.get_parent() as Cable
+		return c if c and c.active else null
 	return null
 
 
-## Host: rig a cable between a hook and an anchor. Returns a message for the player.
-func attach_cable(h: InteractPoint, a: InteractPoint, from_position: Vector3, reach: float) -> String:
-	if h == null or a == null or h.kind != "hook" or a.kind != "anchor":
-		return ""
-	if cable_at(h):
-		return "That hook already has a cable"
-	if cable_at(a):
-		return "That anchor is already in use"
-	if from_position.distance_to(a.global_position) > reach:
-		return "Too far from the anchor"
+## Total tension on cables with an end on `support`'s structure.
+func load_on(support: Support) -> float:
+	var total := 0.0
+	for c in cables():
+		if c.active and (c.end_support(0) == support or c.end_support(1) == support):
+			total += c.tension
+	return total
+
+
+## Host: rig a free cable between two points. Each point is a mission-relative
+## body path ("" for static world) plus a local (or world) position.
+## Returns a message for the player.
+func attach_cable(path_a: String, local_a: Vector3, path_b: String, local_b: Vector3,
+		from_position: Vector3, reach: float) -> String:
 	var free: Cable = null
 	for c in cables():
 		if not c.active:
 			free = c
 			break
 	if free == null:
-		return "All winch cables are in use — detach one first [R]"
-	var dist := h.global_position.distance_to(a.global_position)
-	if dist > free.max_length:
-		return "Cable won't reach (%.0f m, max %.0f m)" % [dist, free.max_length]
-	free.attach(h, a)
-	return "Cable rigged: %s → %s. Hold LMB on either end to reel in." % [h.describe(), a.describe()]
+		return "All %d winch cables are in use — detach one first [R]" % cables().size()
+	free.attach(path_a, local_a, path_b, local_b)
+	var a := free.end_position(0)
+	var b := free.end_position(1)
+	if from_position.distance_to(b) > reach and from_position.distance_to(a) > reach:
+		free.detach()
+		return "Too far away to rig that"
+	if a.distance_to(b) > free.max_length:
+		free.detach()
+		return "Cable won't reach (%.0f m, max %.0f m)" % [a.distance_to(b), free.max_length]
+	return ""
 
 
-## Host: detach whatever cable uses this point.
+## Host: detach whatever cable this end marker belongs to.
 func detach_cable(point: Node) -> String:
 	var c := cable_at(point)
-	if c == null:
-		return ""
-	c.detach()
-	return "Cable detached"
-
-
-## Host: snap a cable because something failed (logged as an incident).
-func snap_cable(point: Node, why: String) -> void:
-	var c := cable_at(point)
 	if c:
-		var h := c.hook()
-		mission.incident_log.incident("Cable on %s %s" % [h.describe() if h else "?", why])
 		c.detach()
+	return ""
 
 
-## Host: put a brace in a socket. Returns a message for the player.
-func place_brace(socket: BraceSocket) -> String:
-	if socket == null:
-		return ""
-	var why := socket.block_reason()
-	if why != "":
-		return why
-	if braces_left <= 0:
-		return "No braces left — recover one with [R]"
-	socket.place()
-	braces_left -= 1
-	return "Brace set on %s (%d left)" % [socket.point.describe(), braces_left]
-
-
-## Host: take a brace back out of a socket.
-func recover_brace(socket: BraceSocket) -> String:
-	if socket == null or not socket.braced:
-		return ""
-	socket.remove()
-	braces_left += 1
-	return "Brace recovered (%d left)" % braces_left
-
-
-func net_get() -> Array:
-	return [braces_left]
-
-
-func net_set(s: Array) -> void:
-	braces_left = s[0]
+## Host: snap every cable touching `support` (it just failed).
+func snap_cables_on(support: Support) -> void:
+	for c in cables():
+		if c.active and (c.end_support(0) == support or c.end_support(1) == support):
+			c._snap("torn loose")

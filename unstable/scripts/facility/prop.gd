@@ -1,8 +1,10 @@
 class_name Prop
 extends RigidBody3D
-## Networked physics object (cargo or debris). Simulated on the host only;
-## clients hold a frozen copy that interpolates toward the replicated pose.
-## Water applies buoyancy/drag; some cargo loses value while submerged.
+## Networked physics object: cargo, debris, rubble, braces, support columns.
+## Simulated on the host only; clients hold a frozen copy that interpolates
+## toward the replicated pose. Water floats it and drags it. Anything moving
+## fast enough knocks over the crew member it hits (falling rubble, a
+## toppling column, a crate a teammate threw at you).
 
 @export var display_name := "Crate"
 @export var value := 0
@@ -12,10 +14,12 @@ extends RigidBody3D
 ## Body height, for the submerged fraction.
 @export var height := 1.0
 @export var water_drag := 1.5
-## Starts frozen in place until woken (e.g. by a failing support).
+## Starts frozen in place until woken (by a tremor, a failing support…).
 @export var dormant := false
 ## Value lost per second while mostly submerged (floored at 25%).
 @export var water_damage := 0.0
+## Speed above which hitting a crew member knocks them back.
+@export var hit_speed := 3.5
 
 var current_value := 0.0
 var submerged := 0.0
@@ -25,6 +29,9 @@ var _home: Transform3D
 var _net_pos := Vector3.ZERO
 var _net_rot := Quaternion.IDENTITY
 var _has_net := false
+var _hit_cooldown := 0.0
+## Velocity before this step resolved contacts (impacts read this, not the bounce).
+var _last_velocity := Vector3.ZERO
 
 @onready var label: Label3D = get_node_or_null("Label")
 
@@ -40,14 +47,18 @@ func _ready() -> void:
 	if not multiplayer.is_server():
 		freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
 		freeze = true
-	elif dormant:
-		freeze = true
+		return
+	freeze = dormant
+	contact_monitor = true
+	max_contacts_reported = 4
+	body_entered.connect(_on_body_entered)
 
 
 func is_grabbable() -> bool:
 	return not dormant
 
 
+## Release a dormant prop into the simulation.
 func wake() -> void:
 	dormant = false
 	if multiplayer.is_server():
@@ -55,20 +66,26 @@ func wake() -> void:
 		sleeping = false
 
 
-func add_cable_force(force: Vector3, at: Vector3) -> void:
-	if freeze:
-		return
-	sleeping = false
-	apply_force(force, at - global_position)
-
-
 func point_velocity(at: Vector3) -> Vector3:
 	return linear_velocity + angular_velocity.cross(at - global_position)
+
+
+func _on_body_entered(body: Node) -> void:
+	if body is CrewMember and _hit_cooldown <= 0.0:
+		var speed := maxf(linear_velocity.length(), _last_velocity.length())
+		if speed < hit_speed:
+			return
+		_hit_cooldown = 0.5
+		var away: Vector3 = (body.global_position - global_position) * Vector3(1, 0, 1)
+		var push := (_last_velocity.normalized() + away.normalized()).normalized()
+		var energy := mass * speed
+		body.knock(push * minf(energy / 60.0, 10.0) + Vector3.UP * 2.5, clampf(energy / 450.0, 0.3, 3.0))
 
 
 func _physics_process(delta: float) -> void:
 	if mission == null or not multiplayer.is_server():
 		return
+	_hit_cooldown -= delta
 	if global_position.y < -20.0:
 		transform = _home
 		linear_velocity = Vector3.ZERO
@@ -76,9 +93,15 @@ func _physics_process(delta: float) -> void:
 	var surface := mission.water_surface_at(global_position)
 	var bottom := global_position.y - height / 2.0
 	submerged = clampf((surface - bottom) / height, 0.0, 1.0) if surface > -1e9 else 0.0
-	if submerged > 0.0 and not freeze:
-		apply_central_force(Vector3.UP * mass * 9.8 * buoyancy * submerged)
-		apply_central_force(-linear_velocity * mass * water_drag * submerged)
+	if not freeze:
+		if submerged > 0.0:
+			apply_central_force(Vector3.UP * mass * 9.8 * buoyancy * submerged)
+			apply_central_force(-linear_velocity * mass * water_drag * submerged)
+		var jet := mission.pressure_network.jet_push_at(global_position)
+		if jet != Vector3.ZERO:
+			sleeping = false
+			apply_central_force(jet * mass)
+	_last_velocity = linear_velocity
 	if water_damage > 0.0 and submerged > 0.5 and mission.running():
 		current_value = maxf(value * 0.25, current_value - water_damage * delta)
 	secured = mission.extraction.contains(global_position)

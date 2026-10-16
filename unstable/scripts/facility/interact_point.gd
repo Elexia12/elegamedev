@@ -1,22 +1,21 @@
 class_name InteractPoint
 extends Area3D
-## Forgiving aim target for the tools and the interact key. Players aim at this
-## generous sphere instead of at exact meshes. The parent owns the behaviour:
-## an Anchor, BraceSocket, Valve or ExtractionLever. For hooks it's the nearest
-## ancestor that accepts cable force (a Prop or the Gate).
+## Forgiving aim target for things you operate rather than push around: a
+## cable end (to reel or detach it), a valve, or the extraction lever. The
+## parent node owns the behaviour. Physical objects need no InteractPoint: you
+## grab them, winch them or blast them directly.
 
 const MARKER_COLORS := {
-	"hook": Color(1.0, 0.8, 0.1),
-	"anchor": Color(1.0, 0.8, 0.1),
+	"cable": Color(1.0, 0.8, 0.1),
 }
 
-@export_enum("hook", "anchor", "brace", "valve", "lever") var kind := "hook"
+@export_enum("cable", "valve", "lever") var kind := "valve"
 
 @onready var marker: MeshInstance3D = $Marker
 
 
 func _ready() -> void:
-	# Only cable points get the yellow ring; other kinds have their own visuals.
+	# Only cable ends get the yellow ring; valves and levers have their own visuals.
 	marker.visible = MARKER_COLORS.has(kind)
 	if marker.visible:
 		var mat := marker.get_active_material(0).duplicate() as StandardMaterial3D
@@ -25,20 +24,11 @@ func _ready() -> void:
 		marker.material_override = mat
 
 
-## For hooks: the node that receives cable force (has add_cable_force()).
-func receiver() -> Node:
-	var n := get_parent()
-	while n and not n.has_method("add_cable_force"):
-		n = n.get_parent()
-	return n
-
-
 ## Human-readable name for prompts.
 func describe() -> String:
-	var n: Node = receiver() if kind == "hook" else get_parent()
-	if n is BraceSocket:
-		var t: Node = n.target()
-		return t.display_name if t else "Brace point"
+	var n := get_parent()
+	if n is Cable:
+		return "Cable"
 	if n and "display_name" in n:
 		return n.display_name
 	return kind.capitalize()

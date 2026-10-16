@@ -1,9 +1,9 @@
-[gd_scene load_steps=46 format=3]
+[gd_scene load_steps=60 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/mission.gd" id="1_mi"]
 [ext_resource type="PackedScene" path="res://scenes/components/gate.tscn" id="2_gate"]
 [ext_resource type="PackedScene" path="res://scenes/components/support.tscn" id="3_sup"]
-[ext_resource type="PackedScene" path="res://scenes/components/anchor.tscn" id="4_anc"]
+[ext_resource type="PackedScene" path="res://scenes/components/bollard.tscn" id="4_bol"]
 [ext_resource type="PackedScene" path="res://scenes/components/cable.tscn" id="5_cab"]
 [ext_resource type="PackedScene" path="res://scenes/components/valve.tscn" id="6_val"]
 [ext_resource type="PackedScene" path="res://scenes/components/extraction_lever.tscn" id="7_lev"]
@@ -22,6 +22,11 @@
 [ext_resource type="Script" path="res://scripts/facility/toolkit.gd" id="20_tk"]
 [ext_resource type="Script" path="res://scripts/facility/crew_roster.gd" id="21_cr"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="22_pl"]
+[ext_resource type="Script" path="res://scripts/facility/tremors.gd" id="23_tr"]
+[ext_resource type="PackedScene" path="res://scenes/props/brace.tscn" id="24_brace"]
+[ext_resource type="PackedScene" path="res://scenes/props/rubble.tscn" id="25_rub"]
+[ext_resource type="PackedScene" path="res://scenes/props/frame_header.tscn" id="26_hdr"]
+[ext_resource type="PackedScene" path="res://scenes/props/skid_sled.tscn" id="27_sled"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_mat"]
 sky_top_color = Color(0.16, 0.2, 0.26, 1)
@@ -100,27 +105,86 @@ rings = 4
 [sub_resource type="SceneReplicationConfig" id="Repl_mission"]
 properties/0/path = NodePath(".:net_state")
 properties/0/spawn = true
-properties/0/replication_mode = 1
+properties/0/replication_mode = 2
+
+[sub_resource type="StandardMaterial3D" id="Mat_ceiling"]
+albedo_color = Color(0.3, 0.32, 0.36, 1)
+roughness = 0.9
+
+[sub_resource type="BoxShape3D" id="Shape_platform"]
+size = Vector3(10, 0.3, 5)
+
+[sub_resource type="StandardMaterial3D" id="Mat_dust"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0.7, 0.68, 0.62, 0.6)
+
+[sub_resource type="BoxMesh" id="Mesh_dust"]
+material = SubResource("Mat_dust")
+size = Vector3(0.06, 0.06, 0.06)
 
 [node name="FloodedReactor" type="Node3D"]
 editor_description = "LEVEL ROOT (Mission).
-Only 3 jobs: receive player actions (request), decide the outcome when the lift leaves or the facility collapses, and pack all 'net' nodes into one snapshot for clients.
+Only 3 jobs: receive player actions (request), run the ending (lift departs or the facility physically collapses), and pack all 'net' nodes into one snapshot for clients.
 Every system below is its own child node."
 script = ExtResource("1_mi")
 
 [node name="MissionClock" type="Node" parent="."]
-editor_description = "Mission timer. Instability rises 0 -> 1 over collapse_time; every hazard scales with it.
-Signals: phase_changed -> Mission (phase banner), collapsed -> Mission (run fails)."
 unique_name_in_owner = true
+editor_description = "Mission timer. Instability rises 0 -> 1 over collapse_time; every hazard scales with it.
+Signals: phase_changed -> Mission (big tremor), collapsed -> Mission (final collapse sequence)."
 script = ExtResource("16_clk")
 
-[node name="PressureNetwork" type="Node" parent="." node_paths=PackedStringArray("burst_zone", "burst_vent")]
-editor_description = "Coolant pressure 0-100%. Rises on its own. Gate jack and DrainPump spend it.
-Held at 100% -> line bursts -> floods burst_zone (LowerFlood) and fires BurstVent steam."
+[node name="Tremors" type="Node3D" parent="." node_paths=PackedStringArray("sun")]
 unique_name_in_owner = true
+editor_description = "How the collapse reaches you: periodic tremors (more frequent as instability rises) shake cameras, shove loose props, damage supports and shake Rubble loose. Dust children pour while shaking; lights in group facility_lights flicker."
+script = ExtResource("23_tr")
+sun = NodePath("../Environment/Sun")
+
+[node name="DustA" type="CPUParticles3D" parent="Tremors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 5.9, -9)
+emitting = false
+amount = 60
+lifetime = 2.5
+mesh = SubResource("Mesh_dust")
+emission_shape = 3
+emission_box_extents = Vector3(6, 0.1, 5)
+direction = Vector3(0, -1, 0)
+gravity = Vector3(0, -2, 0)
+initial_velocity_max = 0.5
+
+[node name="DustB" type="CPUParticles3D" parent="Tremors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 5.9, -9)
+emitting = false
+amount = 60
+lifetime = 2.5
+mesh = SubResource("Mesh_dust")
+emission_shape = 3
+emission_box_extents = Vector3(6, 0.1, 5)
+direction = Vector3(0, -1, 0)
+gravity = Vector3(0, -2, 0)
+initial_velocity_max = 0.5
+
+[node name="DustC" type="CPUParticles3D" parent="Tremors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.9, 1)
+emitting = false
+amount = 90
+lifetime = 2.5
+mesh = SubResource("Mesh_dust")
+emission_shape = 3
+emission_box_extents = Vector3(14, 0.1, 4)
+direction = Vector3(0, -1, 0)
+gravity = Vector3(0, -2, 0)
+initial_velocity_max = 0.5
+
+[node name="PressureNetwork" type="Node" parent="." node_paths=PackedStringArray("burst_zone", "burst_vent", "rattle")]
+unique_name_in_owner = true
+editor_description = "Coolant pressure 0-100%. Rises on its own. Gate jack and DrainPump spend it.
+Above warning_level the JackLine pipe rattles and the vent spits steam. Held at 100% the line bursts: a water jet from BurstVent knocks crew and cargo away and LowerFlood rises."
 script = ExtResource("17_pn")
 burst_zone = NodePath("../Water/LowerFlood")
 burst_vent = NodePath("../Piping/BurstVent")
+rattle = NodePath("../Piping/JackLine")
 
 [node name="DrainPump" type="Node" parent="." node_paths=PackedStringArray("valve", "network", "source", "target")]
 editor_description = "Valve-controlled pump: moves water from source (storage) to target (lower facility) and spends pressure.
@@ -132,14 +196,13 @@ source = NodePath("../Water/BonusFlood")
 target = NodePath("../Water/LowerFlood")
 
 [node name="IncidentLog" type="Node" parent="."]
-editor_description = "Messages to players and the incident list for the results screen.
-Signals: message / client_event -> HUD."
 unique_name_in_owner = true
+editor_description = "Incident list for the results screen. Only a few things are announced as text (lift called, crew joined); everything else you see happen."
 script = ExtResource("19_il")
 
 [node name="Toolkit" type="Node3D" parent="."]
-editor_description = "Team equipment shared by all players: the Cable children (add more to give the team more cables) and team_braces."
 unique_name_in_owner = true
+editor_description = "The team's winch cables. Add Cable children to give the team more."
 script = ExtResource("20_tk")
 
 [node name="Cable1" parent="Toolkit" instance=ExtResource("5_cab")]
@@ -149,8 +212,8 @@ script = ExtResource("20_tk")
 [node name="Cable3" parent="Toolkit" instance=ExtResource("5_cab")]
 
 [node name="Crew" type="Node3D" parent="."]
-editor_description = "Crew roster. Host spawns one player scene per connected peer into Members; PlayerSpawner copies them to every client; SpawnPoints = (re)spawn spots."
 unique_name_in_owner = true
+editor_description = "Crew roster. Host spawns one player scene per connected peer into Members; PlayerSpawner copies them to every client; SpawnPoints = (re)spawn spots."
 script = ExtResource("21_cr")
 player_scene = ExtResource("22_pl")
 
@@ -175,12 +238,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.1, 10.5)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.1, 10.5)
 
 [node name="StateSync" type="MultiplayerSynchronizer" parent="."]
-editor_description = "Replicates Mission.net_state (snapshot of every node in group 'net') from host to clients 20x per second."
-replication_interval = 0.05
+editor_description = "Replicates Mission.net_state (snapshot of every node in group 'net') from host to clients 20x per second. Uses on-change (reliable) mode because the snapshot is bigger than one unreliable packet."
+delta_interval = 0.05
 replication_config = SubResource("Repl_mission")
 
 [node name="HUD" parent="." instance=ExtResource("15_hud")]
-editor_description = "Heads-up display (scenes/ui/hud.tscn). Reads the Mission + local player each frame."
 
 [node name="Environment" type="Node3D" parent="."]
 
@@ -194,9 +256,40 @@ shadow_enabled = true
 
 [node name="OverviewCamera" type="Camera3D" parent="Environment"]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 0.808, 0.589, 0, -0.589, 0.808, 0, 16, 18)
+transform = Transform3D(1, 0, 0, 0, 0.939, 0.343, 0, -0.343, 0.939, 0, 5.5, 11.8)
 current = true
-fov = 70.0
+fov = 80.0
+
+[node name="Lights" type="Node3D" parent="Environment"]
+editor_description = "Work lights (group facility_lights). Tremors make them flicker."
+
+[node name="LampReactor" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 5.3, -10)
+light_color = Color(1, 0.9, 0.75, 1)
+light_energy = 1.6
+shadow_enabled = true
+omni_range = 13.0
+
+[node name="LampStorage" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 5.3, -10)
+light_color = Color(0.85, 0.85, 1, 1)
+light_energy = 1.4
+shadow_enabled = true
+omni_range = 13.0
+
+[node name="LampHallWest" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 4.6, 3)
+light_color = Color(1, 0.9, 0.75, 1)
+light_energy = 1.6
+shadow_enabled = true
+omni_range = 13.0
+
+[node name="LampHallEast" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 4.6, 2)
+light_color = Color(1, 0.9, 0.75, 1)
+light_energy = 1.6
+shadow_enabled = true
+omni_range = 13.0
 
 [node name="Geometry" type="Node3D" parent="."]
 editor_description = "Greybox walls/floors (CSG boxes with collision). Move or resize freely."
@@ -294,11 +387,6 @@ use_collision = true
 size = Vector3(0.6, 3.7, 1.2)
 material = SubResource("Mat_wall")
 
-[node name="CeilingBracket" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 6.05, -3.45)
-size = Vector3(0.4, 0.3, 0.6)
-material = SubResource("Mat_hazard")
-
 [node name="ManifoldPanel" type="CSGBox3D" parent="Geometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.8, 1.3, 0.25)
 use_collision = true
@@ -326,88 +414,90 @@ font_size = 40
 outline_size = 10
 text = "CRAWLWAY"
 
+[node name="CeilingMain" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.2, -5.25)
+use_collision = true
+size = Vector3(34, 0.4, 23.5)
+material = SubResource("Mat_ceiling")
+
+[node name="CeilingSouthWest" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 6.2, 9.75)
+use_collision = true
+size = Vector3(12, 0.4, 6.5)
+material = SubResource("Mat_ceiling")
+
+[node name="CeilingSouthEast" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 6.2, 9.75)
+use_collision = true
+size = Vector3(12, 0.4, 6.5)
+material = SubResource("Mat_ceiling")
+
 [node name="Piping" type="Node3D" parent="."]
-editor_description = "Visual pipes + BurstVent steam (turned on by PressureNetwork during a burst)."
 
 [node name="JackLine" type="MeshInstance3D" parent="Piping"]
 transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 2.1, 4.8, -3.55)
 mesh = SubResource("Mesh_pipe")
 
 [node name="BurstVent" type="CPUParticles3D" parent="Piping"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 4.8, -3.55)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3, -3.55)
 emitting = false
 amount = 80
 lifetime = 1.2
 mesh = SubResource("Mesh_steam")
-direction = Vector3(0, -0.4, 1)
-spread = 25.0
-initial_velocity_min = 4.0
-initial_velocity_max = 7.0
+direction = Vector3(0, -0.25, 1)
+spread = 15.0
+initial_velocity_min = 6.0
+initial_velocity_max = 10.0
 gravity = Vector3(0, -3, 0)
 scale_amount_min = 0.6
 scale_amount_max = 2.5
 
 [node name="Gate" parent="." node_paths=PackedStringArray("jack_valve", "pressure_network") instance=ExtResource("2_gate")]
-editor_description = "Jammed reactor gate. Lifted by cable force + hydraulic jack (jack_valve x pressure_network), pulled down by its weight.
-Can be braced at its BraceSocket. frame_failed() is called by SupportGateFrame.failed."
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, -4)
 jack_valve = NodePath("../Manifold/JackValve")
 pressure_network = NodePath("../PressureNetwork")
 
 [node name="Supports" type="Node3D" parent="."]
-editor_description = "Structural supports: STABLE -> STRAINED -> CRITICAL -> FAILED over time and under cable load on their anchors.
-See each support's 'failed' signal in Node > Signals for what breaks next."
+editor_description = "Structural supports: STABLE -> STRAINED -> CRITICAL -> FAILED over time, tremors, and the tension of cables hooked to their structure (column, header, beam).
+See each support's 'failed' signal in Node > Signals for what comes down with it."
 
 [node name="SupportGateFrame" parent="Supports" instance=ExtResource("3_sup")]
-editor_description = "Holds the gate frame. Strained by cables on AnchorGateCeiling.
-failed -> Gate.frame_failed (jack offline, gate drops unless braced)."
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 0, -3.25)
+editor_description = "Holds the gate frame. Its structure includes the FrameHeader over the gate (the tempting place to winch the gate up from).
+failed -> Gate.frame_failed (jack offline) and FrameHeader.wake (it falls)."
 display_name = "Gate frame"
+topple_direction = Vector3(0.3, 0, 1)
+
+[node name="FrameHeader" parent="Supports/SupportGateFrame" instance=ExtResource("26_hdr")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.7, 4.65, -0.2)
 
 [node name="SupportGantry" parent="Supports" instance=ExtResource("3_sup")]
-editor_description = "Holds the overhead gantry. Strained by cables on GantryBeam/AnchorGantry.
-failed -> GantryBeam.wake (180 kg beam falls into the hall)."
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0, 1)
+editor_description = "Holds the overhead gantry. Its structure includes the GantryBeam (a tempting overhead pull point).
+failed -> GantryBeam.wake (180 kg beam falls across the hall)."
 display_name = "Gantry strut"
+topple_direction = Vector3(1, 0, 0.2)
 
-[node name="GantryBeam" parent="." instance=ExtResource("11_beam")]
-editor_description = "Dormant debris (frozen) until SupportGantry fails and calls wake(). Carries a tempting overhead anchor."
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 5.25, 1)
+[node name="GantryBeam" parent="Supports/SupportGantry" instance=ExtResource("11_beam")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.7, 5.25, 0)
 
-[node name="AnchorGantry" parent="GantryBeam" instance=ExtResource("4_anc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, -0.45, 0)
-display_name = "Gantry"
-support_path = NodePath("../../Supports/SupportGantry")
-show_post = false
+[node name="Bollards" type="Node3D" parent="."]
+editor_description = "Solid floor posts: reliable tie-offs that never fail. Not required: the winch hooks to any surface."
 
-[node name="Anchors" type="Node3D" parent="."]
-editor_description = "Cable end points. support_path = which Support a cable here strains (empty = safe floor bollard)."
-
-[node name="AnchorGateCeiling" parent="Anchors" instance=ExtResource("4_anc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 5.8, -3.2)
-display_name = "Gate ceiling"
-support_path = NodePath("../../Supports/SupportGateFrame")
-show_post = false
-
-[node name="AnchorHall" parent="Anchors" instance=ExtResource("4_anc")]
+[node name="BollardHall" parent="Bollards" instance=ExtResource("4_bol")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, 4.5)
-display_name = "Hall bollard"
 
-[node name="AnchorLiftWest" parent="Anchors" instance=ExtResource("4_anc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0, 11.4)
-display_name = "Lift bollard W"
+[node name="BollardLiftWest" parent="Bollards" instance=ExtResource("4_bol")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.6, 0, 11.4)
 
-[node name="AnchorLiftEast" parent="Anchors" instance=ExtResource("4_anc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 11.4)
-display_name = "Lift bollard E"
+[node name="BollardLiftEast" parent="Bollards" instance=ExtResource("4_bol")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.6, 0, 11.4)
 
-[node name="AnchorStorage" parent="Anchors" instance=ExtResource("4_anc")]
+[node name="BollardStorage" parent="Bollards" instance=ExtResource("4_bol")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0, -6)
-display_name = "Storage bollard"
 
-[node name="AnchorReactor" parent="Anchors" instance=ExtResource("4_anc")]
+[node name="BollardReactor" parent="Bollards" instance=ExtResource("4_bol")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 0, -6.5)
-display_name = "Reactor bollard"
 
 [node name="Manifold" type="Node3D" parent="."]
 editor_description = "Pressure manifold: JackValve (feeds the Gate jack) and DrainValve (feeds the DrainPump). Turned with the Pressure tool."
@@ -431,8 +521,7 @@ outline_size = 12
 text = "PRESSURE MANIFOLD"
 
 [node name="Cargo" type="Node3D" parent="."]
-editor_description = "Physics props (Prop.gd). role: primary (must extract), optional (bonus), salvage, debris.
-Simulated on the host only; clients see frozen, interpolated copies."
+editor_description = "Things worth money. role: primary (must extract), optional (bonus), salvage. All plain physics props: grab, drag, throw, winch or blast them."
 
 [node name="ReactorCore" parent="Cargo" instance=ExtResource("8_core")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.85, -11)
@@ -448,6 +537,54 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0.4, -7)
 
 [node name="SalvageHall" parent="Cargo" instance=ExtResource("10_crate")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.4, 4)
+
+[node name="Equipment" type="Node3D" parent="."]
+editor_description = "Physical gear lying in the bay: brace posts (wedge under the gate or next to a support) and a low-friction skid sled."
+
+[node name="Brace1" parent="Equipment" instance=ExtResource("24_brace")]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 9, 0.12, 9.6)
+
+[node name="Brace2" parent="Equipment" instance=ExtResource("24_brace")]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 9, 0.12, 10.2)
+
+[node name="Brace3" parent="Equipment" instance=ExtResource("24_brace")]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 9, 0.12, 10.8)
+
+[node name="SkidSled" parent="Equipment" instance=ExtResource("27_sled")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.08, 3.5)
+
+[node name="Rubble" type="Node3D" parent="."]
+editor_description = "Chunks of ceiling (group 'rubble'), dormant until tremors shake them loose. Move them to decide where danger falls."
+
+[node name="RubbleHallA" parent="Rubble" instance=ExtResource("25_rub")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 5.77, 3)
+
+[node name="RubbleHallB" parent="Rubble" instance=ExtResource("25_rub")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 5.77, 3.5)
+
+[node name="RubbleHallC" parent="Rubble" instance=ExtResource("25_rub")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 5.77, -1.5)
+
+[node name="RubbleHallD" parent="Rubble" instance=ExtResource("25_rub")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 5.77, 3)
+
+[node name="RubbleHallE" parent="Rubble" instance=ExtResource("25_rub")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 5.77, -2)
+
+[node name="RubbleReactorA" parent="Rubble" instance=ExtResource("25_rub")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 5.77, -9)
+
+[node name="RubbleReactorB" parent="Rubble" instance=ExtResource("25_rub")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 5.77, -13)
+
+[node name="RubbleReactorC" parent="Rubble" instance=ExtResource("25_rub")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 5.77, -7)
+
+[node name="RubbleStorageA" parent="Rubble" instance=ExtResource("25_rub")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 5.77, -10)
+
+[node name="RubbleStorageB" parent="Rubble" instance=ExtResource("25_rub")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 5.77, -13)
 
 [node name="Water" type="Node3D" parent="."]
 editor_description = "Flood zones. Each FloodZone has one water level shared by its FloodVolume children.
@@ -482,19 +619,26 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.15, 0, -10.15)
 size = Vector2(15.7, 11.7)
 
 [node name="Extraction" type="Node3D" parent="."]
-editor_description = "Lift pad. ExtractionLever toggles ExtractionZone's countdown; ExtractionZone.departed -> Mission ends the run."
+editor_description = "The lift. ExtractionLever toggles the countdown; then ExtractionZone/Platform physically rises out of the shaft carrying whatever stands on it. ExtractionZone.departed -> Mission ends the run."
 
 [node name="ExtractionZone" type="Node3D" parent="Extraction"]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9)
 script = ExtResource("14_ez")
 
-[node name="Pad" type="MeshInstance3D" parent="Extraction/ExtractionZone"]
+[node name="Platform" type="AnimatableBody3D" parent="Extraction/ExtractionZone"]
+editor_description = "The lift deck: a moving physics body. Crew and cargo standing on it ride up when it rises."
+
+[node name="Shape" type="CollisionShape3D" parent="Extraction/ExtractionZone/Platform"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.13, 0)
+shape = SubResource("Shape_platform")
+
+[node name="Pad" type="MeshInstance3D" parent="Extraction/ExtractionZone/Platform"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
 cast_shadow = 0
 mesh = SubResource("Mesh_pad")
 
-[node name="Label" type="Label3D" parent="Extraction/ExtractionZone"]
+[node name="Label" type="Label3D" parent="Extraction/ExtractionZone/Platform"]
 transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.06, 0)
 modulate = Color(0.4, 1, 0.55, 0.8)
 font_size = 160
@@ -510,23 +654,18 @@ zone = NodePath("../ExtractionZone")
 [connection signal="message" from="IncidentLog" to="HUD" method="_on_message"]
 [connection signal="client_event" from="IncidentLog" to="HUD" method="_on_client_event"]
 [connection signal="failed" from="Supports/SupportGateFrame" to="Gate" method="frame_failed"]
-[connection signal="failed" from="Supports/SupportGantry" to="GantryBeam" method="wake"]
+[connection signal="failed" from="Supports/SupportGateFrame" to="Supports/SupportGateFrame/FrameHeader" method="wake"]
+[connection signal="failed" from="Supports/SupportGantry" to="Supports/SupportGantry/GantryBeam" method="wake"]
 [connection signal="departed" from="Extraction/ExtractionZone" to="." method="_on_lift_departed"]
 
 [editable path="Gate"]
 [editable path="Supports/SupportGateFrame"]
 [editable path="Supports/SupportGantry"]
-[editable path="GantryBeam"]
-[editable path="GantryBeam/AnchorGantry"]
-[editable path="Anchors/AnchorGateCeiling"]
-[editable path="Anchors/AnchorHall"]
-[editable path="Manifold/JackValve"]
-[editable path="Manifold/DrainValve"]
 [editable path="Cargo/ReactorCore"]
 [editable path="Cargo/BonusContainer"]
+[editable path="Manifold/JackValve"]
+[editable path="Manifold/DrainValve"]
 [editable path="Extraction/ExtractionLever"]
 [editable path="Toolkit/Cable1"]
-[editable path="Water/LowerFlood/ReactorWater"]
-[editable path="Water/LowerFlood/HallWater"]
-[editable path="Water/BonusFlood/StorageWater"]
+[editable path="Equipment/Brace1"]
 [editable path="HUD"]

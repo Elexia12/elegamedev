@@ -1,7 +1,6 @@
 [gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/prop.gd" id="1_pr"]
-[ext_resource type="PackedScene" path="res://scenes/components/interact_point.tscn" id="2_ip"]
 
 [sub_resource type="PhysicsMaterial" id="Phys_core"]
 friction = 0.35
@@ -36,7 +35,7 @@ size = Vector3(1.64, 0.12, 1.64)
 
 [node name="ReactorCore" type="RigidBody3D"]
 collision_layer = 4
-collision_mask = 7
+collision_mask = 23
 mass = 300.0
 physics_material_override = SubResource("Phys_core")
 linear_damp = 0.3
@@ -59,12 +58,6 @@ mesh = SubResource("Mesh_glow")
 
 [node name="Band" type="MeshInstance3D" parent="."]
 mesh = SubResource("Mesh_band")
-
-[node name="HookSouth" parent="." instance=ExtResource("2_ip")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0.9)
-
-[node name="HookNorth" parent="." instance=ExtResource("2_ip")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, -0.9)
 
 [node name="Label" type="Label3D" parent="."]
 billboard = 1

@@ -1,8 +1,9 @@
 class_name IncidentLog
 extends Node
-## Everything players hear about. Broadcasts reach every peer, toasts reach one
-## player, and incidents are kept for the results screen. The HUD listens to the
-## signals.
+## Keeps the incident list for the results screen and carries the few
+## messages that can't be shown physically (who called the lift, who joined).
+## Most events are not announced: you see the column fall, you don't read
+## about it. The HUD listens to the signals.
 
 ## Shown to every player (kinds: info, warn, alert, phase).
 signal message(text: String, kind: String)
@@ -18,10 +19,9 @@ func _ready() -> void:
 	mission = Mission.of(self)
 
 
-## Host: record a major incident and tell everyone.
+## Host: record a major incident for the results screen (not announced).
 func incident(text: String) -> void:
 	incidents.append("%s  %s" % [mission.clock.stamp(), text])
-	broadcast(text, "alert")
 
 
 ## Host: message every player.
@@ -31,7 +31,8 @@ func broadcast(text: String, kind: String) -> void:
 
 ## Host: private message to one player.
 func tell(peer_id: int, text: String) -> void:
-	_notify.rpc_id(peer_id, "toast", text)
+	if text != "":
+		_notify.rpc_id(peer_id, "toast", text)
 
 
 ## Host: tell a player their grab was dropped.

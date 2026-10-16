@@ -36,22 +36,23 @@ func _process(delta: float) -> bool:
 		_did_host_winch = true
 		var me := m.crew.local_member()
 		me.global_position = Vector3(-13.5, 0.05, -8.0)
-		m.request("winch_attach", "Cargo/ReactorCore/HookNorth", "Anchors/AnchorReactor/Point", Vector3.ZERO, 0.0)
-		var c := m.toolkit.cable_at(m.get_node("Anchors/AnchorReactor/Point"))
-		if c:
+		m.tremors._next = 9999.0
+		m.request("winch_attach", "Cargo/ReactorCore", "", Vector3(-0.8, 0.0, -0.8), 0.0, Vector3(-15.9, 1.0, -6.5))
+		var c := m.toolkit.cables()[0]
+		if c.active:
 			c.reel = 1
-		print("[host] winch attached: ", c != null)
+		print("[host] winch attached: ", c.active)
 	if role == "client" and not _did_client_request and t > 4.0 and m.crew.local_member() != null:
 		_did_client_request = true
 		m.send("valve", "Manifold/DrainValve/Point", "", Vector3(0.5, 0, 0))
 		print("[client] sent drain valve request")
 	if t > RUN_SECONDS + (3.0 if role == "host" else 0.0):
 		var core := m.get_node("Cargo/ReactorCore") as Prop
-		var cable := m.toolkit.cable_at(m.get_node("Anchors/AnchorReactor/Point"))
+		var cable := m.toolkit.cables()[0].active
 		print("[%s] peers=%d crew=%d core=(%.2f, %.2f, %.2f) drain=%.2f cable=%s pressure=%.1f elapsed=%.1f" % [
 			role, root.multiplayer.get_peers().size(), m.crew.members().size(),
 			core.global_position.x, core.global_position.y, core.global_position.z,
-			(m.get_node("Manifold/DrainValve") as Valve).opening, cable != null, m.pressure_network.pressure, m.clock.elapsed])
+			(m.get_node("Manifold/DrainValve") as Valve).opening, cable, m.pressure_network.pressure, m.clock.elapsed])
 		root.get_node("Net").leave()
 		return true
 	return false

@@ -1,7 +1,13 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/support.gd" id="1_su"]
-[ext_resource type="PackedScene" path="res://scenes/components/brace_socket.tscn" id="2_bs"]
+[ext_resource type="Script" path="res://scripts/facility/prop.gd" id="2_pr"]
+
+[sub_resource type="PhysicsMaterial" id="Phys_col"]
+friction = 0.7
+
+[sub_resource type="BoxShape3D" id="Shape_col"]
+size = Vector3(0.6, 5, 0.6)
 
 [sub_resource type="StandardMaterial3D" id="Mat_col"]
 albedo_color = Color(0.35, 0.8, 0.4, 1)
@@ -12,21 +18,58 @@ roughness = 0.6
 material = SubResource("Mat_col")
 size = Vector3(0.6, 5, 0.6)
 
-[sub_resource type="BoxShape3D" id="Shape_col"]
-size = Vector3(0.6, 5, 0.6)
+[sub_resource type="BoxShape3D" id="Shape_zone"]
+size = Vector3(2, 3, 2)
+
+[sub_resource type="StandardMaterial3D" id="Mat_pad"]
+albedo_color = Color(1, 0.45, 0.1, 1)
+emission_enabled = true
+emission = Color(0.4, 0.15, 0.02, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_pad"]
+material = SubResource("Mat_pad")
+size = Vector3(1.4, 0.02, 1.4)
 
 [node name="Support" type="Node3D"]
+editor_description = "Structural support. Everything under this node is its structure: cables hooked to any of it strain it. A Brace standing in BraceZone props it up. On failure the Column (a dormant Prop) topples and 'failed' fires."
 script = ExtResource("1_su")
 
-[node name="Column" type="StaticBody3D" parent="."]
+[node name="Column" type="RigidBody3D" parent="."]
+collision_layer = 4
+collision_mask = 23
+mass = 400.0
+physics_material_override = SubResource("Phys_col")
+angular_damp = 0.5
+script = ExtResource("2_pr")
+display_name = "Support column"
+role = "debris"
+buoyancy = 0.2
+height = 5.0
+dormant = true
+hit_speed = 2.5
+
+[node name="Shape" type="CollisionShape3D" parent="Column"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+shape = SubResource("Shape_col")
 
 [node name="Mesh" type="MeshInstance3D" parent="Column"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 mesh = SubResource("Mesh_col")
 
-[node name="Shape" type="CollisionShape3D" parent="Column"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
-shape = SubResource("Shape_col")
+[node name="BraceZone" type="Area3D" parent="."]
+editor_description = "Stand a Brace post upright in here (next to the column) to prop the support up."
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0.9)
+collision_layer = 0
+collision_mask = 4
+monitorable = false
+
+[node name="Shape" type="CollisionShape3D" parent="BraceZone"]
+shape = SubResource("Shape_zone")
+
+[node name="BracePad" type="MeshInstance3D" parent="."]
+editor_description = "Orange floor marking: where a brace post does its job."
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0.9)
+mesh = SubResource("Mesh_pad")
 
 [node name="Label" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0.45)
@@ -34,7 +77,3 @@ billboard = 1
 font_size = 40
 outline_size = 10
 text = "SUPPORT"
-
-[node name="BraceSocket" parent="." instance=ExtResource("2_bs")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.75)
-target_path = NodePath("..")

@@ -1,7 +1,6 @@
 [gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/prop.gd" id="1_pr"]
-[ext_resource type="PackedScene" path="res://scenes/components/interact_point.tscn" id="2_ip"]
 
 [sub_resource type="PhysicsMaterial" id="Phys_beam"]
 friction = 0.6
@@ -20,7 +19,7 @@ size = Vector3(16, 0.5, 0.5)
 
 [node name="GantryBeam" type="RigidBody3D"]
 collision_layer = 4
-collision_mask = 7
+collision_mask = 23
 mass = 180.0
 physics_material_override = SubResource("Phys_beam")
 angular_damp = 1.0
@@ -36,6 +35,3 @@ shape = SubResource("Shape_beam")
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 mesh = SubResource("Mesh_beam")
-
-[node name="Hook" parent="." instance=ExtResource("2_ip")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0.35)
