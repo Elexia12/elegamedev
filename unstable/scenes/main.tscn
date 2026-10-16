@@ -7,16 +7,22 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="5_pause"]
 
 [node name="Main" type="Node"]
+editor_description = "GAME ENTRY. Menu -> solo/host/join -> mission -> results -> restart.
+The level (flooded_reactor.tscn) is added under World at runtime, so open that scene to see the facility."
 script = ExtResource("1_main")
 mission_scene = ExtResource("2_level")
 
 [node name="World" type="Node3D" parent="."]
+editor_description = "Empty in the editor on purpose: the host adds the level here at runtime and MissionSpawner copies it to clients.
+Open scenes/facility/flooded_reactor.tscn to see it."
 
 [node name="MissionSpawner" type="MultiplayerSpawner" parent="."]
+editor_description = "Replicates the level spawned under World to every client (including late joiners)."
 _spawnable_scenes = PackedStringArray("res://scenes/facility/flooded_reactor.tscn")
 spawn_path = NodePath("../World")
 
 [node name="UI" type="CanvasLayer" parent="."]
+editor_description = "Menu screens. Their buttons emit signals connected to Main (see Node > Signals)."
 layer = 10
 
 [node name="MainMenu" parent="UI" instance=ExtResource("3_menu")]
@@ -38,3 +44,7 @@ unique_name_in_owner = true
 [connection signal="resume_requested" from="UI/PauseMenu" to="." method="resume"]
 [connection signal="restart_requested" from="UI/PauseMenu" to="." method="start_mission"]
 [connection signal="leave_requested" from="UI/PauseMenu" to="." method="leave"]
+
+[editable path="UI/MainMenu"]
+[editable path="UI/ResultsScreen"]
+[editable path="UI/PauseMenu"]

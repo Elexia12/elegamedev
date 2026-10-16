@@ -44,6 +44,8 @@ properties/4/spawn = true
 properties/4/replication_mode = 2
 
 [node name="Player" type="CharacterBody3D"]
+editor_description = "ONE CREW MEMBER (CrewMember). Movement, mouse look, aiming and input routing.
+The owning player moves it; every effect on the facility is sent to the host via Mission.send()."
 collision_layer = 2
 collision_mask = 5
 script = ExtResource("1_cm")
@@ -71,12 +73,14 @@ fov = 80.0
 near = 0.08
 
 [node name="InteractRay" type="RayCast3D" parent="Head/Camera3D"]
+editor_description = "Finds InteractPoints (hooks, anchors, braces, valves, lever) up to 6 m. Only collides with the interact layer."
 target_position = Vector3(0, 0, -6)
 collision_mask = 8
 collide_with_areas = true
 collide_with_bodies = false
 
 [node name="GrabRay" type="RayCast3D" parent="Head/Camera3D"]
+editor_description = "Finds props to grab (4 m) and walls that block interaction."
 target_position = Vector3(0, 0, -4)
 collision_mask = 5
 
@@ -92,8 +96,10 @@ outline_size = 10
 text = "Crew"
 
 [node name="Tools" type="Node" parent="."]
+editor_description = "The three hand tools. Child order = hotkeys 1-3. Each extends CrewTool."
 
 [node name="Winch" type="Node" parent="Tools"]
+editor_description = "WinchTool: LMB hook then LMB anchor rigs a cable; hold LMB/RMB on either end to reel."
 script = ExtResource("2_wt")
 display_name = "WINCH"
 color = Color(1, 0.78, 0.1, 1)
@@ -101,6 +107,7 @@ model_size = Vector3(0.1, 0.1, 0.3)
 handles = PackedStringArray("hook", "anchor")
 
 [node name="Brace" type="Node" parent="Tools"]
+editor_description = "BraceTool: LMB places a team brace on a BraceSocket; RMB recovers it."
 script = ExtResource("3_bt")
 display_name = "BRACE"
 color = Color(1, 0.45, 0.1, 1)
@@ -108,6 +115,7 @@ model_size = Vector3(0.05, 0.05, 0.5)
 handles = PackedStringArray("brace")
 
 [node name="Pressure" type="Node" parent="Tools"]
+editor_description = "PressureTool: LMB/RMB turns valves; elsewhere, hold to blast/pull loose props."
 script = ExtResource("4_pt")
 display_name = "PRESSURE"
 color = Color(0.2, 0.85, 1, 1)
@@ -115,12 +123,15 @@ model_size = Vector3(0.08, 0.08, 0.4)
 handles = PackedStringArray("valve")
 
 [node name="Hands" type="Node" parent="."]
+editor_description = "Grabbing with E. grab_force caps what one person can move: the 300 kg core needs two people (or the winch)."
 script = ExtResource("5_ha")
 
 [node name="Vitals" type="Node" parent="."]
+editor_description = "Breath and knockouts. Signals: knocked_out / recovered -> Player."
 script = ExtResource("6_vi")
 
 [node name="Sync" type="MultiplayerSynchronizer" parent="."]
+editor_description = "Replicates this player's position, rotation, aim, selected tool and knocked state from its owner to everyone."
 replication_config = SubResource("Repl_player")
 
 [connection signal="knocked_out" from="Vitals" to="." method="_on_knocked_out"]

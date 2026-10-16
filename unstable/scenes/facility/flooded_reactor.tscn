@@ -103,19 +103,28 @@ properties/0/spawn = true
 properties/0/replication_mode = 1
 
 [node name="FloodedReactor" type="Node3D"]
+editor_description = "LEVEL ROOT (Mission).
+Only 3 jobs: receive player actions (request), decide the outcome when the lift leaves or the facility collapses, and pack all 'net' nodes into one snapshot for clients.
+Every system below is its own child node."
 script = ExtResource("1_mi")
 
 [node name="MissionClock" type="Node" parent="."]
+editor_description = "Mission timer. Instability rises 0 -> 1 over collapse_time; every hazard scales with it.
+Signals: phase_changed -> Mission (phase banner), collapsed -> Mission (run fails)."
 unique_name_in_owner = true
 script = ExtResource("16_clk")
 
 [node name="PressureNetwork" type="Node" parent="." node_paths=PackedStringArray("burst_zone", "burst_vent")]
+editor_description = "Coolant pressure 0-100%. Rises on its own. Gate jack and DrainPump spend it.
+Held at 100% -> line bursts -> floods burst_zone (LowerFlood) and fires BurstVent steam."
 unique_name_in_owner = true
 script = ExtResource("17_pn")
 burst_zone = NodePath("../Water/LowerFlood")
 burst_vent = NodePath("../Piping/BurstVent")
 
 [node name="DrainPump" type="Node" parent="." node_paths=PackedStringArray("valve", "network", "source", "target")]
+editor_description = "Valve-controlled pump: moves water from source (storage) to target (lower facility) and spends pressure.
+The trade-off: protect the bonus cargo, flood the main hall."
 script = ExtResource("18_dp")
 valve = NodePath("../Manifold/DrainValve")
 network = NodePath("../PressureNetwork")
@@ -123,10 +132,13 @@ source = NodePath("../Water/BonusFlood")
 target = NodePath("../Water/LowerFlood")
 
 [node name="IncidentLog" type="Node" parent="."]
+editor_description = "Messages to players and the incident list for the results screen.
+Signals: message / client_event -> HUD."
 unique_name_in_owner = true
 script = ExtResource("19_il")
 
 [node name="Toolkit" type="Node3D" parent="."]
+editor_description = "Team equipment shared by all players: the Cable children (add more to give the team more cables) and team_braces."
 unique_name_in_owner = true
 script = ExtResource("20_tk")
 
@@ -137,6 +149,7 @@ script = ExtResource("20_tk")
 [node name="Cable3" parent="Toolkit" instance=ExtResource("5_cab")]
 
 [node name="Crew" type="Node3D" parent="."]
+editor_description = "Crew roster. Host spawns one player scene per connected peer into Members; PlayerSpawner copies them to every client; SpawnPoints = (re)spawn spots."
 unique_name_in_owner = true
 script = ExtResource("21_cr")
 player_scene = ExtResource("22_pl")
@@ -162,10 +175,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.1, 10.5)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.1, 10.5)
 
 [node name="StateSync" type="MultiplayerSynchronizer" parent="."]
+editor_description = "Replicates Mission.net_state (snapshot of every node in group 'net') from host to clients 20x per second."
 replication_interval = 0.05
 replication_config = SubResource("Repl_mission")
 
 [node name="HUD" parent="." instance=ExtResource("15_hud")]
+editor_description = "Heads-up display (scenes/ui/hud.tscn). Reads the Mission + local player each frame."
 
 [node name="Environment" type="Node3D" parent="."]
 
@@ -184,6 +199,7 @@ current = true
 fov = 70.0
 
 [node name="Geometry" type="Node3D" parent="."]
+editor_description = "Greybox walls/floors (CSG boxes with collision). Move or resize freely."
 
 [node name="Floor" type="CSGBox3D" parent="Geometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -2)
@@ -311,6 +327,7 @@ outline_size = 10
 text = "CRAWLWAY"
 
 [node name="Piping" type="Node3D" parent="."]
+editor_description = "Visual pipes + BurstVent steam (turned on by PressureNetwork during a burst)."
 
 [node name="JackLine" type="MeshInstance3D" parent="Piping"]
 transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 2.1, 4.8, -3.55)
@@ -331,21 +348,30 @@ scale_amount_min = 0.6
 scale_amount_max = 2.5
 
 [node name="Gate" parent="." node_paths=PackedStringArray("jack_valve", "pressure_network") instance=ExtResource("2_gate")]
+editor_description = "Jammed reactor gate. Lifted by cable force + hydraulic jack (jack_valve x pressure_network), pulled down by its weight.
+Can be braced at its BraceSocket. frame_failed() is called by SupportGateFrame.failed."
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, -4)
 jack_valve = NodePath("../Manifold/JackValve")
 pressure_network = NodePath("../PressureNetwork")
 
 [node name="Supports" type="Node3D" parent="."]
+editor_description = "Structural supports: STABLE -> STRAINED -> CRITICAL -> FAILED over time and under cable load on their anchors.
+See each support's 'failed' signal in Node > Signals for what breaks next."
 
 [node name="SupportGateFrame" parent="Supports" instance=ExtResource("3_sup")]
+editor_description = "Holds the gate frame. Strained by cables on AnchorGateCeiling.
+failed -> Gate.frame_failed (jack offline, gate drops unless braced)."
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 0, -3.25)
 display_name = "Gate frame"
 
 [node name="SupportGantry" parent="Supports" instance=ExtResource("3_sup")]
+editor_description = "Holds the overhead gantry. Strained by cables on GantryBeam/AnchorGantry.
+failed -> GantryBeam.wake (180 kg beam falls into the hall)."
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0, 1)
 display_name = "Gantry strut"
 
 [node name="GantryBeam" parent="." instance=ExtResource("11_beam")]
+editor_description = "Dormant debris (frozen) until SupportGantry fails and calls wake(). Carries a tempting overhead anchor."
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 5.25, 1)
 
 [node name="AnchorGantry" parent="GantryBeam" instance=ExtResource("4_anc")]
@@ -355,6 +381,7 @@ support_path = NodePath("../../Supports/SupportGantry")
 show_post = false
 
 [node name="Anchors" type="Node3D" parent="."]
+editor_description = "Cable end points. support_path = which Support a cable here strains (empty = safe floor bollard)."
 
 [node name="AnchorGateCeiling" parent="Anchors" instance=ExtResource("4_anc")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 5.8, -3.2)
@@ -383,6 +410,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 0, -6.5)
 display_name = "Reactor bollard"
 
 [node name="Manifold" type="Node3D" parent="."]
+editor_description = "Pressure manifold: JackValve (feeds the Gate jack) and DrainValve (feeds the DrainPump). Turned with the Pressure tool."
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.6, 0, 0.25)
 
 [node name="JackValve" parent="Manifold" instance=ExtResource("6_val")]
@@ -403,6 +431,8 @@ outline_size = 12
 text = "PRESSURE MANIFOLD"
 
 [node name="Cargo" type="Node3D" parent="."]
+editor_description = "Physics props (Prop.gd). role: primary (must extract), optional (bonus), salvage, debris.
+Simulated on the host only; clients see frozen, interpolated copies."
 
 [node name="ReactorCore" parent="Cargo" instance=ExtResource("8_core")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.85, -11)
@@ -420,6 +450,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0.4, -7)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.4, 4)
 
 [node name="Water" type="Node3D" parent="."]
+editor_description = "Flood zones. Each FloodZone has one water level shared by its FloodVolume children.
+Try changing 'level' in the Inspector to preview water in the editor."
 
 [node name="LowerFlood" type="Node3D" parent="Water"]
 unique_name_in_owner = true
@@ -450,6 +482,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.15, 0, -10.15)
 size = Vector2(15.7, 11.7)
 
 [node name="Extraction" type="Node3D" parent="."]
+editor_description = "Lift pad. ExtractionLever toggles ExtractionZone's countdown; ExtractionZone.departed -> Mission ends the run."
 
 [node name="ExtractionZone" type="Node3D" parent="Extraction"]
 unique_name_in_owner = true
@@ -479,3 +512,21 @@ zone = NodePath("../ExtractionZone")
 [connection signal="failed" from="Supports/SupportGateFrame" to="Gate" method="frame_failed"]
 [connection signal="failed" from="Supports/SupportGantry" to="GantryBeam" method="wake"]
 [connection signal="departed" from="Extraction/ExtractionZone" to="." method="_on_lift_departed"]
+
+[editable path="Gate"]
+[editable path="Supports/SupportGateFrame"]
+[editable path="Supports/SupportGantry"]
+[editable path="GantryBeam"]
+[editable path="GantryBeam/AnchorGantry"]
+[editable path="Anchors/AnchorGateCeiling"]
+[editable path="Anchors/AnchorHall"]
+[editable path="Manifold/JackValve"]
+[editable path="Manifold/DrainValve"]
+[editable path="Cargo/ReactorCore"]
+[editable path="Cargo/BonusContainer"]
+[editable path="Extraction/ExtractionLever"]
+[editable path="Toolkit/Cable1"]
+[editable path="Water/LowerFlood/ReactorWater"]
+[editable path="Water/LowerFlood/HallWater"]
+[editable path="Water/BonusFlood/StorageWater"]
+[editable path="HUD"]
