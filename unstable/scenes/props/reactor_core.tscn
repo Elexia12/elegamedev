@@ -1,0 +1,74 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/facility/prop.gd" id="1_pr"]
+[ext_resource type="PackedScene" path="res://scenes/components/interact_point.tscn" id="2_ip"]
+
+[sub_resource type="PhysicsMaterial" id="Phys_core"]
+friction = 0.35
+
+[sub_resource type="BoxShape3D" id="Shape_core"]
+size = Vector3(1.6, 1.6, 1.6)
+
+[sub_resource type="StandardMaterial3D" id="Mat_shell"]
+albedo_color = Color(0.3, 0.36, 0.4, 1)
+metallic = 0.7
+roughness = 0.35
+
+[sub_resource type="BoxMesh" id="Mesh_shell"]
+material = SubResource("Mat_shell")
+size = Vector3(1.6, 1.6, 1.6)
+
+[sub_resource type="StandardMaterial3D" id="Mat_glow"]
+albedo_color = Color(0.2, 1, 0.85, 1)
+emission_enabled = true
+emission = Color(0.1, 0.9, 0.7, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="CylinderMesh" id="Mesh_glow"]
+material = SubResource("Mat_glow")
+top_radius = 0.5
+bottom_radius = 0.5
+height = 1.64
+
+[sub_resource type="BoxMesh" id="Mesh_band"]
+material = SubResource("Mat_glow")
+size = Vector3(1.64, 0.12, 1.64)
+
+[node name="ReactorCore" type="RigidBody3D"]
+collision_layer = 4
+collision_mask = 7
+mass = 300.0
+physics_material_override = SubResource("Phys_core")
+linear_damp = 0.3
+angular_damp = 1.5
+script = ExtResource("1_pr")
+display_name = "Reactor core"
+value = 5000
+role = "primary"
+buoyancy = 0.25
+height = 1.6
+
+[node name="Shape" type="CollisionShape3D" parent="."]
+shape = SubResource("Shape_core")
+
+[node name="Shell" type="MeshInstance3D" parent="."]
+mesh = SubResource("Mesh_shell")
+
+[node name="Glow" type="MeshInstance3D" parent="."]
+mesh = SubResource("Mesh_glow")
+
+[node name="Band" type="MeshInstance3D" parent="."]
+mesh = SubResource("Mesh_band")
+
+[node name="HookSouth" parent="." instance=ExtResource("2_ip")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0.9)
+
+[node name="HookNorth" parent="." instance=ExtResource("2_ip")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, -0.9)
+
+[node name="Label" type="Label3D" parent="."]
+billboard = 1
+modulate = Color(0.6, 1, 0.9, 1)
+font_size = 44
+outline_size = 12
+text = "REACTOR CORE"

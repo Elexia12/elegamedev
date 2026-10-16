@@ -1,0 +1,54 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/facility/extraction_lever.gd" id="1_lv"]
+[ext_resource type="PackedScene" path="res://scenes/components/interact_point.tscn" id="2_ip"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_base"]
+albedo_color = Color(0.25, 0.3, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_base"]
+material = SubResource("Mat_base")
+size = Vector3(0.6, 1, 0.5)
+
+[sub_resource type="BoxShape3D" id="Shape_base"]
+size = Vector3(0.6, 1, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="Mat_handle"]
+albedo_color = Color(0.3, 1, 0.4, 1)
+emission_enabled = true
+emission = Color(0.1, 0.4, 0.15, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_handle"]
+material = SubResource("Mat_handle")
+size = Vector3(0.08, 0.7, 0.08)
+
+[node name="ExtractionLever" type="Node3D"]
+script = ExtResource("1_lv")
+
+[node name="Base" type="StaticBody3D" parent="."]
+
+[node name="Mesh" type="MeshInstance3D" parent="Base"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("Mesh_base")
+
+[node name="Shape" type="CollisionShape3D" parent="Base"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("Shape_base")
+
+[node name="Handle" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Handle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
+mesh = SubResource("Mesh_handle")
+
+[node name="Point" parent="." instance=ExtResource("2_ip")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+kind = "lever"
+
+[node name="Label" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0)
+billboard = 1
+font_size = 40
+outline_size = 10
+text = "CALL EXTRACTION"
