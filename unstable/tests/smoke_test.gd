@@ -90,6 +90,10 @@ func _initialize() -> void:
 			var s := _n("Supports/SupportGateFrame") as Support
 			_check(g.jammed, "one winch alone can't break the gate free (tension %.0f N)" % m.toolkit.cables()[0].tension)
 			_check(mark_f - s.health > 3.0, "pulling on the frame header strains the gate frame (%.0f%% → %.0f%%)" % [mark_f, s.health])
+			_check(g.cable_lift > 3000.0 and g.label.text.contains("LIFT") and g.hint().contains("jack valve"),
+				"the jammed gate shows its lift readout (cables %.1f kN) and how to free it" % (g.cable_lift / 1000.0))
+			var jv := _n("Manifold/JackValve") as Valve
+			_check(jv.label.text.contains("REACTOR GATE"), "the jack valve's label says it drives the reactor gate")
 			s.health = 100.0
 			m.pressure_network.pressure = 95.0
 			_req("valve", "Manifold/JackValve/Point", "", Vector3(1, 0, 0))],

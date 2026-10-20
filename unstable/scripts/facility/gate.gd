@@ -22,6 +22,8 @@ extends RigidBody3D
 @export var brace_wear := 1.2
 
 var jammed := true
+## Upward pull from winch cables last physics frame (N, replicated for the label).
+var cable_lift := 0.0
 var jack_enabled := true
 var mission: Mission
 var _base_y := 0.0
@@ -61,6 +63,21 @@ func register_pull(force: Vector3) -> void:
 	_pull += force
 
 
+## Total lift needed to break the jam (N).
+func lift_needed() -> float:
+	return mass * 9.8 + jam_force
+
+
+## One-line explanation for the aim prompt.
+func hint() -> String:
+	if jammed:
+		return "%s JAMMED · lift %.1f / %.1f kN · winch it UPWARD + open the Gate jack valve (manifold)" % [
+			display_name, (jack_force() + cable_lift) / 1000.0, lift_needed() / 1000.0]
+	if not jack_enabled:
+		return "%s · jack offline: winch it up, wedge a brace post under it" % display_name
+	return "%s · jack %.1f kN · wedge a brace post under it to hold it open" % [display_name, jack_force() / 1000.0]
+
+
 func jack_force() -> float:
 	if not jack_enabled or jack_valve == null or pressure_network == null:
 		return 0.0
@@ -78,11 +95,17 @@ func _physics_process(delta: float) -> void:
 		_simulate(delta)
 	elif not multiplayer.is_server():
 		global_position.y = lerpf(global_position.y, _net_y, 1.0 - exp(-18.0 * delta))
+	if multiplayer.is_server():
+		cable_lift = maxf(_pull.y, 0.0)
 	_pull = Vector3.ZERO
 	var rod := 0.2 + height()
 	jack_rod.scale.y = rod
 	jack_rod.global_position.y = _base_y + 1.8 + rod / 2.0
 	label.text = "%s\n%s" % [display_name.to_upper(), "JAMMED" if jammed else "%.1f m" % height()]
+	if jammed:
+		label.text += "\nLIFT %.1f / %.1f kN\njack %.1f + cables %.1f" % [
+			(jack_force() + cable_lift) / 1000.0, lift_needed() / 1000.0,
+			jack_force() / 1000.0, cable_lift / 1000.0]
 	if not jack_enabled:
 		label.text += "\nJACK OFFLINE"
 
@@ -136,10 +159,11 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 
 
 func net_get() -> Array:
-	return [global_position.y, jammed, jack_enabled]
+	return [global_position.y, jammed, jack_enabled, cable_lift]
 
 
 func net_set(s: Array) -> void:
 	_net_y = s[0]
 	jammed = s[1]
 	jack_enabled = s[2]
+	cable_lift = s[3]

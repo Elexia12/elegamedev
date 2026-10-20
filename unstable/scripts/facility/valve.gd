@@ -7,6 +7,8 @@ extends Node3D
 @export var display_name := "Valve"
 @export_enum("jack", "drain") var channel := "jack"
 @export_range(0.0, 1.0, 0.25) var opening := 0.0
+## What this valve drives, shown on its label and in the aim prompt.
+@export var feeds := ""
 
 @onready var wheel: Node3D = $Wheel/Mesh
 @onready var label: Label3D = $Label
@@ -25,6 +27,8 @@ func turn(step: float) -> void:
 func _process(delta: float) -> void:
 	wheel.rotation.y = lerp_angle(wheel.rotation.y, opening * TAU * 0.75, 1.0 - exp(-8.0 * delta))
 	label.text = "%s\n%d%% OPEN" % [display_name.to_upper(), roundi(opening * 100.0)]
+	if feeds != "":
+		label.text += "\n→ %s" % feeds.to_upper()
 
 
 func net_get() -> Array:

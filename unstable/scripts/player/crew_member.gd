@@ -220,6 +220,9 @@ func prompt() -> String:
 	if t is Prop and t.is_grabbable():
 		var grab := "[E] %s %s" % ["carry" if hands.can_lift(t) else "drag", t.display_name]
 		return grab + ("   ·   " + surface if surface != "" else "")
+	var gate := grab_ray.get_collider() as Gate
+	if gate:
+		return gate.hint() + ("\n" + surface if surface != "" else "")
 	return surface
 
 

@@ -506,10 +506,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.6, 0, 0.25)
 [node name="JackValve" parent="Manifold" instance=ExtResource("6_val")]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 1.3, -1.1)
 display_name = "Gate jack"
+feeds = "reactor gate"
 
 [node name="DrainValve" parent="Manifold" instance=ExtResource("6_val")]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 1.3, 1.1)
 display_name = "Drain pump"
+feeds = "storage drain"
 channel = "drain"
 
 [node name="Sign" type="Label3D" parent="Manifold"]

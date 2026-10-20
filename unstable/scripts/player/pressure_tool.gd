@@ -28,7 +28,12 @@ func secondary(target: InteractPoint) -> void:
 
 
 func prompt(target: InteractPoint) -> String:
-	return "%s · LMB open · RMB close" % target.describe()
+	var valve := target.get_parent() as Valve
+	if valve == null:
+		return "%s · LMB open · RMB close" % target.describe()
+	var drives := " (drives %s)" % valve.feeds if valve.feeds != "" else ""
+	return "%s valve%s · %d%% open · LMB open 25%% · RMB close 25%%" % [
+		valve.display_name, drives, roundi(valve.opening * 100.0)]
 
 
 func host_start(_path: String, v: Vector3, _f: float) -> void:
