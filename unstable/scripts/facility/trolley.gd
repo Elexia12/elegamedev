@@ -72,6 +72,8 @@ func _ready() -> void:
 	super._ready()
 	add_to_group("pushables")
 	_last_pos = global_position
+	# Four wheels on the floor plus whatever sits on the deck.
+	max_contacts_reported = 16
 
 
 func cargo() -> Array[RigidBody3D]:
@@ -165,9 +167,15 @@ func _cargo(delta: float) -> void:
 			release_cargo(b)
 	var deck_y := deck.global_position.y + 0.05
 	var hold := deck_friction * 9.8
+	var resting := _resting_on_deck()
 	for b in bodies:
 		# Held or hoisted: it's in someone's hands, not resting on the deck.
 		if _lifted(b):
+			continue
+		# Only what sits on top of the deck rides on it. Something the
+		# trolley bumped into or rolled onto (a motor that fell off the
+		# front) isn't cargo, even inside the CargoArea.
+		if not _joints.has(b) and not b in resting:
 			continue
 		var on_deck := Vector3(b.global_position.x, deck_y, b.global_position.z)
 		var r := on_deck - global_position
@@ -186,7 +194,8 @@ func _cargo(delta: float) -> void:
 			b.linear_velocity -= change - change.limit_length(hold * delta)
 		var rel := (b.linear_velocity - point_velocity(on_deck)) * Vector3(1, 0, 1)
 		var spin := b.angular_velocity.y - angular_velocity.y
-		if rel.length() < 0.12 and absf(spin) < 0.3 and b.get_contact_count() > 0 and not _lifted(b):
+		# (Cargo that just came unstuck has no contact yet: it slides first.)
+		if rel.length() < 0.12 and absf(spin) < 0.3 and b in resting:
 			_stick(b)
 			continue
 		# Sliding: kinetic friction, measured and applied where it meets the deck.
@@ -194,6 +203,25 @@ func _cargo(delta: float) -> void:
 		var f := (-rel * reduced * 20.0).limit_length(deck_friction * b.mass * 9.8)
 		b.apply_force(f, on_deck - b.global_position)
 		apply_force(-f, on_deck - global_position)
+
+
+## Bodies touching the top of the deck from above this step, centred over it
+## (stuck cargo has no contacts: its joint turns them off).
+func _resting_on_deck() -> Array:
+	var out := []
+	var state := PhysicsServer3D.body_get_direct_state(get_rid())
+	var half := (deck.shape as BoxShape3D).size / 2.0
+	for i in state.get_contact_count():
+		var b := state.get_contact_collider_object(i) as RigidBody3D
+		if b == null or b in out or shape_owner_get_owner(shape_find_owner(state.get_contact_local_shape(i))) != deck:
+			continue
+		var local := deck.to_local(b.global_position)
+		if absf(local.x) > half.x or absf(local.z) > half.z or local.y < 0.0:
+			continue
+		# The normal on our side points into us: down, for a load on top.
+		if state.get_contact_local_normal(i).dot(-global_basis.y) > 0.7:
+			out.append(b)
+	return out
 
 
 ## Is something lifting this cargo off the deck (the hoist, a crew member)?

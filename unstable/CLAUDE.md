@@ -28,7 +28,7 @@ $g = "C:\Program Files\Godot\Godot.exe"
 & $g --headless --path . --fixed-fps 60 -s res://tests/blackwater_test.gd   # Blackwater acceptance run (88 checks)
 & $g --headless --path . --fixed-fps 60 -s res://tests/smoke_test.gd        # Flooded Reactor (29 checks)
 ```
-Network tests run two processes: start `-s res://tests/blackwater_net_test.gd -- --role=host` with `Start-Process`,
+Network tests run two processes in real time (no `--fixed-fps`, or the host finishes before the client joins): start `-s res://tests/blackwater_net_test.gd -- --role=host` with `Start-Process`,
 then the same with `--role=client`. Compare the `[host]` / `[client]` lines; they must agree. `net_test.gd` covers the
 reactor. Run all four before committing gameplay changes.
 

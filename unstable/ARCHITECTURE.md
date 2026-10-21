@@ -58,6 +58,9 @@ How the code is organised, and the decisions behind it that should hold. Level l
 - **Collision shapes match the visible mesh.** No invisible boxes (motor = cylinder on feet; trolley handle = posts +
   bar, with a separate aim-only `InteractPoint`). Held props ignore their holder's body (`Hands._sync_collision_exception`),
   and the trolley leaves held or hoisted cargo alone (`Trolley._lifted`).
+- **Jolt solver settings** (`project.godot`): `penetration_slop` 0.002, `position_steps` 6, `velocity_steps` 15. With
+  the defaults (2 cm slop, 2 position steps) the loaded trolley's wheels sank 3–5 cm into the floor while rolling,
+  caught the side of the next floor piece (corridor slabs) and stopped dead, flinging the motor off.
 - Jolt areas don't detect **static**-frozen bodies: anything an Area must still see while frozen uses
   `FREEZE_MODE_KINEMATIC` (`support_jack.gd`).
 
@@ -73,7 +76,8 @@ How the code is organised, and the decisions behind it that should hold. Level l
   - Fixed wheels at the handle end, casters at the far end.
   - **Cargo sticks** via a `Generic6DOFJoint3D` (static friction, no contact jitter). It breaks loose when the deck's
     acceleration exceeds `deck_friction × g`, or when the hoist or hands lift it. Loose cargo slides with kinetic
-    friction and re-sticks once settled.
+    friction and re-sticks once settled. Only bodies touching the deck's top, centred over it, count as cargo
+    (`Trolley._resting_on_deck`): cargo that fell off and got rolled onto is never glued back on.
 - **Wrench** (`wrench_tool.gd`) works `Mounting`s (unbolting, faster with two people, slips in tremors) and cranks valves.
 
 ## Presentation
