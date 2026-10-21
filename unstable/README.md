@@ -100,6 +100,11 @@ The loaded trolley fits neither 1 m door, so the motor goes out one of two ways:
   280 kg: two crew are fine; the trolley with the motor is not. Extend a **support jack** (two in the bay) at the **jack
   point** in the void under it (walk in from the pit), and it holds 800 kg. A big impact on the deck can make the jack slip.
   At 100% stress the deck falls into the pit, and the only way out for the motor is the service tunnel.
+- **Second chance: the corridor hoist.** If the deck collapses under the motor, the motor (and maybe the trolley) ends
+  up down in the void, in the wreckage. A maintenance hoist runs under the corridor ceiling from over the void out into
+  the hall, with its pendant at the corridor mouth. Its hook reaches anywhere in the void; a teammate climbs down over
+  the fallen slabs (the void floods first) and hooks the motor. The trolley has a lifting lug in the middle of its deck,
+  so the hoist can lift it out too. Set the trolley down in the hall, then the motor on it, and take the service tunnel.
 - **Flooding.** One water level for the whole station, measured from the pit floor. It rises with seepage (faster as the
   station destabilises), through the **inlet valve** in the pit (crank it shut with the wrench), and much faster through a
   burst pipe (the inlet valve shuts that off too). The gauges show DRY / SHALLOW / DEEP / CRITICAL for the pit and the hall:
@@ -133,10 +138,12 @@ BlackwaterStation (Mission)
 │  ├─ OverheadHoist       rail (north-south, pit -> hall), Carriage, Chain, Hook (+ Point), Pendant (+ Point) = the
 │  │                      console in the booth (move it anywhere)
 │  ├─ PumpMotor           450 kg Prop with a LiftingEye, down in the pit   MotorMounting (bolts, item = PumpMotor)
-│  ├─ Trolley             FixedAxle (fixed wheels, handle end), Grip (aim zone), CargoArea (cargo that sticks)
+│  ├─ Trolley             FixedAxle (fixed wheels, handle end), Grip (aim zone), CargoArea (cargo that sticks),
+│  │                      LiftingEye (flat lug mid-deck: a hoist can lift the trolley)
 │  └─ WaterMainPipe       PipeRun: ruptures on a heavy hit
 ├─ ControlRoom            VfdModule + VfdMounting, HallDoor (SwingDoor: 1 m, turns about its hinge)
-├─ DamagedCorridor        Slabs (BridgeSlab ×3), LoadArea, JackPoint, Labels
+├─ DamagedCorridor        Slabs (BridgeSlab ×3, they crumble `crumble` m shorter when they fall), LoadArea, JackPoint, Labels
+├─ CorridorHoist          OverheadHoist along the corridor (void -> hall), Pendant at the corridor mouth: the second chance
 ├─ Pit                    InletValve, InletGush, Transmitter1-4 + their Mountings
 ├─ Tunnel                 Debris1-3 (60 kg crates in the passage: drag them aside)
 ├─ Bay                    DepositZone (truck_bed = Truck/TruckBed), Truck (TruckDeparture: Ignition, yard = the bay,
@@ -203,6 +210,7 @@ follows the spec's acceptance tests:
 - pushing the trolley by its handle (tracking, staying at the handle, coasting after letting go), and cargo sliding in a crash
 - departure and the payout
 - the swing door, the jack holding the corridor and slipping on impact, the corridor collapsing
+- the second chance: the corridor hoist lifts the motor out of the collapsed corridor onto the trolley
 - the service tunnel: one pusher can't get the loaded trolley up its ramp, two can
 - station failure with a rescue fee
 

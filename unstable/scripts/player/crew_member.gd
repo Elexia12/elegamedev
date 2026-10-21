@@ -425,18 +425,26 @@ func _tether_to(pushed: Node) -> void:
 	var fwd := (-global_basis.z * Vector3(1, 0, 1)).normalized()
 	var stand: Vector3 = pushed.handle_for(self) - fwd * pushed.handle_reach
 	var off := (global_position - stand) * Vector3(1, 0, 1)
-	# Sideways: you line up behind the handle.
+	# Sideways: you line up behind the handle. These corrections are moves,
+	# not teleports: a trolley swinging next to a wall can't shove you through it.
 	var side := fwd.cross(Vector3.UP)
 	var lateral := off.dot(side)
-	global_position -= side * lateral * 0.5
+	_shift(-side * lateral * 0.5)
 	velocity -= side * velocity.dot(side)
 	# Forward: walking into a trolley that won't go stops you. (If it rolls
 	# ahead, you don't get dragged after it: your hands hold it back.)
 	var ahead := off.dot(fwd)
 	var slack := 0.3
 	if ahead > slack:
-		global_position -= fwd * (ahead - slack)
+		_shift(-fwd * (ahead - slack))
 		velocity -= fwd * maxf(0.0, velocity.dot(fwd))
+
+
+## Nudge the body by `motion` unless a wall is in the way (checked from a
+## little above the floor, so the floor you stand on doesn't count).
+func _shift(motion: Vector3) -> void:
+	if not test_move(global_transform.translated(Vector3.UP * 0.08), motion):
+		global_position += motion
 
 
 ## Owner: movement keys drive the machine. x = A/D, y = W (+1) / S (-1).

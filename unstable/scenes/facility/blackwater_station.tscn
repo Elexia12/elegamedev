@@ -270,7 +270,7 @@ shadow_enabled = true
 omni_range = 10
 
 [node name="LampCorridor" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 3.1, -4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 3.2, -5.1)
 light_color = Color(1, 0.8, 0.55, 1)
 light_energy = 1.2
 shadow_enabled = true
@@ -775,6 +775,15 @@ text = "SERVICE TUNNEL"
 script = ExtResource("10_proxim")
 show_within = 14
 
+[node name="SignCorridorHoist" type="Label3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 2.3, -8)
+modulate = Color(1, 0.85, 0.3, 1)
+font_size = 32
+outline_size = 12
+text = "CORRIDOR HOIST"
+script = ExtResource("10_proxim")
+show_within = 8
+
 [node name="Water" type="Node3D" parent="."]
 editor_description = "One flood zone for the whole station, measured from the pit floor (y = -3). The pit fills first (including the void under the damaged corridor); past 3 m it spreads over every floor.
 WaterMain pours in through the InletValve (and any burst pipe); the zone's seepage never stops."
@@ -916,6 +925,32 @@ transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3, 0, -12.7)
 [node name="DamagedCorridor" parent="." instance=ExtResource("18_damage")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -4)
 editor_description = "D: the shortcut from the hall to the control room. Its cracked deck spans the void over the pit; the JackPoint is down there (reach it through the pit)."
+
+[node name="CorridorHoist" parent="." instance=ExtResource("15_overhe")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 3, -3.6)
+editor_description = "THE SECOND CHANCE (OverheadHoist). A maintenance hoist on a rail under the corridor ceiling, from over the corridor's middle (x = -7 local) out into the pump hall (x = +7). If the corridor collapses with the motor, it is still down in the void: hook it there, lift it out into the hall, lower it onto the trolley, and take the service tunnel.
+The rail stops short of the corridor's solid west end, so it can't carry the motor across the weak deck."
+display_name = "Corridor hoist"
+rail_length = 14.0
+max_length = 5.5
+hook_reach = 2.0
+start_x = 5
+start_length = 0.8
+
+[node name="Rail" parent="CorridorHoist"]
+transform = Transform3D(1.0746, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Flange" parent="CorridorHoist"]
+transform = Transform3D(1.0746, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.17, 0)
+
+[node name="EndStopA" parent="CorridorHoist"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.2, -0.1, 0)
+
+[node name="EndStopB" parent="CorridorHoist"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2, -0.1, 0)
+
+[node name="Pendant" parent="CorridorHoist"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3, -3, -4.4)
 
 [node name="Pit" type="Node3D" parent="."]
 editor_description = "E: lower maintenance pit (floor y = -3). One ramp down from the hall; the pump motor on its base under the hoist rail; a doorway east into the service tunnel. Water inlet + InletValve, four bonus sensors, the jack point under the corridor. It floods first."
@@ -1062,6 +1097,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 6.75, 4)
 [connection signal="departed" from="Bay/Truck" to="." method="_on_departed"]
 
 [editable path="PumpHall/OverheadHoist"]
+[editable path="CorridorHoist"]
 [editable path="Bay/Truck"]
 [editable path="DamagedCorridor"]
 [editable path="HUD"]

@@ -31,6 +31,9 @@ extends Prop
 @export var handle_reach := 0.8
 @export var release_distance := 1.6
 @export var max_pushers := 2
+## With two pushers, how far either side of the handle's middle each one
+## holds it (m). Bodies are 0.7 m wide, so the grips are 0.8 m apart.
+@export var grip_spread := 0.4
 @export_group("Wheels")
 ## Sideways grip of the fixed axle (1/s) and the skid limit (× load on it).
 @export var axle_grip := 20.0
@@ -109,7 +112,7 @@ func push_speed_factor() -> float:
 ## The point on the handle this crew member holds (two pushers share it).
 func handle_for(crew: CrewMember) -> Vector3:
 	var i := pushers.find(crew.get_multiplayer_authority())
-	var spread := 0.0 if pushers.size() < 2 else 0.3
+	var spread := 0.0 if pushers.size() < 2 else grip_spread
 	return handle_point.global_position + global_basis.z * (spread if i <= 0 else -spread)
 
 
@@ -301,7 +304,7 @@ func _push(delta: float) -> void:
 		# Where this trolley's origin should be for the handle to sit in this
 		# pusher's hands, facing their way.
 		var held := Basis(Vector3.UP, yaw)
-		var grip_offset := handle_point.position + Vector3(0, 0, 0.0 if n < 2 else (0.3 if i == 0 else -0.3))
+		var grip_offset := handle_point.position + Vector3(0, 0, 0.0 if n < 2 else (grip_spread if i == 0 else -grip_spread))
 		var want := c.global_position + fwd * handle_reach - held * Vector3(grip_offset.x, 0.0, grip_offset.z)
 		var err := (want - global_position) * Vector3(1, 0, 1)
 		if err.length() > release_distance:
@@ -340,12 +343,25 @@ func _own_yaw_inertia() -> float:
 	return 1.0 / inv.y if inv.y > 0.0 else mass * (1.8 * 1.8 + 1.1 * 1.1) / 12.0
 
 
+## Is any wheel touching something this step?
+func _on_wheels() -> bool:
+	var state := PhysicsServer3D.body_get_direct_state(get_rid())
+	for i in state.get_contact_count():
+		if str(shape_owner_get_owner(shape_find_owner(state.get_contact_local_shape(i))).name).begins_with("Wheel"):
+			return true
+	return false
+
+
 ## Host: fixed-axle grip, caster drag, rolling resistance.
 ## Their gains use what actually moves with the trolley (its body plus cargo
 ## stuck to it, not cargo sliding loose on top), or they overshoot every
 ## physics step and the wheels jitter instead of gripping. How much grip
 ## there is (the clamp) scales with the whole load.
 func _wheels(total: float) -> void:
+	# Wheels only grip and roll when they're on something (not while it hangs
+	# from a hoist or tumbles).
+	if not _on_wheels():
+		return
 	var weight := total * 9.8
 	var rigid := _rigid_mass()
 	var axle := fixed_axle.global_position

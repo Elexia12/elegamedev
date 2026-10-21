@@ -11,12 +11,14 @@ Two playable greybox missions (the main menu's Mission picker; details in `READM
     through a gap in the pit railing onto a shopping-cart-style trolley in the hall.
   - Two routes out: the short corridor (needs a support jack from the pit), or, if it collapses, the hard way: back down
     into the pit and out through the service tunnel (tight turn, debris, floods, a ramp that needs two pushers).
+  - Second chance: if the corridor collapses under the motor, the corridor hoist (rail under the corridor ceiling, void
+    -> hall) lifts the motor, and the trolley by its deck lug, back out of the wreck.
   - Rising water and a rupturable water main, condition-based salvage value, partial extraction, truck departure,
     station failure at 15 min.
 - **The Flooded Reactor** (first prototype, GDD §8): winch / pressure tool, jammed gate, lift extraction.
 
 Tests, all passing on `main`:
-- `tests/blackwater_test.gd`: 99 checks.
+- `tests/blackwater_test.gd`: 108 checks.
 - `tests/smoke_test.gd`: 29 checks.
 - `tests/blackwater_net_test.gd` and `tests/net_test.gd`: host and client agree, over localhost ENet.
 

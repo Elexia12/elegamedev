@@ -417,16 +417,83 @@ func _initialize() -> void:
 			_check(not slab.dormant and slab.global_position.y < -0.6, "its slabs fall into the pit (y=%.1f)" % slab.global_position.y)
 			_check((_n("PumpHall/PumpMotor") as Prop).global_position.y < -1.0, "taking the motor with them")],
 
+		# --- Second chance: the corridor hoist gets the motor back out ------------------
+		[0.2, func() -> void:
+			_place(p, Vector3(0.0, 0.05, -8.4), PI / 2.0, -0.3)],
+		[0.1, func() -> void:
+			_check(p.prompt().contains("take the controls"), "the corridor hoist's controls at the corridor mouth (\"%s\")" % p.prompt())
+			_req("use", "CorridorHoist/Pendant/Point")],
+		[0.1, func() -> void:
+			var h := _n("CorridorHoist") as OverheadHoist
+			_check(h.operator == 1, "[E] takes the corridor hoist")
+			mark_f = (_n("PumpHall/PumpMotor") as Prop).condition
+			# Run over the fallen motor and lower the hook to its lifting eye.
+			tick = func() -> void:
+				var eye := _n("PumpHall/PumpMotor/LiftingEye") as Node3D
+				var d := h.to_local(eye.global_position).x - h.x
+				var down := h.anchor_position().y - eye.global_position.y - 0.2
+				_req("drive", "CorridorHoist", "", Vector3(signf(d) if absf(d) > 0.25 else 0.0, -1.0 if h.length < down else 0.0, 0))],
+		[9.0, func() -> void:
+			tick = Callable()
+			_req("drive", "CorridorHoist", "", Vector3.ZERO)
+			var h := _n("CorridorHoist") as OverheadHoist
+			_check(h.eye_in_reach() != null, "its hook reaches the motor down in the wreck of the corridor")
+			# A teammate climbs down over the fallen slabs and hooks it.
+			m.crew.add_member(97)
+			var helper := m.crew.member(97)
+			_place(helper, (_n("PumpHall/PumpMotor") as Node3D).global_position + Vector3(0, 0.3, 1.0), 0.0, 0.0)
+			h.use(helper, h.hook_point)
+			_check(h.load_path == "PumpHall/PumpMotor", "a teammate in the void hooks it")
+			_place(helper, Vector3(-4.0, -2.95, 2.0), 0.0, 0.0)
+			_req("drive", "CorridorHoist", "", Vector3(0, 1, 0))],
+		[6.0, func() -> void:
+			var motor := _n("PumpHall/PumpMotor") as Prop
+			_check(motor.global_position.y > 0.6, "W lifts it up out of the void (y=%.2f)" % motor.global_position.y)
+			# Test shortcut: the trolley is waiting in the hall under the rail's east end.
+			var trolley := _n("PumpHall/Trolley") as Trolley
+			trolley.linear_velocity = Vector3.ZERO
+			trolley.angular_velocity = Vector3.ZERO
+			trolley.global_transform = Transform3D(Basis(Vector3.UP, PI), Vector3(1.5, 0.45, -3.6))
+			var h := _n("CorridorHoist") as OverheadHoist
+			tick = func() -> void:
+				var d := 5.5 - h.x
+				_req("drive", "CorridorHoist", "", Vector3(signf(d) if absf(d) > 0.25 else 0.0, 0, 0))],
+		[9.0, func() -> void:
+			var h := _n("CorridorHoist") as OverheadHoist
+			_check(absf(h.x - 5.5) < 0.3, "the rail carries it out of the corridor into the hall (x=%.2f)" % h.x)
+			var motor := _n("PumpHall/PumpMotor") as Prop
+			tick = func() -> void:
+				var resting := motor.linear_velocity.length() < 0.2 and h.tension < motor.mass * 9.8 * 0.05 and motor.global_position.y < 1.4
+				_req("drive", "CorridorHoist", "", Vector3.ZERO if resting else Vector3(0, -1, 0))],
+		[6.0, func() -> void:
+			tick = Callable()
+			_req("drive", "CorridorHoist", "", Vector3.ZERO)
+			var h := _n("CorridorHoist") as OverheadHoist
+			var motor := _n("PumpHall/PumpMotor") as Prop
+			var trolley := _n("PumpHall/Trolley") as Trolley
+			_check(motor in trolley.cargo(), "and lowers it onto the trolley: the motor is back in play")
+			_check(motor.condition >= mark_f - 1.0, "careful hoisting costs nothing more (%d%%)" % roundi(motor.condition))
+			var helper := m.crew.member(97)
+			_place(helper, Vector3(0.0, 0.05, -3.6), 0.0, 0.0)
+			h.use(helper, h.hook_point)
+			_check(h.load_path == "", "unhooked")
+			_place(helper, Vector3(-3.0, 0.05, -27.0), 0.0, 0.0)
+			_req("release_controls")],
+
 		# --- The hard way out: the service tunnel ---------------------------------------
 		[0.2, func() -> void:
 			# The corridor is gone. Debris dragged aside into the annex; the loaded
 			# trolley at the foot of the tunnel ramp, pointing north (up the ramp).
+			# (The tunnel floods with the pit as the run goes on: start this check
+			# from the run's starting water level, so it's about the ramp.)
+			(_n("Water/StationFlood") as FloodZone).level = 0.35
 			var i := 0
 			for d in _n("Tunnel").get_children():
 				d.global_position = Vector3(22.4, -2.6, 6.8 - i * 0.8)
 				i += 1
 			var trolley := _n("PumpHall/Trolley") as Trolley
 			var motor := _n("PumpHall/PumpMotor") as Prop
+			trolley.release_cargo(motor)
 			for b: RigidBody3D in [trolley, motor]:
 				b.linear_velocity = Vector3.ZERO
 				b.angular_velocity = Vector3.ZERO
@@ -448,11 +515,11 @@ func _initialize() -> void:
 			mark_f = (_n("PumpHall/PumpMotor") as Prop).condition
 			m.crew.add_member(99)
 			p2 = m.crew.member(99)
-			_place(p2, p.global_position - p.global_basis.x * 0.6, p.rotation.y, 0.0)
+			_place(p2, p.global_position - p.global_basis.x * 0.8, p.rotation.y, 0.0)
 			trolley.use(p2, null)
 			# The second pusher walks beside the first (remote crew aren't simulated here).
 			tick = func() -> void:
-				p2.global_position = p.global_position - p.global_basis.x * 0.6
+				p2.global_position = p.global_position - p.global_basis.x * 0.8
 				p2.rotation = p.rotation],
 		[14.0, func() -> void:
 			tick = Callable()

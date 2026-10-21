@@ -1,7 +1,8 @@
-[gd_scene load_steps=19 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/trolley.gd" id="1_trolle"]
 [ext_resource type="PackedScene" path="res://scenes/components/interact_point.tscn" id="2_intera"]
+[ext_resource type="PackedScene" path="res://scenes/components/lifting_eye.tscn" id="3_liftin"]
 
 [sub_resource type="PhysicsMaterial" id="Phys_trolley"]
 friction = 0
@@ -209,6 +210,13 @@ collision_mask = 4
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 shape = SubResource("Shape_cargo")
 
+[node name="LiftingEye" parent="." instance=ExtResource("3_liftin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
+editor_description = "Lifting lug in the middle of the deck (over the centre of mass, so it hangs level): a hoist can pick the trolley up, e.g. out of the pit after the corridor collapses. It lies flat, under any cargo."
+
+[node name="Marker" parent="LiftingEye"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
 [node name="Label" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
 billboard = 1
@@ -216,3 +224,5 @@ modulate = Color(0.95, 0.85, 0.4, 1)
 font_size = 32
 outline_size = 10
 text = "TROLLEY"
+
+[editable path="LiftingEye"]

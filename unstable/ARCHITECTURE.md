@@ -76,7 +76,9 @@ How the code is organised, and the decisions behind it that should hold. Level l
   - While held, a capped controller holds its position *along its length* and its heading to the pusher's. It is never
     shoved sideways.
   - The pusher is tethered one-way (`CrewMember._tether_to`): you're stopped and lined up, never dragged after it, and
-    your yaw is kept within 12° of the cart's heading.
+    your yaw is kept within 12° of the cart's heading. Those corrections are wall-checked moves (`_shift`), never
+    teleports through walls. Two pushers hold the handle `grip_spread` either side of its middle (bodies are 0.7 m wide).
+  - Wheel forces only act while a wheel touches something (`_on_wheels`): a trolley hanging from a hoist doesn't "grip".
   - Fixed wheels at the handle end, casters at the far end.
   - **Cargo sticks** via a `Generic6DOFJoint3D` (static friction, no contact jitter). It breaks loose when the deck's
     acceleration exceeds `deck_friction × g`, or when the hoist or hands lift it. Loose cargo slides with kinetic

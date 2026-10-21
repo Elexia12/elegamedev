@@ -25,7 +25,7 @@ Read first, as needed:
 ```
 $g = "C:\Program Files\Godot\Godot.exe"
 & $g --headless --path . --editor --quit-after 150      # build the class cache (needed in a fresh checkout/worktree)
-& $g --headless --path . --fixed-fps 60 -s res://tests/blackwater_test.gd   # Blackwater acceptance run (99 checks)
+& $g --headless --path . --fixed-fps 60 -s res://tests/blackwater_test.gd   # Blackwater acceptance run (108 checks)
 & $g --headless --path . --fixed-fps 60 -s res://tests/smoke_test.gd        # Flooded Reactor (29 checks)
 ```
 Network tests run two processes in real time (no `--fixed-fps`, or the host finishes before the client joins): start `-s res://tests/blackwater_net_test.gd -- --role=host` with `Start-Process`,
