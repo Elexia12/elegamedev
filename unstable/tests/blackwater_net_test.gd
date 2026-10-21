@@ -53,8 +53,9 @@ func _process(delta: float) -> bool:
 			print("[client] wrenching the VFD bolts")
 		if _once("go_pendant", 9.0):
 			m.send("hold", "")
-			me.global_position = Vector3(6.0, 0.05, -15.3)
-			me.rotation = Vector3.ZERO
+			# Up in the hoist booth, at the console.
+			me.global_position = Vector3(14.6, 3.65, -15.0)
+			me.rotation = Vector3(0, PI / 2.0, 0)
 		if _once("pendant", 9.5):
 			m.send("use", HOIST + "/Pendant/Point")
 		if _once("drive", 10.0):
@@ -66,7 +67,7 @@ func _process(delta: float) -> bool:
 			m.send("release_controls")
 		if _once("go_trolley", 13.0):
 			# Behind the trolley's handle (it faces +X), facing along it.
-			me.global_position = Vector3(6.25, 0.05, -7.5)
+			me.global_position = Vector3(15.75, 0.05, -8.5)
 			me.rotation = Vector3(0, PI / 2.0, 0)
 		if _once("take_trolley", 13.5):
 			m.send("use", "PumpHall/Trolley")

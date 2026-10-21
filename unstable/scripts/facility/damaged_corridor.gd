@@ -32,12 +32,16 @@ signal collapsed
 @export var crew_mass := 80.0
 ## The stress signs only show within this distance (m).
 @export var label_range := 12.0
+## How much shorter each slab gets when it breaks (m): its ends crumble, so
+## the slabs can't wedge against each other and the floor edges like an arch.
+@export var crumble := 0.2
 
 var stress := 30.0
 var load_kg := 0.0
 var jacked := false
 var is_collapsed := false
 var mission: Mission
+var _crumbled := false
 
 @onready var slabs: Node3D = $Slabs
 @onready var load_area: Area3D = $LoadArea
@@ -105,6 +109,7 @@ func collapse() -> void:
 	stress = 100.0
 	# Middle slabs drop straight down; the end slabs hinge down off the walls
 	# (pushed down at their inner end), so nothing wedges between the walls.
+	_crumble()
 	var centre := slabs.global_position
 	for s in slabs.get_children():
 		if s is Prop:
@@ -122,6 +127,25 @@ func collapse() -> void:
 	collapsed.emit()
 
 
+## Every peer: shorten the broken slabs by `crumble` (their box shapes and
+## their meshes alike, so what you see still matches what collides).
+func _crumble() -> void:
+	if _crumbled:
+		return
+	_crumbled = true
+	for s in slabs.get_children():
+		var length := 0.0
+		for c in s.get_children():
+			if c is CollisionShape3D and c.shape is BoxShape3D:
+				var box := c.shape.duplicate() as BoxShape3D
+				length = box.size.x
+				box.size.x = maxf(0.5, length - crumble)
+				c.shape = box
+		var mesh := s.get_node_or_null("Mesh") as Node3D
+		if mesh and length > 0.0:
+			mesh.scale.x = maxf(0.5, length - crumble) / length
+
+
 func status_line() -> String:
 	if is_collapsed:
 		return "COLLAPSED"
@@ -135,6 +159,7 @@ func _update_visuals() -> void:
 		l.modulate = c
 		l.text = "WEAK FLOOR %d%%\n%d / %d kg%s" % [roundi(stress), roundi(load_kg), roundi(safe_load()), " · JACKED" if jacked else ""]
 	if is_collapsed:
+		_crumble()
 		return
 	# The deck trembles harder as it gets closer to giving way.
 	var shake := 0.0 if stress < 60.0 else (stress - 60.0) / 40.0 * 0.03

@@ -106,7 +106,7 @@ func _initialize() -> void:
 
 		# --- A tremor knocks the wrench off; bonus sensors ------------------------------
 		[0.1, func() -> void:
-			_place(p, Vector3(-6.0, -2.95, 5.6), PI, -0.3)
+			_place(p, Vector3(-6.0, -2.95, 8.6), PI, -0.3)
 			_req("hold", "wrench", "Pit/Transmitter1Mounting/Point", Vector3(-1, 0, 0))],
 		[0.6, func() -> void:
 			mark_f = (_n("Pit/Transmitter1Mounting") as Mounting).progress
@@ -124,7 +124,7 @@ func _initialize() -> void:
 
 		# --- Inlet valve: crank it with the wrench -------------------------------------
 		[0.1, func() -> void:
-			_place(p, Vector3(4.0, -2.95, 5.6), PI, -0.4)
+			_place(p, Vector3(4.0, -2.95, 8.6), PI, -0.4)
 			mark_f = (_n("Pit/InletValve") as Valve).opening
 			mark_g = (_n("Water/WaterMain") as WaterMain).flow()
 			_req("hold", "wrench", "Pit/InletValve/Point", Vector3(-1, 0, 0))],
@@ -136,61 +136,78 @@ func _initialize() -> void:
 			_check(v.opening < mark_f - 0.25 and f < mark_g, "holding LMB cranks the inlet valve shut (%d%% → %d%%), slowing the flooding" % [roundi(mark_f * 100.0), roundi(v.opening * 100.0)])
 			_req("hold", "")],
 
-		# --- The hoist: controls, braking, swing ---------------------------------------
+		# --- The hoist: from the booth, motor up out of the pit ----------------------
 		[0.1, func() -> void:
-			_place(p, Vector3(6.0, 0.05, -15.3), 0.0, -0.45)],
+			# Up in the hoist booth, at the console beside the window.
+			_place(p, Vector3(14.6, 3.65, -15.0), PI / 2.0, -0.35)],
 		[0.1, func() -> void:
-			_check(p.prompt().contains("take the controls"), "the pendant says what [E] does (\"%s\")" % p.prompt())
+			_check(p.global_position.y > 3.4, "the hoist booth is a raised room over the hall (y=%.1f)" % p.global_position.y)
+			_check(p.prompt().contains("take the controls"), "the booth console says what [E] does (\"%s\")" % p.prompt())
 			_req("use", HOIST + "/Pendant/Point")],
 		[0.1, func() -> void:
 			var h := _hoist()
-			_check(h.operator == 1 and p.operated_machine() == h, "[E] on the pendant takes the hoist controls")
+			_check(h.operator == 1 and p.operated_machine() == h, "[E] on the console takes the hoist controls")
 			_check(p.prompt().contains("HOIST CONTROLS"), "and the HUD shows the hoist controls")
 			_drive(Vector3(-1, 0, 0))],
 		[2.0, func() -> void:
 			var h := _hoist()
-			_check(h.x < -2.0 and h.vx < -1.0, "A/D runs the carriage along the rail with limited acceleration (x=%.2f, v=%.2f)" % [h.x, h.vx])
+			_check(h.x < -1.5 and h.vx < -1.0, "A/D runs the carriage along the rail with limited acceleration (x=%.2f, v=%.2f)" % [h.x, h.vx])
 			_drive(Vector3.ZERO)],
 		[0.6, func() -> void:
 			_check(_hoist().vx == 0.0, "letting go brakes it hard (stopped within 0.6 s)")
-			_hoist().x = 4.0
-			mark_f = _hoist().length
+			_seek_x(-6.5)],
+		[4.5, func() -> void:
+			tick = Callable()
+			var h := _hoist()
+			_check(absf(h.anchor_position().z - 4.0) < 0.4, "the rail runs out over the pit, above the motor (z=%.1f)" % h.anchor_position().z)
+			mark_f = h.length
 			_drive(Vector3(0, -1, 0))],
-		[3.4, func() -> void:
+		[7.6, func() -> void:
 			var h := _hoist()
 			_drive(Vector3.ZERO)
-			_check(h.length > mark_f + 2.0, "S lowers the hook (%.1f → %.1f m)" % [mark_f, h.length])
+			_check(h.length > mark_f + 4.5, "S lowers the hook down into the pit (%.1f → %.1f m)" % [mark_f, h.length])
 			_check(h.eye_in_reach() != null, "the hook is now next to the motor's lifting eye")
-			_req("use", HOIST + "/Hook/Point")],
+			# A teammate down in the pit hooks it (the operator is up in the booth).
+			_place(p2, Vector3(12.8, -2.95, 4.0), 0.0, 0.0)
+			_check(m._in_reach(p2, h.hook_point) and not m._in_reach(p, h.hook_point), "the hook is in reach from the pit floor, not from the booth")
+			h.use(p2, h.hook_point)],
 		[0.1, func() -> void:
 			_check(_hoist().load_path == "PumpHall/PumpMotor", "[E] on the hook hooks the motor")
-			_place(p2, Vector3(12.0, 0.05, -10.4), 0.0, -0.6)
+			_place(p2, Vector3(14.0, -2.95, 5.6), 0.0, -0.6)
 			p2.set_hold("wrench", "PumpHall/MotorMounting/Point", Vector3(-1, 0, 0), 0.0)],
 		[6.1, func() -> void:
 			_check(not (_n("PumpHall/PumpMotor") as Prop).dormant, "a teammate unbolts the motor while the operator holds it on the hook")
 			p2.set_hold("", "", Vector3.ZERO, 0.0)
-			_place(p2, Vector3(10.0, 0.05, -5.0), 0.0, 0.0)
+			_place(p2, Vector3(12.8, -2.95, 6.0), 0.0, 0.0)
 			_drive(Vector3(0, 1, 0))],
 		[3.0, func() -> void:
 			var h := _hoist()
 			var motor := _n("PumpHall/PumpMotor") as Prop
 			_drive(Vector3.ZERO)
-			_check(motor.global_position.y > 1.8, "W raises it off its base (y=%.2f)" % motor.global_position.y)
+			_check(motor.global_position.y > -1.2, "W raises it off its base (y=%.2f)" % motor.global_position.y)
 			_check(absf(h.tension - motor.mass * 9.8) < motor.mass * 9.8 * 0.35, "the chain carries its weight (%.1f kN)" % (h.tension / 1000.0))
-			_req("use", HOIST + "/Hook/Point")],
-		[0.1, func() -> void:
-			_check(_hoist().load_path != "", "unhooking a hanging load is refused")
-			_drive(Vector3(-1, 0, 0))],
+			var reply := h.use(p2, h.hook_point)
+			_check(h.load_path != "" and reply.contains("lower it"), "unhooking a hanging load is refused (\"%s\")" % reply)
+			_place(p2, Vector3(10.0, -2.95, 8.5), 0.0, 0.0)
+			# Lift it clear of the pit and of the water main before moving it.
+			tick = func() -> void:
+				_drive(Vector3(0, 1, 0) if (_n("PumpHall/PumpMotor") as Prop).global_position.y < 3.8 else Vector3.ZERO)],
+		[8.0, func() -> void:
+			tick = Callable()
+			_drive(Vector3.ZERO)
+			var motor := _n("PumpHall/PumpMotor") as Prop
+			_check(motor.global_position.y > 3.6, "W hauls it all the way up out of the pit (y=%.2f)" % motor.global_position.y)
+			_drive(Vector3(1, 0, 0))],
 		[2.4, func() -> void:
 			_drive(Vector3.ZERO)
 			swing = 0.0
 			tick = func() -> void:
-				var off := (_n("PumpHall/PumpMotor") as Prop).global_position.x - _hoist().anchor_position().x
+				var off := ((_n("PumpHall/PumpMotor") as Prop).global_position - _hoist().anchor_position()).dot(_hoist().global_basis.x)
 				swing = maxf(swing, absf(off))],
 		[2.0, func() -> void:
 			var motor := _n("PumpHall/PumpMotor") as Prop
 			_check(swing > 0.25, "stopping abruptly sets the load swinging (%.2f m)" % swing)
-			_check(motor.global_position.y > 1.5 and motor.global_position.y < 5.0, "without flying off (y=%.2f)" % motor.global_position.y)
+			_check(motor.global_position.y > 3.0 and motor.global_position.y < 6.0, "without flying off (y=%.2f)" % motor.global_position.y)
 			mark_f = swing],
 		[4.0, func() -> void: swing = 0.0],
 		[2.0, func() -> void:
@@ -199,8 +216,8 @@ func _initialize() -> void:
 			mark_f = (_n("PumpHall/PumpMotor") as Prop).condition
 			# Too low to clear the water main at head height: drive into it.
 			_drive(Vector3(0, -1, 0))],
-		[1.4, func() -> void: _drive(Vector3(-1, 0, 0))],
-		[2.6, func() -> void:
+		[1.9, func() -> void: _drive(Vector3(1, 0, 0))],
+		[5.0, func() -> void:
 			var pipe := _n("PumpHall/WaterMainPipe") as PipeRun
 			var motor := _n("PumpHall/PumpMotor") as Prop
 			_drive(Vector3.ZERO)
@@ -209,14 +226,13 @@ func _initialize() -> void:
 			_check(motor.condition > mark_f - 3.0, "a slow glancing swing breaks the pipe, not the motor (%d%%)" % roundi(motor.condition))
 			_drive(Vector3(0, 1, 0))],
 		[2.5, func() -> void:
-			(_n("PumpHall/Trolley") as Prop).global_transform = Transform3D(Basis(Vector3.UP, PI), Vector3(3.0, 0.45, -12.0))
 			_drive(Vector3.ZERO)
-			_seek_x(-5.0)],
+			_seek_x(6.0)],
 		[6.0, func() -> void:
 			tick = Callable()
 			_drive(Vector3.ZERO)
 			var h := _hoist()
-			_check(absf(h.x + 5.0) < 0.3, "the operator brings the motor over the trolley (x=%.2f)" % h.x)
+			_check(absf(h.x - 6.0) < 0.3, "the operator brings the motor over the trolley (x=%.2f)" % h.x)
 			mark_f = (_n("PumpHall/PumpMotor") as Prop).condition],
 		[3.0, func() -> void: _lower_until_supported()],
 		[5.0, func() -> void:
@@ -226,15 +242,28 @@ func _initialize() -> void:
 			var trolley := _n("PumpHall/Trolley") as Trolley
 			_check(motor in trolley.cargo(), "lowered onto the trolley deck")
 			_check(motor.condition >= mark_f - 0.01, "lowering it gently costs nothing (%d%%)" % roundi(motor.condition))
-			_req("use", HOIST + "/Hook/Point")],
+			_place(p2, Vector3(12.8, 0.05, -8.5), 0.0, 0.0)
+			_hoist().use(p2, _hoist().hook_point)],
 		[0.1, func() -> void:
 			_check(_hoist().load_path == "", "once it rests on the trolley it can be unhooked")
+			_place(p2, Vector3(-3.0, 0.05, -27.0), 0.0, 0.0)
 			_req("release_controls")],
 		[0.1, func() -> void:
-			_check(_hoist().operator == 0 and p.operated_machine() == null, "[E] lets go of the controls")],
+			_check(_hoist().operator == 0 and p.operated_machine() == null, "[E] lets go of the controls")
+			# Test shortcut: wheel the loaded trolley over to the control-room side
+			# of the hall (its grip on the motor re-forms once they settle).
+			var trolley := _n("PumpHall/Trolley") as Trolley
+			var motor := _n("PumpHall/PumpMotor") as Prop
+			var off := motor.global_position - trolley.global_position
+			trolley.release_cargo(motor)
+			for b: RigidBody3D in [trolley, motor]:
+				b.linear_velocity = Vector3.ZERO
+				b.angular_velocity = Vector3.ZERO
+			trolley.global_transform = Transform3D(Basis(Vector3.UP, PI), Vector3(3.0, 0.45, -12.0))
+			motor.global_position = trolley.global_position + off],
 
 		# --- The trolley ------------------------------------------------------------------
-		[0.2, func() -> void:
+		[1.2, func() -> void:
 			# Stand behind the handle (it faces +X) and take it.
 			_place(p, Vector3(4.75, 0.05, -12.0), PI / 2.0, -0.75)
 			mark = (_n("PumpHall/Trolley") as Prop).global_position],
@@ -387,6 +416,52 @@ func _initialize() -> void:
 			var slab := _n("DamagedCorridor/Slabs/Slab2") as Prop
 			_check(not slab.dormant and slab.global_position.y < -0.6, "its slabs fall into the pit (y=%.1f)" % slab.global_position.y)
 			_check((_n("PumpHall/PumpMotor") as Prop).global_position.y < -1.0, "taking the motor with them")],
+
+		# --- The hard way out: the service tunnel ---------------------------------------
+		[0.2, func() -> void:
+			# The corridor is gone. Debris dragged aside into the annex; the loaded
+			# trolley at the foot of the tunnel ramp, pointing north (up the ramp).
+			var i := 0
+			for d in _n("Tunnel").get_children():
+				d.global_position = Vector3(22.4, -2.6, 6.8 - i * 0.8)
+				i += 1
+			var trolley := _n("PumpHall/Trolley") as Trolley
+			var motor := _n("PumpHall/PumpMotor") as Prop
+			for b: RigidBody3D in [trolley, motor]:
+				b.linear_velocity = Vector3.ZERO
+				b.angular_velocity = Vector3.ZERO
+			trolley.global_transform = Transform3D(Basis(Vector3.UP, PI / 2.0), Vector3(19.75, -2.55, 0.5))
+			motor.global_transform = Transform3D(Basis(Vector3.UP, PI / 2.0), Vector3(19.75, -1.95, 0.5))
+			_place(p, Vector3(19.75, -2.95, 2.3), 0.0, -0.75)],
+		[1.5, func() -> void:
+			var trolley := _n("PumpHall/Trolley") as Trolley
+			_check(_n("PumpHall/PumpMotor") in trolley._joints, "the motor rides the trolley in the tunnel")
+			_req("use", "PumpHall/Trolley")],
+		[0.1, func() -> void:
+			_check(p.pushing() != null, "[E] takes the handle")
+			p.head.rotation.x = 0.0
+			p.bot_input = Vector2(0, -1)],
+		[6.0, func() -> void:
+			var trolley := _n("PumpHall/Trolley") as Trolley
+			_check(trolley.global_position.y < -1.9, "alone, you can't push the loaded trolley up the steep tunnel ramp (y=%.2f)" % trolley.global_position.y)
+			_check(_n("PumpHall/PumpMotor") in trolley.cargo(), "and the motor stays on it")
+			mark_f = (_n("PumpHall/PumpMotor") as Prop).condition
+			m.crew.add_member(99)
+			p2 = m.crew.member(99)
+			_place(p2, p.global_position - p.global_basis.x * 0.6, p.rotation.y, 0.0)
+			trolley.use(p2, null)
+			# The second pusher walks beside the first (remote crew aren't simulated here).
+			tick = func() -> void:
+				p2.global_position = p.global_position - p.global_basis.x * 0.6
+				p2.rotation = p.rotation],
+		[14.0, func() -> void:
+			tick = Callable()
+			p.bot_input = null
+			var trolley := _n("PumpHall/Trolley") as Trolley
+			var motor := _n("PumpHall/PumpMotor") as Prop
+			_check(trolley.global_position.z < -16.0 and trolley.global_position.y > 0.3, "two crew push it up the ramp and out into the bay (%s)" % trolley.global_position.snapped(Vector3.ONE * 0.1))
+			_check(motor in trolley.cargo() and motor.condition >= mark_f - 0.01, "with the motor still on it, no worse for the climb (%d%%)" % roundi(motor.condition))
+			_req("use", "PumpHall/Trolley")],
 
 		# --- Station failure ---------------------------------------------------------------
 		[0.2, func() -> void:

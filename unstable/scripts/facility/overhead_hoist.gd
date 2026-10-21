@@ -180,7 +180,7 @@ func release(_player: CrewMember) -> String:
 func prompt_for(crew: CrewMember, target: Node) -> String:
 	if target == pendant_point:
 		if operator == 0:
-			return "Hoist pendant · %s · [E] take the controls" % state_name()
+			return "Hoist controls · %s · [E] take the controls" % state_name()
 		return "%s is on the hoist controls" % _member_name(operator)
 	var p := load_prop()
 	if p:
@@ -191,8 +191,8 @@ func prompt_for(crew: CrewMember, target: Node) -> String:
 	if eye:
 		return "[E] hook onto the %s" % eye.get_parent().display_name
 	if target is LiftingEye:
-		return "Lifting eye · bring the hoist hook here (pendant: A/D along the rail, S lowers)"
-	return "Hoist hook · lower it next to a lifting eye (pendant: S lowers)"
+		return "Lifting eye · bring the hoist hook here (hoist controls: A/D along the rail, S lowers)"
+	return "Hoist hook · lower it next to a lifting eye (hoist controls: S lowers)"
 
 
 func operator_prompt() -> String:

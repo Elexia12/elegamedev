@@ -61,11 +61,15 @@ How the code is organised, and the decisions behind it that should hold. Level l
 - **Jolt solver settings** (`project.godot`): `penetration_slop` 0.002, `position_steps` 6, `velocity_steps` 15. With
   the defaults (2 cm slop, 2 position steps) the loaded trolley's wheels sank 3–5 cm into the floor while rolling,
   caught the side of the next floor piece (corridor slabs) and stopped dead, flinging the motor off.
+- Pieces that fall into a gap must be able to: a collapsing `DamagedCorridor` shortens its slabs by `crumble` (shape and
+  mesh), or they wedge between each other and the floor edges like an arch.
 - Jolt areas don't detect **static**-frozen bodies: anything an Area must still see while frozen uses
   `FREEZE_MODE_KINEMATIC` (`support_jack.gd`).
 
 ## Machines and handling
 - **Overhead hoist** (`overhead_hoist.gd`): the carriage accelerates gently and brakes hard, so stops swing the load.
+  Its controls (the `Pendant` node) can sit anywhere; [E] on the hook still needs you next to it, so in Blackwater (booth
+  far above the pit) hooking and unhooking takes a teammate.
   The chain is a one-sided spring whose damping acts on the stretch rate *minus* the payout rate, so lowering at a
   steady speed isn't resisted. You can only unhook a load that's resting on something.
 - **Trolley** (`trolley.gd`) handles like a shopping cart:

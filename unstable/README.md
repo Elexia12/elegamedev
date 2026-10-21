@@ -28,29 +28,36 @@ A short briefing on screen explains the job; it disappears once you walk into th
 time). Recover what you can, then leave in the truck. Anything you secure gets paid, at whatever condition it's in when you
 secure it. Labels on things only appear when you're close, and the aim prompt tells you what [E] or the wrench will do.
 
-**The layout follows the spec's blockout** (north at the top):
+**The layout** (north at the top). It started from the spec's blockout; the owner then moved the motor down into the
+pit, put the hoist controls in a booth, and added the service tunnel:
 ```
-+------------- A  EXTRACTION BAY -------------+   truck, deposit zone, support jacks
-+--opening--+---------------1 m door---------+
-| B CONTROL |  C PUMP HALL                    |
-|   ROOM   1 m door   hoist rail over the motor|
-|  (VFD)    |  trolley        water main pipe |
-+--opening--+                                 |
-| D DAMAGED CORRIDOR  -> into the hall        |
-+--ramp-----+---------------ramp--------------+
-| E LOWER MAINTENANCE PIT (floods first)      |
-+---------------------------------------------+
++--------------- A  EXTRACTION BAY ----------------+-tunnel exit-+   truck, deposit zone, support jacks
++--opening--+-----------------1 m door--[BOOTH]----+      |      |
+| B CONTROL |  C PUMP HALL          hoist   stair  |   F  |      |
+|   ROOM   1 m door  trolley          rail     |   |SERVICE      |
+|  (VFD)    |   ~~~ water main ~~~~~~~~|~~~~~~~~  |TUNNEL|ramp   |
++--opening--+                          |        |  |      |      |
+| D DAMAGED CORRIDOR  -> into the hall |        |  |      |      |
++-----------+---ramp----+--rail--gap---|--------+  |      |      |
+| E LOWER MAINTENANCE PIT (floods first)  [MOTOR]  door--annex   |
++----------------------------------------------------------------+
 ```
+The **motor sits on its pump base down in the pit**, under the hoist rail. The rail runs north–south, from over the
+motor, through a gap in the pit railing, to over the trolley in the hall. The hoist is driven from the **booth**, a raised
+room in the hall's north-east corner up a stair along the east wall; its window looks straight down the rail.
+
 The loaded trolley fits neither 1 m door, so the motor goes out one of two ways:
 - **Short:** hall → across the corridor's cracked deck → control room → bay. The deck only holds ~280 kg unless a support
   jack holds it up from the pit below.
-- **Long:** hall → ramp down into the pit → across → ramp up to the corridor's solid end → control room → bay. The ramps
-  need two people to push the loaded trolley up, and the pit floods as time goes on.
+- **Hard (if the corridor fails):** hall → ramp down into the pit → east through a doorway into the **service tunnel** →
+  a tight turn in its annex → a narrow passage (debris crates to drag aside, and it floods with the pit) → a steep 17°
+  ramp up into the bay's east end. One person can't push the loaded trolley up that ramp; two can. Going down the hall
+  ramp, one person can't hold it back either.
 
 | Salvage | Where | Value | The problem |
 |---|---|---|---|
 | **VFD power module** (contract) | control room, bolted in its drive cabinet | 1,000 cr | Fragile: knocks and water ruin it. One person can carry it, slowly. |
-| **Pump motor** (jackpot) | pump hall, bolted to its pump base | 1,800 cr | 450 kg: too heavy to carry. Hoist it onto the trolley, push the trolley out. |
+| **Pump motor** (jackpot) | the pit, bolted to its pump base under the hoist rail | 1,800 cr | 450 kg: too heavy to carry. Hoist it up onto the trolley, push the trolley out. |
 | **Pressure transmitters** ×4 (bonus) | the maintenance pit | 150 cr each | Easy to carry, but the pit floods first. |
 
 ### Controls
@@ -58,11 +65,11 @@ The loaded trolley fits neither 1 m door, so the motor goes out one of two ways:
 | Input | Action |
 |---|---|
 | WASD / Shift / Space | Move / sprint / jump (hold Space to swim up) |
-| E | Grab / let go (light things are carried, heavy things dragged). Use things: the hoist pendant, the hook, a support jack, a door, the truck |
+| E | Grab / let go (light things are carried, heavy things dragged). Use things: the hoist controls, the hook, a support jack, a door, the truck |
 | LMB while holding | Throw it |
 | R while holding | Turn it: free → upright → flat (stand a support jack up) |
 | **Wrench [1]** | Hold LMB on bolts to unbolt (stay on them). On a valve wheel: hold LMB to crank it shut, RMB to crank it open |
-| Hoist pendant | [E] takes the controls. Then A/D run the carriage along the rail, W raises, S lowers, [E] lets go |
+| Hoist controls (booth) | [E] takes the controls. Then A/D run the carriage along the rail, W raises, S lowers, [E] lets go. Look around freely while you drive |
 | Trolley | [E] takes the handle. Walk to push; turn with the mouse or A/D to steer; [E] lets go |
 | Tab | Salvage manifest (condition, value, where each item is) |
 | Esc | Menu (the station keeps running) |
@@ -75,12 +82,13 @@ The loaded trolley fits neither 1 m door, so the motor goes out one of two ways:
   (impact speed − threshold) × fragility percent. You see sparks, a floating `−120 cr` and the new value on its label.
   Gentle handling costs nothing. The VFD also loses value fast underwater. When you carry something fragile, look down
   before letting go: then it's set down instead of dropped.
-- **The hoist.** A fixed overhead hoist runs on a rail over the motor. One crew member takes the pendant controls. Lower the
-  hook next to the motor's orange lifting eye and [E] to hook it. Anyone can hook or unhook it, but you can only unhook a
-  load that's resting on something. The carriage accelerates gently and brakes hard, so stopping makes the load swing.
-  Teammates can grab the motor to steady it. The **water main** crosses the hall at head height: lift the motor high enough
-  to clear it, or swing the motor into it and burst it.
-- **The trolley** handles like a shopping cart. [E] takes the handle (two people can push together), [E] again lets
+- **The hoist.** A fixed overhead hoist runs on a rail from over the motor in the pit to over the trolley in the hall. One
+  crew member drives it from the booth, watching through the window. The hook only reaches the motor's orange lifting
+  eye down in the pit, so a teammate down there has to hook it ([E] on the hook), and someone on the hall floor unhooks it
+  at the trolley: you can only unhook a load that's resting on something. The carriage accelerates gently and brakes hard,
+  so stopping makes the load swing. Haul the motor all the way up before moving it: the pit's floor edge and the **water
+  main** (head height, across the hall between the pit and the trolley) are in the way. Swing it into the pipe and it bursts.
+- **The trolley** starts in the hall under the north end of the hoist rail. It handles like a shopping cart. [E] takes the handle (two people can push together), [E] again lets
   go. While you hold it, it's held rigidly in front of you: walk and it goes where you walk, turn (mouse, or A/D) and it
   turns with you. It can't be shoved sideways: you line up behind it. The fixed wheels are at the handle end, the swivel
   casters at the far end. Your hands only have so much strength, so a loaded trolley is slow to get going, slow to turn
@@ -91,7 +99,7 @@ The loaded trolley fits neither 1 m door, so the motor goes out one of two ways:
 - **The damaged corridor.** Its cracked deck spans a void over the pit. Its signs show stress and load. It holds about
   280 kg: two crew are fine; the trolley with the motor is not. Extend a **support jack** (two in the bay) at the **jack
   point** in the void under it (walk in from the pit), and it holds 800 kg. A big impact on the deck can make the jack slip.
-  At 100% stress the deck falls into the pit.
+  At 100% stress the deck falls into the pit, and the only way out for the motor is the service tunnel.
 - **Flooding.** One water level for the whole station, measured from the pit floor. It rises with seepage (faster as the
   station destabilises), through the **inlet valve** in the pit (crank it shut with the wrench), and much faster through a
   burst pipe (the inlet valve shuts that off too). The gauges show DRY / SHALLOW / DEEP / CRITICAL for the pit and the hall:
@@ -115,19 +123,22 @@ BlackwaterStation (Mission)
 ├─ MissionClock           15 min to station failure; instability raises seepage and tremors
 ├─ Tremors                shakes cameras, shoves props, knocks wrenches off bolts, drops Rubble
 ├─ IncidentLog, Crew (loadout = Wrench), StateSync, HUD, Environment
-├─ Geometry               CSG greybox: bay, control room, hall, corridor, pit + two ramps; signs (ProximityLabel)
+├─ Geometry               CSG greybox: bay, control room, hall + hoist booth and stair, corridor, pit + hall ramp,
+│                         service tunnel (annex, passage, ramp); signs (ProximityLabel)
 ├─ Water
-│  ├─ StationFlood        one FloodZone (base = pit floor) with Pit / Corridor / Hall / Control volumes
+│  ├─ StationFlood        one FloodZone (base = pit floor) with Pit / Corridor / Hall / Control / Tunnel / Annex volumes
 │  ├─ WaterMain           inlet_flow through InletValve + leak_flow per burst PipeRun
 │  └─ PitGauge, HallGauge FloodGauge signs (DRY → CRITICAL)
 ├─ PumpHall
-│  ├─ OverheadHoist       rail, Carriage, Chain, Hook (+ Point), Pendant (+ Point): move the Pendant anywhere
-│  ├─ PumpMotor           450 kg Prop with a LiftingEye        MotorMounting (bolts, item = PumpMotor)
+│  ├─ OverheadHoist       rail (north-south, pit -> hall), Carriage, Chain, Hook (+ Point), Pendant (+ Point) = the
+│  │                      console in the booth (move it anywhere)
+│  ├─ PumpMotor           450 kg Prop with a LiftingEye, down in the pit   MotorMounting (bolts, item = PumpMotor)
 │  ├─ Trolley             FixedAxle (fixed wheels, handle end), Grip (aim zone), CargoArea (cargo that sticks)
 │  └─ WaterMainPipe       PipeRun: ruptures on a heavy hit
 ├─ ControlRoom            VfdModule + VfdMounting, HallDoor (SwingDoor: 1 m, turns about its hinge)
 ├─ DamagedCorridor        Slabs (BridgeSlab ×3), LoadArea, JackPoint, Labels
 ├─ Pit                    InletValve, InletGush, Transmitter1-4 + their Mountings
+├─ Tunnel                 Debris1-3 (60 kg crates in the passage: drag them aside)
 ├─ Bay                    DepositZone (truck_bed = Truck/TruckBed), Truck (TruckDeparture: Ignition, yard = the bay,
 │                         departed → Mission), SupportJack1-2
 └─ Rubble
@@ -187,12 +198,13 @@ follows the spec's acceptance tests:
 - unbolting (solo vs two wrenches, a tremor knocking the wrench off)
 - fragile carrying (gentle set-down vs a drop)
 - securing exactly once, and cranking the inlet valve
-- the hoist: controls, hard braking, the swing and how it dies down, unhooking only when supported, a burst pipe, a gentle
-  set-down on the trolley
+- the hoist: the booth controls, hard braking, hooking the motor down in the pit (from the pit, not the booth), hauling it
+  out, the swing and how it dies down, unhooking only when supported, a burst pipe, a gentle set-down on the trolley
 - pushing the trolley by its handle (tracking, staying at the handle, coasting after letting go), and cargo sliding in a crash
 - departure and the payout
-- the swing door, the jack holding the corridor and slipping on impact, the corridor collapsing, and station failure with
-  a rescue fee
+- the swing door, the jack holding the corridor and slipping on impact, the corridor collapsing
+- the service tunnel: one pusher can't get the loaded trolley up its ramp, two can
+- station failure with a rescue fee
 
 `smoke_test.gd` covers the Flooded Reactor.
 
