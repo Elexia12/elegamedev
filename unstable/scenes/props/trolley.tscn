@@ -62,9 +62,9 @@ material = SubResource("Mat_handle")
 size = Vector3(0.06, 0.6, 0.06)
 
 [node name="Trolley" type="RigidBody3D"]
-editor_description = "PLATFORM TROLLEY (Trolley). [E] takes the handle (two crew can push), [E] again lets go. Walk to push it, turn to steer: the far end (FrontAxle) has fixed wheels, the handle end has swivel casters.
+editor_description = "PLATFORM TROLLEY (Trolley), handles like a shopping cart. [E] takes the handle (two crew can push), [E] again lets go. While held it stays rigidly in front of you: walk to push, turn to steer. Fixed wheels at the handle end (FixedAxle), swivel casters at the far end.
 Cargo on the deck is held by deck_friction only (no straps): brake, ram or turn too hard and the motor slides off.
-Tuning: push_force / push_stiffness (how it follows you), axle_grip / skid_friction (cornering), rolling_resistance / drag (how far it coasts)."
+Tuning: push_force / push_torque (what your hands can do), hold_stiffness / turn_stiffness (how rigid the grip is), axle_grip / skid_friction (cornering), rolling_resistance / drag (how far it coasts)."
 collision_layer = 4
 collision_mask = 23
 mass = 70
@@ -106,32 +106,32 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 mesh = SubResource("Mesh_deck")
 
 [node name="Wheels" type="Node3D" parent="."]
-editor_description = "Visual wheels. FrontLeft/Right spin; the casters swivel (y) and spin (their Wheel child)."
+editor_description = "Visual wheels. FixedLeft/Right (handle end) spin; the casters (far end) swivel (y) and spin (their Wheel child)."
 
-[node name="FrontLeft" type="Node3D" parent="Wheels"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, -0.33, 0.5)
+[node name="FixedLeft" type="Node3D" parent="Wheels"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, -0.33, 0.5)
 
-[node name="Tyre" type="MeshInstance3D" parent="Wheels/FrontLeft"]
+[node name="Tyre" type="MeshInstance3D" parent="Wheels/FixedLeft"]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
 mesh = SubResource("Mesh_wheel")
 
-[node name="Spoke" type="MeshInstance3D" parent="Wheels/FrontLeft"]
+[node name="Spoke" type="MeshInstance3D" parent="Wheels/FixedLeft"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("Mesh_spoke")
 
-[node name="FrontRight" type="Node3D" parent="Wheels"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, -0.33, -0.5)
+[node name="FixedRight" type="Node3D" parent="Wheels"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, -0.33, -0.5)
 
-[node name="Tyre" type="MeshInstance3D" parent="Wheels/FrontRight"]
+[node name="Tyre" type="MeshInstance3D" parent="Wheels/FixedRight"]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
 mesh = SubResource("Mesh_wheel")
 
-[node name="Spoke" type="MeshInstance3D" parent="Wheels/FrontRight"]
+[node name="Spoke" type="MeshInstance3D" parent="Wheels/FixedRight"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("Mesh_spoke")
 
 [node name="CasterLeft" type="Node3D" parent="Wheels"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, -0.25, 0.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, -0.25, 0.5)
 
 [node name="Wheel" type="Node3D" parent="Wheels/CasterLeft"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.07, -0.08, 0)
@@ -148,7 +148,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.02, 0.03, 0)
 mesh = SubResource("Mesh_fork")
 
 [node name="CasterRight" type="Node3D" parent="Wheels"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, -0.25, -0.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, -0.25, -0.5)
 
 [node name="Wheel" type="Node3D" parent="Wheels/CasterRight"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.07, -0.08, 0)
@@ -180,9 +180,9 @@ mesh = SubResource("Mesh_post")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, 0.4, 0)
 editor_description = "Where the pusher pushes. Their force is applied here (at the height of the centre of mass)."
 
-[node name="FrontAxle" type="Marker3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, -0.33, 0)
-editor_description = "The fixed (non-swivelling) wheels. Sideways grip is applied here."
+[node name="FixedAxle" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, -0.33, 0)
+editor_description = "The fixed (non-swivelling) wheels, at the handle end like a shopping cart. Sideways grip is applied here."
 
 [node name="CargoArea" type="Area3D" parent="."]
 editor_description = "What is resting on the deck. Deck friction is applied to these bodies."

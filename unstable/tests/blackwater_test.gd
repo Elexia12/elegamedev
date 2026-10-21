@@ -244,15 +244,25 @@ func _initialize() -> void:
 			p.head.rotation.x = 0.0
 			mark = (_n("PumpHall/Trolley") as Prop).global_position
 			p.bot_input = Vector2(0, -1)],
-		[3.0, func() -> void:
+		[2.0, func() -> void:
 			var trolley := _n("PumpHall/Trolley") as Trolley
 			var moved := mark.x - trolley.global_position.x
 			var drift := absf(trolley.global_position.z - mark.z)
-			_check(moved > 2.5, "walking pushes the loaded trolley (moved %.1f m)" % moved)
-			_check(drift < 0.5, "it rolls straight on its fixed wheels (drift %.2f m over %.1f m)" % [drift, moved])
+			_check(moved > 1.8, "walking pushes the loaded trolley (moved %.1f m)" % moved)
+			_check(drift < 0.3, "it rolls straight on its fixed wheels (drift %.2f m over %.1f m)" % [drift, moved])
 			_check(_n("PumpHall/PumpMotor") in trolley.cargo(), "the motor rides along on the deck")
 			var stand: Vector3 = trolley.handle_for(p) - (-p.global_basis.z) * trolley.handle_reach
 			_check(((p.global_position - stand) * Vector3(1, 0, 1)).length() < 0.45, "the pusher stays at the handle")
+			# Keep walking and hold A: steer it like a cart.
+			mark_f = trolley.heading()
+			p.bot_input = Vector2(-1, -1)],
+		[0.8, func() -> void:
+			var trolley := _n("PumpHall/Trolley") as Trolley
+			var turned := rad_to_deg(absf(angle_difference(mark_f, trolley.heading())))
+			var off := rad_to_deg(absf(angle_difference(trolley.heading(), p.rotation.y + PI / 2.0)))
+			_check(turned > 30.0, "A/D steer the trolley (it turned %.0f°)" % turned)
+			_check(off < 15.0, "it turns with you, held in your hands (%.0f° off your heading)" % off)
+			_check(_n("PumpHall/PumpMotor") in trolley.cargo(), "and the motor stays on through the turn")
 			p.bot_input = Vector2.ZERO
 			_req("use", "PumpHall/Trolley")],
 		[0.1, func() -> void:
@@ -268,8 +278,8 @@ func _initialize() -> void:
 			var motor := _n("PumpHall/PumpMotor") as Prop
 			mark = motor.global_position - trolley.global_position
 			mark_f = motor.condition
-			trolley.linear_velocity = Vector3(-3.5, 0, 0)
-			motor.linear_velocity = Vector3(-3.5, 0, 0)],
+			trolley.linear_velocity = trolley.global_basis.x * 3.5
+			motor.linear_velocity = trolley.global_basis.x * 3.5],
 		[1.2, func() -> void:
 			var trolley := _n("PumpHall/Trolley") as Trolley
 			var motor := _n("PumpHall/PumpMotor") as Prop

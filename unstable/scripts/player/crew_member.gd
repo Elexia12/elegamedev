@@ -367,6 +367,10 @@ func _move(delta: float) -> void:
 		input = Vector2.ZERO
 	elif _drive_sent != Vector3.ZERO:
 		_drive_sent = Vector3.ZERO
+	if pushing():
+		# Hands on a cart: A/D turn it instead of side-stepping.
+		rotate_y(-input.x * deg_to_rad(70.0) * delta)
+		input.x = 0.0
 	var dir := (transform.basis * Vector3(input.x, 0.0, input.y)).normalized()
 	var speed := sprint_speed if Input.is_action_pressed("sprint") else walk_speed
 	if depth > 0.4:
@@ -409,18 +413,30 @@ func _move(delta: float) -> void:
 	_shake_camera(delta)
 
 
-## Owner: your hands are on the trolley's handle. You can't walk away from it:
-## if it lags (it's heavy, it's stuck, you turned too fast) it holds you back.
+## Owner: your hands are on the trolley's handle. You can't walk away from it,
+## and you can't turn faster than it does: if it lags (it's heavy, it's stuck)
+## it holds you back. Looking up and down stays free.
 func _tether_to(pushed: Node) -> void:
+	var cart_yaw: float = pushed.heading() - PI / 2.0
+	var off_yaw := angle_difference(cart_yaw, rotation.y)
+	var max_off := deg_to_rad(12.0)
+	if absf(off_yaw) > max_off:
+		rotation.y = cart_yaw + clampf(off_yaw, -max_off, max_off)
 	var fwd := (-global_basis.z * Vector3(1, 0, 1)).normalized()
 	var stand: Vector3 = pushed.handle_for(self) - fwd * pushed.handle_reach
 	var off := (global_position - stand) * Vector3(1, 0, 1)
+	# Sideways: you line up behind the handle.
+	var side := fwd.cross(Vector3.UP)
+	var lateral := off.dot(side)
+	global_position -= side * lateral * 0.5
+	velocity -= side * velocity.dot(side)
+	# Forward: walking into a trolley that won't go stops you. (If it rolls
+	# ahead, you don't get dragged after it: your hands hold it back.)
+	var ahead := off.dot(fwd)
 	var slack := 0.3
-	if off.length() <= slack:
-		return
-	var dir := off.normalized()
-	global_position -= dir * (off.length() - slack)
-	velocity -= dir * maxf(0.0, velocity.dot(dir))
+	if ahead > slack:
+		global_position -= fwd * (ahead - slack)
+		velocity -= fwd * maxf(0.0, velocity.dot(fwd))
 
 
 ## Owner: movement keys drive the machine. x = A/D, y = W (+1) / S (-1).
