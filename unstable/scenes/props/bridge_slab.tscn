@@ -71,6 +71,18 @@ mesh = SubResource("Mesh_deck")
 transform = Transform3D(0.95106, 0, 0.30902, 0, 1, 0, -0.30902, 0, 0.95106, 0.4, 0.155, 0)
 mesh = SubResource("Mesh_crack")
 
+[node name="Crack2" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(0.81915, 0, -0.57358, 0, 1, 0, 0.57358, 0, 0.81915, -0.9, 0.155, 0.25)
+visible = false
+editor_description = "Opens up once the corridor's stress passes 50% (DamagedCorridor)."
+mesh = SubResource("Mesh_crack")
+
+[node name="Crack3" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(0.5, 0, 0.519615, 0, 1, 0, -0.866025, 0, 0.3, 1.1, 0.155, -0.5)
+visible = false
+editor_description = "Opens up once the corridor's stress passes 70% (DamagedCorridor)."
+mesh = SubResource("Mesh_crack")
+
 [node name="RailTopA" type="MeshInstance3D" parent="Mesh"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 1.38)
 mesh = SubResource("Mesh_rail")

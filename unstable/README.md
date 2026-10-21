@@ -99,6 +99,11 @@ The loaded trolley fits neither 1 m door, so the motor goes out one of two ways:
 - **The damaged corridor.** Its cracked deck spans a void over the pit. Its signs show stress and load. It holds about
   280 kg: two crew are fine; the trolley with the motor is not. Extend a **support jack** (two in the bay) at the **jack
   point** in the void under it (walk in from the pit), and it holds 800 kg. A big impact on the deck can make the jack slip.
+  **It warns you, without words, louder the closer you are to its limit:** weight coming on makes it groan (one person:
+  softly); it creaks under load; near the limit it cracks (a snap, a puff of dust, the slab dips); over the limit it
+  groans hard, cracks fast, grit and dust pour from the seams and the slabs tremble. The cracks in the slabs widen and
+  multiply as stress builds, and stay. Overloaded, you have a few seconds (a loaded trolley: ~3.5 s) to back off: take
+  the weight off in time and it holds, weaker than before. Slam something heavy onto it and it can go at once.
   At 100% stress the deck falls into the pit, and the only way out for the motor is the service tunnel.
 - **Second chance: the corridor hoist.** If the deck collapses under the motor, the motor (and maybe the trolley) ends
   up down in the void, in the wreckage. A maintenance hoist runs under the corridor ceiling from over the void out into
@@ -126,7 +131,8 @@ Everything you do makes the noise it should, and every player hears the same thi
 - The hoist motor whines (deeper under load), its chain rattles as it pays out, and the brake clunks when it stops.
 - The trolley's wheels rumble with speed. The wrench ratchets on bolts and valves; a freed item clanks loose.
 - Water rushes from the inlet (louder the wider the valve is open); a burst pipe bangs, then hisses.
-- The damaged corridor groans as its stress climbs and crashes down when it goes. Tremors rumble. The truck idles,
+- The damaged corridor groans when weight comes on, creaks under load, cracks near its limit (grit pours from the
+  seams when overloaded), and crashes down when it goes. Tremors rumble. The truck idles,
   then revs as it leaves. The hall and control room hum, the pit laps, the tunnel drips.
 
 The sounds are synthesised placeholders (`tools/make_sfx.py` writes `audio/sfx/`). Replace any `.wav` with a real
@@ -165,7 +171,8 @@ BlackwaterStation (Mission)
 └─ Rubble
 ```
 Tune it in the Inspector:
-- Corridor: `tolerance`, `jack_bonus`, `slip_chance`.
+- Corridor: `tolerance`, `jack_bonus`, `slip_chance`, `overload_rate` (how long you have to back off), and the warning
+  signs: `warn_from`, `max_crack_rate`.
 - Hoist: `braking` vs `acceleration` (the swing), `sway_damping`.
 - Salvage: `fragility` / `damage_threshold` on each prop.
 - Water main: `inlet_flow`; the zone's `inflow`.
@@ -223,6 +230,7 @@ follows the spec's acceptance tests:
   out, the swing and how it dies down, unhooking only when supported, a burst pipe, a gentle set-down on the trolley
 - pushing the trolley by its handle (tracking, staying at the handle, coasting after letting go), and cargo sliding in a crash
 - departure and the payout
+- the corridor's warnings (groans, creaks, cracks, grit and dust when overloaded) and backing off in time saving it
 - the swing door, the jack holding the corridor and slipping on impact, the corridor collapsing
 - the second chance: the corridor hoist lifts the motor out of the collapsed corridor onto the trolley
 - the service tunnel: one pusher can't get the loaded trolley up its ramp, two can

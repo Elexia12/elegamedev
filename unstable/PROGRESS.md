@@ -18,7 +18,7 @@ Two playable greybox missions (the main menu's Mission picker; details in `READM
 - **The Flooded Reactor** (first prototype, GDD §8): winch / pressure tool, jammed gate, lift extraction.
 
 Tests, all passing on `main`:
-- `tests/blackwater_test.gd`: 111 checks.
+- `tests/blackwater_test.gd`: 117 checks.
 - `tests/smoke_test.gd`: 29 checks.
 - `tests/blackwater_net_test.gd` and `tests/net_test.gd`: host and client agree, over localhost ENet.
 

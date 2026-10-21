@@ -281,6 +281,36 @@ def tremor_rumble():
     return x * env + grit
 
 
+def crack_snap():
+    """Concrete cracking under load: a sharp snap, grit, a short low knock."""
+    s = 0.7
+    tt = t(s)
+    snap = band(noise(s), 1200, 12000) * np.exp(-tt / 0.008)
+    grit = np.zeros(int(s * SR))
+    for _ in range(14):
+        place(grit, band(noise(0.025), 2000, 9000) * decay(0.025, 0.004) * rng.uniform(0.1, 0.6), abs(rng.normal(0.03, 0.08)))
+    knock = thump(s, 180, 70, 0.05)
+    return 1.3 * snap + 0.6 * grit + 0.6 * knock + 0.3 * lowpass(noise(s), 600) * np.exp(-tt / 0.1)
+
+
+def deck_groan():
+    """The deck taking weight: a long, heavy, uneasy groan."""
+    s = 1.8
+    x = groan(s, 70, 52) + 0.5 * groan(s, 105, 88)
+    tt = t(s)
+    return x + 0.25 * lowpass(noise(s), 300) * np.sin(np.pi * tt / s)
+
+
+def grit_loop():
+    """Dust and grit trickling out of the cracks."""
+    s = 2.0
+    buf = np.zeros(int(s * SR))
+    for _ in range(int(s * 60)):
+        wrap_add(buf, band(noise(0.02), 2500, 10000) * decay(0.02, 0.003) * rng.uniform(0.05, 0.5), rng.uniform(0, s))
+    hiss = crossfade_loop(band(noise(s + 0.3), 3000, 9000), 0.3)
+    return buf + 0.15 * pad(hiss, s)
+
+
 # --- Machines and ambience ----------------------------------------------------------------
 
 def hum_loop():
@@ -336,6 +366,10 @@ SOUNDS = {
     "ratchet_loop": ratchet_loop,
     "bolt_free": bolt_free,
     "truck_engine_loop": truck_engine_loop,
+    # Added later: kept at the end so the sounds above stay identical.
+    "crack_snap": crack_snap,
+    "deck_groan": deck_groan,
+    "grit_loop": grit_loop,
 }
 
 if __name__ == "__main__":
