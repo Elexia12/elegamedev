@@ -52,9 +52,12 @@ How the code is organised, and the decisions behind it that should hold. Level l
 - **Size a force's gain by the body it's applied to.** Cargo is a separate rigid body, so a force on the 70 kg trolley
   scaled by trolley + 450 kg motor overshoots every step and jitters. Use the body's own mass/inertia, the pair's
   reduced mass for forces between two bodies, or "body + rigidly attached cargo". Keep `gain × dt` well under 1.
+  Torques likewise: turn things as an angular acceleration times the body's real inertia tensor (`Hands._world_inertia`),
+  never "× mass", or slim shapes (the jack's cylinder) spin up about their long axis.
 - **Apply contact-like forces where the contact is** (deck friction at deck height, not at the cargo's centre).
 - **Collision shapes match the visible mesh.** No invisible boxes (motor = cylinder on feet; trolley handle = posts +
-  bar, with a separate aim-only `InteractPoint`). Held props ignore their holder's body (`Hands._sync_collision_exception`).
+  bar, with a separate aim-only `InteractPoint`). Held props ignore their holder's body (`Hands._sync_collision_exception`),
+  and the trolley leaves held or hoisted cargo alone (`Trolley._lifted`).
 - Jolt areas don't detect **static**-frozen bodies: anything an Area must still see while frozen uses
   `FREEZE_MODE_KINEMATIC` (`support_jack.gd`).
 

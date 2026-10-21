@@ -166,6 +166,9 @@ func _cargo(delta: float) -> void:
 	var deck_y := deck.global_position.y + 0.05
 	var hold := deck_friction * 9.8
 	for b in bodies:
+		# Held or hoisted: it's in someone's hands, not resting on the deck.
+		if _lifted(b):
+			continue
 		var on_deck := Vector3(b.global_position.x, deck_y, b.global_position.z)
 		var r := on_deck - global_position
 		if _joints.has(b):
@@ -329,18 +332,19 @@ func _wheels(total: float) -> void:
 	# Swivel casters barely resist turning: sized by the trolley alone.
 	var caster_force := clampf(-caster_slip * mass * caster_grip, -caster_friction * weight * 0.5, caster_friction * weight * 0.5)
 	apply_force(side * caster_force, caster_at - global_position)
+	# Rolling resistance as Coulomb friction: one continuous force, stiff near a
+	# standstill (so it stops, and stays stopped) but never more than
+	# `rolling_resistance` × weight. No on/off threshold to rock around. The
+	# stiffness is sized by the trolley body (stuck cargo follows through its
+	# joint), which keeps it stable.
+	var ticks := float(Engine.physics_ticks_per_second)
 	var v := linear_velocity * Vector3(1, 0, 1)
-	var speed := v.length()
-	if speed > 0.001:
-		# Constant rolling resistance, faded in near standstill so it doesn't jitter.
-		apply_central_force(-v / speed * rolling_resistance * weight * clampf(speed / 0.15, 0.0, 1.0))
+	apply_central_force((-v * mass * 0.5 * ticks).limit_length(rolling_resistance * weight))
 	apply_central_force(-v * total * drag)
-	# Static friction: left alone and nearly still, it stays put instead of
-	# creeping (half the slip per step, up to what the wheels can hold).
-	if pushers.is_empty() and speed < 0.1:
-		var hold := (-v * rigid * 0.5 * Engine.physics_ticks_per_second).limit_length(rolling_resistance * 3.0 * weight)
-		apply_central_force(hold)
-		apply_torque(Vector3.UP * -angular_velocity.y * _rigid_yaw_inertia() * 0.5 * Engine.physics_ticks_per_second)
+	if pushers.is_empty():
+		# Left alone, it doesn't keep slowly turning either.
+		var limit := rolling_resistance * weight * 0.6
+		apply_torque(Vector3.UP * clampf(-angular_velocity.y * _own_yaw_inertia() * 0.5 * ticks, -limit, limit))
 
 
 func _process(delta: float) -> void:

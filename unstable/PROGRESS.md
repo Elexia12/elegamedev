@@ -1,6 +1,6 @@
 # UNSTABLE — progress
 
-_Last updated 2026-10-21 · `main` at the commit that added this file (gameplay last changed in `502d41d`)._
+_Last updated 2026-10-21 (see `git log` on `main` for the latest change)._
 
 ## Where things stand
 Two playable greybox missions (the main menu's Mission picker; details in `README.md`):

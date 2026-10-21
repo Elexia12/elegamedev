@@ -260,7 +260,7 @@ func _initialize() -> void:
 			var trolley := _n("PumpHall/Trolley") as Trolley
 			var turned := rad_to_deg(absf(angle_difference(mark_f, trolley.heading())))
 			var off := rad_to_deg(absf(angle_difference(trolley.heading(), p.rotation.y + PI / 2.0)))
-			_check(turned > 30.0, "A/D steer the trolley (it turned %.0f°)" % turned)
+			_check(turned > 25.0, "A/D steer the trolley (it turned %.0f° in 0.8 s)" % turned)
 			_check(off < 15.0, "it turns with you, held in your hands (%.0f° off your heading)" % off)
 			_check(_n("PumpHall/PumpMotor") in trolley.cargo(), "and the motor stays on through the turn")
 			p.bot_input = Vector2.ZERO

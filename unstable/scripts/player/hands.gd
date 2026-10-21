@@ -161,15 +161,29 @@ func _physics_process(_delta: float) -> void:
 	force = force.limit_length(grab_force)
 	_prop.sleeping = false
 	_prop.apply_force(force, gp - _prop.global_position)
-	_prop.apply_torque(-_prop.angular_velocity * _prop.mass * 0.5)
-	if _align != Align.FREE:
+	# Turning is done as an angular acceleration times the prop's real inertia
+	# (from the physics engine). Scaling torques by mass instead over-drives
+	# slim things like the jack's cylinder about their long axis, and they spin.
+	var inertia := _world_inertia(_prop)
+	var spin_damp := -_prop.angular_velocity * 3.0
+	if _align == Align.FREE:
+		_prop.apply_torque(inertia * spin_damp)
+	else:
 		var want := Vector3.UP if _align == Align.UPRIGHT else crew.head.global_basis.x
 		var up := _prop.global_basis.y
 		# Pick whichever end is closer so "flat" doesn't flip it end over end.
 		if _align == Align.FLAT and up.dot(want) < 0.0:
 			want = -want
-		var torque := up.cross(want) * align_strength * _prop.mass - _prop.angular_velocity * _prop.mass * 2.0
-		_prop.apply_torque(torque.limit_length(grab_force * 1.5))
+		# Critically damped toward the wanted orientation.
+		var k := sqrt(align_strength)
+		var turn := up.cross(want) * k * k - _prop.angular_velocity * 2.0 * k
+		_prop.apply_torque((inertia * turn).limit_length(grab_force * 1.5))
+
+
+## The prop's inertia tensor in world space (kg·m²).
+func _world_inertia(p: RigidBody3D) -> Basis:
+	var inv := PhysicsServer3D.body_get_direct_state(p.get_rid()).inverse_inertia_tensor
+	return inv.inverse() if inv.determinant() > 0.000001 else Basis.IDENTITY * p.mass * 0.1
 
 
 func _drop(msg: String) -> void:
