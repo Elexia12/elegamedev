@@ -36,6 +36,8 @@ var _prop: Prop = null
 var _offset := Vector3.ZERO
 var _distance := 2.0
 var _align: int = Align.FREE
+## The prop currently excluded from colliding with this crew member.
+var _ignored: Prop = null
 
 
 func _ready() -> void:
@@ -123,7 +125,23 @@ func host_throw() -> void:
 	p.linear_velocity = crew.velocity * 0.5 + (dir + Vector3.UP * 0.15).normalized() * speed
 
 
+## Whatever you hold doesn't collide with your own body (no jitter against
+## yourself). Kept in sync every frame, on the host and on your own machine.
+func _sync_collision_exception() -> void:
+	var want: Prop = _prop if is_instance_valid(_prop) else (holding if is_instance_valid(holding) else null)
+	if want == _ignored:
+		return
+	if is_instance_valid(_ignored):
+		crew.remove_collision_exception_with(_ignored)
+		_ignored.remove_collision_exception_with(crew)
+	_ignored = want
+	if want:
+		crew.add_collision_exception_with(want)
+		want.add_collision_exception_with(crew)
+
+
 func _physics_process(_delta: float) -> void:
+	_sync_collision_exception()
 	if _prop == null:
 		return
 	if not is_instance_valid(_prop) or _prop.freeze:

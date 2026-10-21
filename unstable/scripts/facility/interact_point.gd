@@ -14,7 +14,7 @@ const MARKER_COLORS := {
 	"bolts": Color(1.0, 0.4, 0.15),
 }
 
-@export_enum("cable", "valve", "lever", "pendant", "hook", "eye", "bolts", "ignition") var kind := "valve"
+@export_enum("cable", "valve", "lever", "pendant", "hook", "eye", "bolts", "ignition", "handle") var kind := "valve"
 
 @onready var marker: MeshInstance3D = $Marker
 

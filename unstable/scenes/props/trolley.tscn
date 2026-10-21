@@ -1,6 +1,7 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/trolley.gd" id="1_trolle"]
+[ext_resource type="PackedScene" path="res://scenes/components/interact_point.tscn" id="2_intera"]
 
 [sub_resource type="PhysicsMaterial" id="Phys_trolley"]
 friction = 0
@@ -11,8 +12,11 @@ size = Vector3(1.8, 0.1, 1.1)
 [sub_resource type="SphereShape3D" id="Shape_wheel"]
 radius = 0.12
 
-[sub_resource type="BoxShape3D" id="Shape_handle"]
-size = Vector3(0.08, 0.6, 1)
+[sub_resource type="BoxShape3D" id="Shape_post"]
+size = Vector3(0.06, 0.6, 0.06)
+
+[sub_resource type="BoxShape3D" id="Shape_bar"]
+size = Vector3(0.06, 0.06, 1)
 
 [sub_resource type="BoxShape3D" id="Shape_cargo"]
 size = Vector3(1.7, 1.2, 1)
@@ -97,9 +101,17 @@ shape = SubResource("Shape_wheel")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, -0.33, -0.45)
 shape = SubResource("Shape_wheel")
 
-[node name="Handle" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, 0.4, 0)
-shape = SubResource("Shape_handle")
+[node name="HandlePostShapeA" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, 0.38, 0.47)
+shape = SubResource("Shape_post")
+
+[node name="HandlePostShapeB" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, 0.38, -0.47)
+shape = SubResource("Shape_post")
+
+[node name="HandleBarShape" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, 0.68, 0)
+shape = SubResource("Shape_bar")
 
 [node name="DeckMesh" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
@@ -175,6 +187,10 @@ mesh = SubResource("Mesh_post")
 [node name="HandlePostB" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, 0.38, -0.47)
 mesh = SubResource("Mesh_post")
+
+[node name="Grip" parent="." instance=ExtResource("2_intera")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, 0.6, 0)
+kind = "handle"
 
 [node name="HandlePoint" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, 0.4, 0)

@@ -1,9 +1,13 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/support_jack.gd" id="1_suppor"]
 
-[sub_resource type="BoxShape3D" id="Shape_jack"]
-size = Vector3(0.4, 0.9, 0.4)
+[sub_resource type="CylinderShape3D" id="Shape_jack"]
+radius = 0.16
+height = 0.84
+
+[sub_resource type="BoxShape3D" id="Shape_base"]
+size = Vector3(0.44, 0.06, 0.44)
 
 [sub_resource type="StandardMaterial3D" id="Mat_jack"]
 albedo_color = Color(0.85, 0.2, 0.12, 1)
@@ -48,7 +52,12 @@ buoyancy = 0.2
 height = 0.9
 
 [node name="Shape" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
 shape = SubResource("Shape_jack")
+
+[node name="BaseShape" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.42, 0)
+shape = SubResource("Shape_base")
 
 [node name="Body" type="MeshInstance3D" parent="."]
 mesh = SubResource("Mesh_body")

@@ -43,7 +43,7 @@ extends Prop
 @export var wheel_radius := 0.12
 @export_group("Cargo")
 ## Friction coefficient between the deck and cargo.
-@export var deck_friction := 0.45
+@export var deck_friction := 0.85
 
 ## Peer ids holding the handle (replicated).
 var pushers: Array = []
@@ -109,6 +109,11 @@ func use_prompt(crew: CrewMember) -> String:
 	if pushers.size() >= max_pushers:
 		return "Two people are already pushing the trolley"
 	return "[E] push the trolley"
+
+
+## Aiming at the Grip point (the generous aim zone around the thin handle).
+func prompt_for(crew: CrewMember, _target: Node) -> String:
+	return use_prompt(crew)
 
 
 ## [E]: take the handle, or let go of it.
@@ -232,8 +237,14 @@ func _wheels(total: float) -> void:
 	var speed := v.length()
 	if speed > 0.001:
 		# Constant rolling resistance, faded in near standstill so it doesn't jitter.
-		apply_central_force(-v / speed * rolling_resistance * weight * clampf(speed / 0.3, 0.0, 1.0))
+		apply_central_force(-v / speed * rolling_resistance * weight * clampf(speed / 0.15, 0.0, 1.0))
 	apply_central_force(-v * total * drag)
+	# Static friction: left alone and nearly still, it stays put instead of
+	# creeping (half the slip per step, up to what the wheels can hold).
+	if pushers.is_empty() and speed < 0.1:
+		var hold := (-v * mass * 0.5 * Engine.physics_ticks_per_second).limit_length(rolling_resistance * 3.0 * weight)
+		apply_central_force(hold)
+		apply_torque(Vector3.UP * -angular_velocity.y * _own_yaw_inertia() * 0.5 * Engine.physics_ticks_per_second)
 
 
 func _process(delta: float) -> void:

@@ -84,8 +84,8 @@ The loaded trolley fits neither 1 m door, so the motor goes out one of two ways:
   go. While you hold it, it's held rigidly in front of you: walk and it goes where you walk, turn (mouse, or A/D) and it
   turns with you. It can't be shoved sideways: you line up behind it. The fixed wheels are at the handle end, the swivel
   casters at the far end. Your hands only have so much strength, so a loaded trolley is slow to get going, slow to turn
-  and slow to stop, and you can't turn faster than it does. Let go and it rolls on a few metres. Nothing is strapped
-  down: stop dead, ram something or corner hard and the motor slides or falls off.
+  and slow to stop, and you can't turn faster than it does. Let go and it rolls on a few metres, then stays put. The
+  deck is grippy (`deck_friction` 0.85): the motor rides steadily, and only a hard ram or a dead stop slides it.
 - **The damaged corridor.** Its cracked deck spans a void over the pit. Its signs show stress and load. It holds about
   280 kg: two crew are fine; the trolley with the motor is not. Extend a **support jack** (two in the bay) at the **jack
   point** in the void under it (walk in from the pit), and it holds 800 kg. A big impact on the deck can make the jack slip.
@@ -194,6 +194,10 @@ which). `Hands` does grab/carry/drag/throw, `Vitals` handles breath and knockout
    that's the point's handler, the nearest ancestor that implements `use()`. Its `prompt_for()` writes the HUD prompt.
 3. `"drive"` sends the movement keys of whoever holds a machine's controls (group `machines`).
 4. Held actions (grab, reel, blast, wrench) run on the host every physics frame, using that player's replicated aim.
+
+**Collision shapes match what you see.** No invisible boxes: the motor is a cylinder on feet, the trolley handle is two
+posts and a bar (with a separate, generous aim zone for [E]), the support jack is a cylinder on a base plate. Whatever you
+carry doesn't collide with your own body. Check with Debug → Visible Collision Shapes.
 
 **Damage and knock-on effects:** every `Prop` measures impacts from its change in velocity over the last few physics
 steps. It applies its own condition damage and passes the blow to whatever it hit (`take_hit`): that's how a motor ruptures

@@ -270,7 +270,7 @@ func _initialize() -> void:
 			_check(p.pushing() == null and trolley.linear_velocity.length() > 0.3, "[E] lets go, and the loaded trolley rolls on (%.1f m/s)" % trolley.linear_velocity.length())],
 		[3.0, func() -> void:
 			var trolley := _n("PumpHall/Trolley") as Trolley
-			_check(trolley.linear_velocity.length() < 0.05, "then rolls to a stop")
+			_check(trolley.linear_velocity.length() < 0.05, "then rolls to a stop (%.2f m/s, at %s)" % [trolley.linear_velocity.length(), trolley.global_position])
 			p.bot_input = null],
 		[0.5, func() -> void:
 			# Reckless: ram the loaded trolley at the 1 m door to the control room.
