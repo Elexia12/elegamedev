@@ -3,10 +3,15 @@ extends Node
 ## The screens under UI are their own scenes and their buttons are wired to
 ## the handlers below in main.tscn. The host instantiates the mission under
 ## World, and MissionSpawner replicates it to clients, late joiners included.
-## Command-line user args for testing: `-- --solo`, `-- --host`, `-- --join=IP`.
+## The host picks the mission in the menu (MainMenu.mission_selected).
+## Command-line user args for testing: `-- --solo`, `-- --host`, `-- --join=IP`,
+## `-- --mission=N` (index into `missions`).
 
-@export var mission_scene: PackedScene
+## Playable levels, in menu order. The first is the default.
+@export var missions: Array[PackedScene] = []
+@export var mission_names: PackedStringArray = []
 
+var mission_index := 0
 var _mission_count := 0
 
 @onready var world: Node3D = $World
@@ -18,6 +23,10 @@ var _mission_count := 0
 func _ready() -> void:
 	Net.session_ended.connect(_on_session_ended)
 	multiplayer.connected_to_server.connect(func() -> void: menu.set_status("Connected — waiting for the mission…"))
+	menu.set_missions(mission_names)
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--mission="):
+			select_mission(arg.trim_prefix("--mission=").to_int())
 	for arg in OS.get_cmdline_user_args():
 		if arg == "--solo":
 			start_solo()
@@ -32,6 +41,11 @@ func mission() -> Mission:
 		if c is Mission and not c.is_queued_for_deletion():
 			return c
 	return null
+
+
+## Wired to MainMenu.mission_selected. Takes effect on the next (re)start.
+func select_mission(index: int) -> void:
+	mission_index = clampi(index, 0, missions.size() - 1)
 
 
 # --- Session -----------------------------------------------------------------
@@ -59,7 +73,7 @@ func start_mission() -> void:
 	for c in world.get_children():
 		c.queue_free()
 	_mission_count += 1
-	var m := mission_scene.instantiate()
+	var m := missions[mission_index].instantiate()
 	m.name = "Mission%d" % _mission_count
 	world.add_child(m, true)
 	_on_mission_started()

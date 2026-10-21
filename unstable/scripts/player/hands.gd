@@ -91,6 +91,8 @@ func prompt() -> String:
 	var t := "[E] let go of %s · [R] turn (%s)" % [holding.display_name, ALIGN_NAMES[align]]
 	if can_lift(holding):
 		t += " · LMB throw"
+	if holding.fragility > 0.0:
+		t += "\nFragile: look down before letting go to set it down gently"
 	return t
 
 

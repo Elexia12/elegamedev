@@ -7,7 +7,7 @@ extends Node
 
 ## Shown to every player (kinds: info, warn, alert, phase).
 signal message(text: String, kind: String)
-## Private to this peer (kinds: toast, release).
+## Private to this peer (kinds: toast, release, hold_ended).
 signal client_event(kind: String, text: String)
 
 ## Host only: "mm:ss  what happened" lines for the results screen.
@@ -32,12 +32,23 @@ func broadcast(text: String, kind: String) -> void:
 ## Host: private message to one player.
 func tell(peer_id: int, text: String) -> void:
 	if text != "":
-		_notify.rpc_id(peer_id, "toast", text)
+		_private(peer_id, "toast", text)
 
 
 ## Host: tell a player their grab was dropped.
 func release_grab(peer_id: int, text: String) -> void:
-	_notify.rpc_id(peer_id, "release", text)
+	_private(peer_id, "release", text)
+
+
+## Host: tell a player the host stopped their held action (a tool slipped).
+func end_hold(peer_id: int, text: String) -> void:
+	_private(peer_id, "hold_ended", text)
+
+
+## Host: send a private event, skipping peers that aren't connected (any more).
+func _private(peer_id: int, kind: String, text: String) -> void:
+	if peer_id == multiplayer.get_unique_id() or peer_id in multiplayer.get_peers():
+		_notify.rpc_id(peer_id, kind, text)
 
 
 ## Local-only toast (no network).

@@ -26,6 +26,7 @@ func _process(delta: float) -> bool:
 	t += delta
 	if t > 0.2 and t - delta <= 0.2:
 		if role == "host":
+			main.select_mission(1)  # The Flooded Reactor
 			main.start_host()
 		else:
 			main.start_join("127.0.0.1")

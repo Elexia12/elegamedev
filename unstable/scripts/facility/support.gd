@@ -83,7 +83,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _simulate(delta: float) -> void:
-	var load_n := mission.toolkit.load_on(self)
+	var load_n := mission.toolkit.load_on(self) if mission.toolkit else 0.0
 	var rate := base_decay + instability_decay * mission.clock.instability() + load_decay * load_n / 1000.0
 	var brace := bracing_brace()
 	if brace:
@@ -99,7 +99,8 @@ func _simulate(delta: float) -> void:
 func _fail() -> void:
 	health = 0.0
 	mission.incident_log.incident("%s FAILED" % display_name)
-	mission.toolkit.snap_cables_on(self)
+	if mission.toolkit:
+		mission.toolkit.snap_cables_on(self)
 	column.wake()
 	# Shove the top of the column so it topples instead of standing there.
 	var top := column.global_basis.y * 4.5

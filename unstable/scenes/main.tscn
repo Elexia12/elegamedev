@@ -1,24 +1,26 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/facility/blackwater_station.tscn" id="6_bw"]
 [ext_resource type="PackedScene" path="res://scenes/facility/flooded_reactor.tscn" id="2_level"]
 [ext_resource type="PackedScene" path="res://scenes/ui/main_menu.tscn" id="3_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/results_screen.tscn" id="4_results"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="5_pause"]
 
 [node name="Main" type="Node"]
-editor_description = "GAME ENTRY. Menu -> solo/host/join -> mission -> results -> restart.
-The level (flooded_reactor.tscn) is added under World at runtime, so open that scene to see the facility."
+editor_description = "GAME ENTRY. Menu -> pick a mission -> solo/host/join -> mission -> results -> restart.
+The chosen level (missions: blackwater_station.tscn, flooded_reactor.tscn) is added under World at runtime, so open those scenes to see the facilities."
 script = ExtResource("1_main")
-mission_scene = ExtResource("2_level")
+missions = Array[PackedScene]([ExtResource("6_bw"), ExtResource("2_level")])
+mission_names = PackedStringArray("Blackwater Station (prototype 01)", "The Flooded Reactor")
 
 [node name="World" type="Node3D" parent="."]
 editor_description = "Empty in the editor on purpose: the host adds the level here at runtime and MissionSpawner copies it to clients.
-Open scenes/facility/flooded_reactor.tscn to see it."
+Open scenes/facility/blackwater_station.tscn (or flooded_reactor.tscn) to see it."
 
 [node name="MissionSpawner" type="MultiplayerSpawner" parent="."]
 editor_description = "Replicates the level spawned under World to every client (including late joiners)."
-_spawnable_scenes = PackedStringArray("res://scenes/facility/flooded_reactor.tscn")
+_spawnable_scenes = PackedStringArray("res://scenes/facility/blackwater_station.tscn", "res://scenes/facility/flooded_reactor.tscn")
 spawn_path = NodePath("../World")
 
 [node name="UI" type="CanvasLayer" parent="."]
@@ -39,6 +41,7 @@ unique_name_in_owner = true
 [connection signal="host_requested" from="UI/MainMenu" to="." method="start_host"]
 [connection signal="join_requested" from="UI/MainMenu" to="." method="start_join"]
 [connection signal="quit_requested" from="UI/MainMenu" to="." method="quit"]
+[connection signal="mission_selected" from="UI/MainMenu" to="." method="select_mission"]
 [connection signal="restart_requested" from="UI/ResultsScreen" to="." method="start_mission"]
 [connection signal="leave_requested" from="UI/ResultsScreen" to="." method="leave"]
 [connection signal="resume_requested" from="UI/PauseMenu" to="." method="resume"]

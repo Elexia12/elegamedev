@@ -4,13 +4,19 @@ extends CharacterBody3D
 ##   Head/Camera3D/InteractRay  finds InteractPoints (cable ends, valves, lever)
 ##   Head/Camera3D/GrabRay      finds the surface you're looking at: props to
 ##                              grab, anything to hook a winch cable to
-##   Tools/Winch, Pressure      the CrewTools (child order = hotkeys 1-2)
+##   Tools/Winch, Pressure, Wrench  the CrewTools (child order = hotkeys). The
+##                              level's Crew roster `loadout` picks which ones
+##                              this mission hands out.
 ##   Hands                      grab, carry, drag, throw, turn things upright
 ##   Vitals                     breath and knockouts
 ##   Sync                       replicates transform, aim, tool and knocked
-## This script does movement, mouse look, aiming and input routing. It also
-## takes hits: knock() shoves and stuns you (falling rubble, a snapped cable, a
-## crate a teammate threw), and tremors and water jets push you around.
+## This script does movement, mouse look, aiming and input routing. [E] on a
+## facility thing (a hoist pendant, a hook, an ignition) asks that thing to
+## handle it (its use()), and its prompt_for() says what [E] will do. While
+## you hold a machine's controls (group "machines"), your movement keys drive
+## the machine instead of your legs. You also take hits: knock() shoves and
+## stuns you (falling rubble, a snapped cable, a swinging motor), and tremors
+## and water jets push you around.
 ##
 ## The owning peer moves this body (client-authoritative movement). Anything
 ## that changes the facility goes to the host through Mission.send().
@@ -35,6 +41,8 @@ var aim_target: Node = null
 var aim_point := Vector3.ZERO
 
 var _held_button := ""
+## Owner: the last drive input sent to the machine we operate.
+var _drive_sent := Vector3.ZERO
 var _stun := 0.0
 var _hit_shake := 0.0
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
@@ -59,6 +67,11 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	mission = Mission.of(self)
+	var loadout := mission.crew.loadout
+	for t in $Tools.get_children():
+		if not loadout.is_empty() and not str(t.name) in loadout:
+			$Tools.remove_child(t)
+			t.queue_free()
 	tools.assign($Tools.get_children())
 	var id := get_multiplayer_authority()
 	name_label.text = display_name
@@ -76,11 +89,23 @@ func _ready() -> void:
 		global_position = mission.crew.spawn_position(id)
 		mission.incident_log.client_event.connect(func(kind: String, text: String) -> void:
 			if kind == "release":
-				hands.on_dropped(text))
+				hands.on_dropped(text)
+			elif kind == "hold_ended":
+				_held_button = ""
+				if text != "":
+					toast(text))
 
 
 func current_tool() -> CrewTool:
 	return tools[tool]
+
+
+## The machine whose controls this crew member holds, if any.
+func operated_machine() -> Node:
+	for m in mission.machines():
+		if m.operator_id() == get_multiplayer_authority():
+			return m
+	return null
 
 
 func knocked() -> bool:
@@ -123,6 +148,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if not captured or knocked() or not mission.running():
 		return
+	if operated_machine():
+		# Hands are on the controls: [E] lets go, nothing else.
+		if event.is_action_pressed("interact"):
+			mission.send("release_controls")
+		return
 	for i in tools.size():
 		if event.is_action_pressed("tool_%d" % (i + 1)):
 			select_tool(i)
@@ -158,14 +188,20 @@ func _interact() -> void:
 		return
 	var t := aim_target
 	if t is InteractPoint:
-		match t.kind:
-			"lever":
-				mission.send("lever", path_to(t))
-			"valve":
-				toast("Valves are turned with the Pressure tool [2]")
+		if t.kind == "lever" and mission.extraction:
+			mission.send("lever", path_to(t))
+		elif t.handler().has_method("use"):
+			mission.send("use", path_to(t))
+		else:
+			for i in tools.size():
+				if tools[i].handles_point(t):
+					toast("Use the %s on that [%d]" % [tools[i].display_name, i + 1])
 		return
 	if t is Prop:
-		hands.grab(t, aim_point, camera.global_position.distance_to(aim_point))
+		if t.has_method("use_prompt") and t.use_prompt(self) != "":
+			mission.send("use", path_to(t))
+		else:
+			hands.grab(t, aim_point, camera.global_position.distance_to(aim_point))
 
 
 ## R: turn what you're holding (free → upright → flat), or detach a cable end.
@@ -174,7 +210,7 @@ func _remove() -> void:
 		hands.cycle_align()
 		return
 	var t := aim_target as InteractPoint
-	if t and mission.toolkit.cable_at(t):
+	if t and mission.toolkit and mission.toolkit.cable_at(t):
 		mission.send("winch_detach", path_to(t))
 
 
@@ -190,6 +226,15 @@ func _release_hold(button: String) -> void:
 		mission.send("hold", "")
 
 
+## Owner: stop whatever continuous action is running (e.g. the aim moved off).
+func cancel_hold() -> void:
+	_release_hold(_held_button)
+
+
+func is_holding_button() -> bool:
+	return _held_button != ""
+
+
 func path_to(n: Node) -> String:
 	return str(mission.get_path_to(n))
 
@@ -202,24 +247,36 @@ func toast(text: String) -> void:
 func prompt() -> String:
 	if helpless():
 		return ""
+	var machine := operated_machine()
+	if machine:
+		return machine.operator_prompt()
 	if hands.holding:
 		return hands.prompt()
 	var t := aim_target
 	if t is InteractPoint:
-		if t.kind == "lever":
+		if t.kind == "lever" and mission.extraction:
 			if mission.extraction.is_rising():
 				return "The lift is rising"
 			return "[E] %s" % ("cancel extraction" if mission.extraction.is_counting() else "call extraction")
 		if current_tool().handles_point(t):
 			return current_tool().prompt(t)
+		var h: Node = t.handler()
+		if h.has_method("prompt_for"):
+			return h.prompt_for(self, t)
 		for i in tools.size():
 			if tools[i].handles_point(t):
 				return "%s — switch to %s [%d]" % [t.describe(), tools[i].display_name, i + 1]
 		return ""
 	var surface := current_tool().surface_prompt()
-	if t is Prop and t.is_grabbable():
-		var grab := "[E] %s %s" % ["carry" if hands.can_lift(t) else "drag", t.display_name]
-		return grab + ("   ·   " + surface if surface != "" else "")
+	if t is Prop:
+		var use: String = t.use_prompt(self) if t.has_method("use_prompt") else ""
+		if use != "":
+			return use
+		if t.is_grabbable():
+			var grab := "[E] %s %s" % ["carry" if hands.can_lift(t) else "drag", t.display_name]
+			return grab + ("   ·   " + surface if surface != "" else "")
+		if t.note != "":
+			return "%s · %s" % [t.display_name, t.note]
 	var gate := grab_ray.get_collider() as Gate
 	if gate:
 		return gate.hint() + ("\n" + surface if surface != "" else "")
@@ -233,6 +290,8 @@ func _on_knocked_out(reason: String) -> void:
 		hands.holding = null
 		_held_button = ""
 		mission.send("hold", "")
+	if operated_machine():
+		mission.send("release_controls")
 	for t in tools:
 		t.deselected()
 	mission.send("report", reason)
@@ -246,17 +305,17 @@ func _on_recovered() -> void:
 # --- Host: holds ---------------------------------------------------------------
 
 ## Host: start/stop a continuous action for this player ("" stops everything).
+## "grab" goes to Hands; anything else to the tool that runs that hold kind.
 func set_hold(kind: String, path: String, v: Vector3, f: float) -> void:
 	hands.host_stop()
 	for t in tools:
 		t.host_stop()
-	match kind:
-		"grab":
-			hands.host_start(path, v, f)
-		"reel":
-			$Tools/Winch.host_start(path, v, f)
-		"blast":
-			$Tools/Pressure.host_start(path, v, f)
+	if kind == "grab":
+		hands.host_start(path, v, f)
+		return
+	for t in tools:
+		if kind in t.hold_kinds():
+			t.host_start(path, v, f)
 
 
 # --- Simulation ----------------------------------------------------------------
@@ -281,6 +340,12 @@ func _move(delta: float) -> void:
 	var input := Vector2.ZERO
 	if can_act:
 		input = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var machine := operated_machine()
+	if machine:
+		_drive(machine, input)
+		input = Vector2.ZERO
+	elif _drive_sent != Vector3.ZERO:
+		_drive_sent = Vector3.ZERO
 	var dir := (transform.basis * Vector3(input.x, 0.0, input.y)).normalized()
 	var speed := sprint_speed if Input.is_action_pressed("sprint") else walk_speed
 	if depth > 0.4:
@@ -293,7 +358,7 @@ func _move(delta: float) -> void:
 	velocity.z = move_toward(velocity.z, dir.z * speed, accel * speed * delta)
 
 	# The world pushes back: water jets, and the floor bucking in a tremor.
-	var jet := mission.pressure_network.jet_push_at(global_position + Vector3.UP)
+	var jet := mission.jet_push_at(global_position + Vector3.UP)
 	if jet.length() > 4.0:
 		# Caught in the jet: you can't fight it, it carries you.
 		velocity += jet * delta * 2.0
@@ -315,6 +380,15 @@ func _move(delta: float) -> void:
 	if global_position.y < -20.0:
 		_on_recovered()
 	_shake_camera(delta)
+
+
+## Owner: movement keys drive the machine. x = A/D, y = W (+1) / S (-1).
+## Sent only when it changes (reliable), so holding a key costs nothing.
+func _drive(machine: Node, input: Vector2) -> void:
+	var v := Vector3(input.x, -input.y, 0.0).round()
+	if v != _drive_sent:
+		_drive_sent = v
+		mission.send("drive", path_to(machine), "", v)
 
 
 func _shake_camera(delta: float) -> void:

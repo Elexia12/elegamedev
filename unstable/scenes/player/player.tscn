@@ -1,10 +1,11 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/crew_member.gd" id="1_cm"]
 [ext_resource type="Script" path="res://scripts/player/winch_tool.gd" id="2_wt"]
 [ext_resource type="Script" path="res://scripts/player/pressure_tool.gd" id="4_pt"]
 [ext_resource type="Script" path="res://scripts/player/hands.gd" id="5_ha"]
 [ext_resource type="Script" path="res://scripts/player/vitals.gd" id="6_vi"]
+[ext_resource type="Script" path="res://scripts/player/wrench_tool.gd" id="7_wr"]
 
 [sub_resource type="CapsuleShape3D" id="Shape_body"]
 radius = 0.35
@@ -104,7 +105,7 @@ outline_size = 10
 text = "Crew"
 
 [node name="Tools" type="Node" parent="."]
-editor_description = "The hand tools. Child order = hotkeys 1-2. Each extends CrewTool. (Braces are physical posts now, carried with Hands.)"
+editor_description = "The hand tools. Each extends CrewTool. The level's Crew.loadout picks which ones a mission hands out; their order here is the hotkey order (1, 2, …)."
 
 [node name="Winch" type="Node" parent="Tools"]
 editor_description = "WinchTool: LMB any surface, then LMB a second surface to run a cable between them. Hold LMB/RMB on a cable end to reel; R detaches."
@@ -127,6 +128,14 @@ display_name = "PRESSURE"
 color = Color(0.2, 0.85, 1, 1)
 model_size = Vector3(0.08, 0.08, 0.4)
 handles = PackedStringArray("valve")
+
+[node name="Wrench" type="Node" parent="Tools"]
+editor_description = "WrenchTool: hold LMB on a mounting's bolts to unbolt salvage (two wrenches = twice as fast). On a valve wheel: hold LMB to crank it shut, RMB to crank it open."
+script = ExtResource("7_wr")
+display_name = "WRENCH"
+color = Color(1, 0.55, 0.15, 1)
+model_size = Vector3(0.06, 0.06, 0.36)
+handles = PackedStringArray("bolts", "valve")
 
 [node name="Hands" type="Node" parent="."]
 editor_description = "E grab / let go, LMB throw, R turn upright/flat. grab_force caps what one person moves: the 300 kg core needs two people (or the winch)."

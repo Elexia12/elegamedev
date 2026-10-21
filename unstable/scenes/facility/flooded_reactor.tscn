@@ -1,4 +1,4 @@
-[gd_scene load_steps=60 format=3]
+[gd_scene load_steps=61 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/mission.gd" id="1_mi"]
 [ext_resource type="PackedScene" path="res://scenes/components/gate.tscn" id="2_gate"]
@@ -27,6 +27,7 @@
 [ext_resource type="PackedScene" path="res://scenes/props/rubble.tscn" id="25_rub"]
 [ext_resource type="PackedScene" path="res://scenes/props/frame_header.tscn" id="26_hdr"]
 [ext_resource type="PackedScene" path="res://scenes/props/skid_sled.tscn" id="27_sled"]
+[ext_resource type="Script" path="res://scripts/facility/reactor_contract.gd" id="28_rc"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_mat"]
 sky_top_color = Color(0.16, 0.2, 0.26, 1)
@@ -129,6 +130,13 @@ Only 3 jobs: receive player actions (request), run the ending (lift departs or t
 Every system below is its own child node."
 script = ExtResource("1_mi")
 
+[node name="Contract" type="Node" parent="." node_paths=PackedStringArray("lower_flood", "storage_flood")]
+unique_name_in_owner = true
+editor_description = "THE RULES OF THIS LEVEL (ReactorContract): get the reactor core (primary) and bonus container (optional) onto the lift and ride it out. Builds the HUD text and the results screen."
+script = ExtResource("28_rc")
+lower_flood = NodePath("../Water/LowerFlood")
+storage_flood = NodePath("../Water/BonusFlood")
+
 [node name="MissionClock" type="Node" parent="."]
 unique_name_in_owner = true
 editor_description = "Mission timer. Instability rises 0 -> 1 over collapse_time; every hazard scales with it.
@@ -216,6 +224,7 @@ unique_name_in_owner = true
 editor_description = "Crew roster. Host spawns one player scene per connected peer into Members; PlayerSpawner copies them to every client; SpawnPoints = (re)spawn spots."
 script = ExtResource("21_cr")
 player_scene = ExtResource("22_pl")
+loadout = PackedStringArray("Winch", "Pressure")
 
 [node name="Members" type="Node3D" parent="Crew"]
 

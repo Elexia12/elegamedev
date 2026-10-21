@@ -36,6 +36,10 @@ func prompt(target: InteractPoint) -> String:
 		valve.display_name, drives, roundi(valve.opening * 100.0)]
 
 
+func hold_kinds() -> PackedStringArray:
+	return ["blast"]
+
+
 func host_start(_path: String, v: Vector3, _f: float) -> void:
 	_blast = signf(v.x)
 

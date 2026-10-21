@@ -5,6 +5,9 @@ extends Node3D
 ## SpawnPoints children are where crew start and respawn.
 
 @export var player_scene: PackedScene
+## Tools this mission hands out (names of the player scene's Tools children,
+## in hotkey order of the player scene). Empty = all of them.
+@export var loadout: PackedStringArray = []
 
 var mission: Mission
 

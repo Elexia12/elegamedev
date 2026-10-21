@@ -1,0 +1,67 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/facility/swing_door.gd" id="1_swing_"]
+
+[sub_resource type="BoxShape3D" id="Shape_door"]
+size = Vector3(1.36, 2.3, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="Mat_door"]
+albedo_color = Color(0.35, 0.45, 0.55, 1)
+metallic = 0.5
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_stripe"]
+albedo_color = Color(0.95, 0.75, 0.1, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="Mesh_door"]
+material = SubResource("Mat_door")
+size = Vector3(1.36, 2.3, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_stripe"]
+material = SubResource("Mat_stripe")
+size = Vector3(1.36, 0.12, 0.09)
+
+[sub_resource type="StandardMaterial3D" id="Mat_glass"]
+transparency = 1
+albedo_color = Color(0.6, 0.8, 0.9, 0.4)
+roughness = 0.1
+
+[sub_resource type="BoxMesh" id="Mesh_window"]
+material = SubResource("Mat_glass")
+size = Vector3(0.4, 0.4, 0.09)
+
+[node name="SwingDoor" type="RigidBody3D"]
+editor_description = "Heavy swing door (SwingDoor). Origin = hinge. It rotates only about its hinge (custom centre of mass on the hinge line + axis locks). Walk into it and it swings away from you, into whoever is on the other side."
+collision_layer = 4
+collision_mask = 7
+mass = 35
+center_of_mass_mode = 1
+center_of_mass = Vector3(0, 1.15, 0)
+axis_lock_linear_x = true
+axis_lock_linear_y = true
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_z = true
+angular_damp = 2.5
+script = ExtResource("1_swing_")
+display_name = "Control room door"
+role = "equipment"
+height = 2.3
+hit_speed = 2.5
+
+[node name="Shape" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 1.15, 0)
+shape = SubResource("Shape_door")
+
+[node name="Panel" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 1.15, 0)
+mesh = SubResource("Mesh_door")
+
+[node name="Stripe" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 1, 0)
+mesh = SubResource("Mesh_stripe")
+
+[node name="Window" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 1.65, 0)
+mesh = SubResource("Mesh_window")

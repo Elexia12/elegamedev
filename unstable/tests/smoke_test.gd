@@ -22,7 +22,9 @@ func _initialize() -> void:
 	var t := 0
 	# Each step: [seconds after previous, callable].
 	steps = [
-		[0.05, func() -> void: main.start_solo()],
+		[0.05, func() -> void:
+			main.select_mission(1)  # The Flooded Reactor
+			main.start_solo()],
 		[0.2, _check_spawn],
 
 		# --- Hands: weight decides who can move what -------------------------

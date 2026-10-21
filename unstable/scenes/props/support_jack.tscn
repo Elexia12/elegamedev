@@ -1,0 +1,77 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/facility/support_jack.gd" id="1_suppor"]
+
+[sub_resource type="BoxShape3D" id="Shape_jack"]
+size = Vector3(0.4, 0.9, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="Mat_jack"]
+albedo_color = Color(0.85, 0.2, 0.12, 1)
+metallic = 0.4
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_ram"]
+albedo_color = Color(0.75, 0.78, 0.8, 1)
+metallic = 0.9
+roughness = 0.2
+
+[sub_resource type="CylinderMesh" id="Mesh_body"]
+material = SubResource("Mat_jack")
+top_radius = 0.13
+bottom_radius = 0.17
+height = 0.9
+
+[sub_resource type="BoxMesh" id="Mesh_base"]
+material = SubResource("Mat_jack")
+size = Vector3(0.44, 0.06, 0.44)
+
+[sub_resource type="CylinderMesh" id="Mesh_ram"]
+material = SubResource("Mat_ram")
+top_radius = 0.07
+bottom_radius = 0.07
+height = 1
+
+[sub_resource type="BoxMesh" id="Mesh_top"]
+material = SubResource("Mat_ram")
+size = Vector3(0.36, 0.05, 0.36)
+
+[node name="SupportJack" type="RigidBody3D"]
+editor_description = "PORTABLE SUPPORT JACK (SupportJack). Carry it [E], stand it upright [R], put it in a JackPoint, let go and [E] to extend the Ram. Installed, it raises the structure tolerance; a big impact can make it slip."
+collision_layer = 4
+collision_mask = 23
+mass = 25
+angular_damp = 1
+script = ExtResource("1_suppor")
+display_name = "Support jack"
+role = "equipment"
+buoyancy = 0.2
+height = 0.9
+
+[node name="Shape" type="CollisionShape3D" parent="."]
+shape = SubResource("Shape_jack")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+mesh = SubResource("Mesh_body")
+
+[node name="Base" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.42, 0)
+mesh = SubResource("Mesh_base")
+
+[node name="Ram" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.475, 0)
+editor_description = "Extends (scale.y) up to the structure when installed."
+
+[node name="Rod" type="MeshInstance3D" parent="Ram"]
+mesh = SubResource("Mesh_ram")
+
+[node name="Top" type="MeshInstance3D" parent="Ram"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("Mesh_top")
+
+[node name="Label" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+billboard = 1
+modulate = Color(1, 0.6, 0.5, 1)
+font_size = 30
+outline_size = 10
+text = "SUPPORT JACK"

@@ -1,0 +1,84 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/facility/prop.gd" id="1_prop"]
+
+[sub_resource type="BoxShape3D" id="Shape_tx"]
+size = Vector3(0.22, 0.3, 0.18)
+
+[sub_resource type="StandardMaterial3D" id="Mat_tx"]
+albedo_color = Color(0.2, 0.4, 0.85, 1)
+metallic = 0.5
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_face"]
+albedo_color = Color(0.9, 0.92, 0.85, 1)
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="Mesh_tx"]
+material = SubResource("Mat_tx")
+size = Vector3(0.22, 0.3, 0.18)
+
+[sub_resource type="CylinderMesh" id="Mesh_face"]
+material = SubResource("Mat_face")
+top_radius = 0.08
+bottom_radius = 0.08
+height = 0.02
+
+[sub_resource type="StandardMaterial3D" id="Mat_spark"]
+albedo_color = Color(1, 0.8, 0.3, 1)
+shading_mode = 0
+roughness = 0.8
+emission_enabled = true
+emission = Color(1, 0.6, 0.1, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_spark"]
+material = SubResource("Mat_spark")
+size = Vector3(0.04, 0.04, 0.04)
+
+[node name="PressureTransmitter" type="RigidBody3D"]
+editor_description = "BONUS SALVAGE (Prop, role salvage). 3 kg sensor, quick to unbolt and easy to carry, but they are all down in the maintenance pit."
+collision_layer = 4
+collision_mask = 23
+mass = 3
+script = ExtResource("1_prop")
+display_name = "Pressure transmitter"
+value = 150
+role = "salvage"
+buoyancy = 0.4
+height = 0.3
+dormant = true
+water_damage = 6
+fragility = 8
+damage_threshold = 3
+
+[node name="Shape" type="CollisionShape3D" parent="."]
+shape = SubResource("Shape_tx")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+mesh = SubResource("Mesh_tx")
+
+[node name="Face" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0.04, 0.1)
+mesh = SubResource("Mesh_face")
+
+[node name="Label" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+billboard = 1
+modulate = Color(0.6, 0.8, 1, 1)
+font_size = 30
+outline_size = 10
+text = "TRANSMITTER"
+
+[node name="Sparks" type="CPUParticles3D" parent="."]
+editor_description = "Bursts when this takes damage (Prop._show_damage, on every peer)."
+emitting = false
+amount = 24
+lifetime = 0.5
+one_shot = true
+explosiveness = 1
+mesh = SubResource("Mesh_spark")
+direction = Vector3(0, 1, 0)
+spread = 180
+gravity = Vector3(0, -9.8, 0)
+initial_velocity_min = 2.5
+initial_velocity_max = 6

@@ -1,0 +1,60 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/facility/deposit_zone.gd" id="1_deposi"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_pad"]
+transparency = 1
+albedo_color = Color(0.2, 1, 0.45, 0.3)
+roughness = 0.8
+emission_enabled = true
+emission = Color(0.05, 0.45, 0.15, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_edge"]
+albedo_color = Color(0.95, 0.75, 0.1, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="Mesh_pad"]
+material = SubResource("Mat_pad")
+size = Vector3(6, 0.03, 7)
+
+[sub_resource type="BoxMesh" id="Mesh_edge_x"]
+material = SubResource("Mat_edge")
+size = Vector3(6, 0.04, 0.2)
+
+[sub_resource type="BoxMesh" id="Mesh_edge_z"]
+material = SubResource("Mat_edge")
+size = Vector3(0.2, 0.04, 7)
+
+[node name="DepositZone" type="Node3D"]
+editor_description = "DEPOSIT ZONE (DepositZone). Salvage left here (nearly still) for settle_time seconds is secured once and loaded onto the truck_bed markers. Its value is locked in at that moment."
+script = ExtResource("1_deposi")
+size = Vector3(6, 3, 7)
+
+[node name="Pad" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0)
+cast_shadow = 0
+mesh = SubResource("Mesh_pad")
+
+[node name="EdgeN" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, -3.4)
+mesh = SubResource("Mesh_edge_x")
+
+[node name="EdgeS" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 3.4)
+mesh = SubResource("Mesh_edge_x")
+
+[node name="EdgeW" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.9, 0.02, 0)
+mesh = SubResource("Mesh_edge_z")
+
+[node name="EdgeE" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9, 0.02, 0)
+mesh = SubResource("Mesh_edge_z")
+
+[node name="Label" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, 0)
+billboard = 1
+modulate = Color(0.5, 1, 0.6, 1)
+font_size = 48
+outline_size = 12
+text = "DEPOSIT ZONE"

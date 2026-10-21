@@ -225,6 +225,7 @@ theme_override_font_sizes/font_size = 18
 text = " 3  TOOL "
 
 [node name="Help" type="Label" parent="Root"]
+unique_name_in_owner = true
 modulate = Color(1, 1, 1, 0.55)
 layout_mode = 1
 anchors_preset = 2

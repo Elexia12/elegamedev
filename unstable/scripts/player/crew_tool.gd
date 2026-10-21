@@ -50,6 +50,11 @@ func deselected() -> void:
 	pass
 
 
+## The "hold" kinds this tool runs on the host (see CrewMember.set_hold).
+func hold_kinds() -> PackedStringArray:
+	return []
+
+
 ## Host: begin a continuous effect requested by this player.
 func host_start(_path: String, _v: Vector3, _f: float) -> void:
 	pass

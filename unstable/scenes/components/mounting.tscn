@@ -1,0 +1,42 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/facility/mounting.gd" id="1_mounti"]
+[ext_resource type="PackedScene" path="res://scenes/components/interact_point.tscn" id="2_intera"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_bolt"]
+albedo_color = Color(0.75, 0.7, 0.6, 1)
+metallic = 0.9
+roughness = 0.3
+
+[sub_resource type="CylinderMesh" id="Mesh_bolt"]
+material = SubResource("Mat_bolt")
+top_radius = 0.035
+bottom_radius = 0.035
+height = 0.07
+radial_segments = 6
+
+[node name="Mounting" type="Node3D"]
+editor_description = "BOLTED MOUNTING (Mounting). Keeps `item` frozen in place until someone holds the WRENCH (LMB) on the bolts for unbolt_time seconds (two wrenches = twice as fast; a tremor makes it slip).
+Place it on the item, local +Z facing out. bolt_spread sets the bolt pattern."
+script = ExtResource("1_mounti")
+
+[node name="Point" parent="." instance=ExtResource("2_intera")]
+kind = "bolts"
+
+[node name="Bolts" type="Node3D" parent="."]
+
+[node name="Bolt1" type="MeshInstance3D" parent="Bolts"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.02)
+mesh = SubResource("Mesh_bolt")
+
+[node name="Bolt2" type="MeshInstance3D" parent="Bolts"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.02)
+mesh = SubResource("Mesh_bolt")
+
+[node name="Bolt3" type="MeshInstance3D" parent="Bolts"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.02)
+mesh = SubResource("Mesh_bolt")
+
+[node name="Bolt4" type="MeshInstance3D" parent="Bolts"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.02)
+mesh = SubResource("Mesh_bolt")

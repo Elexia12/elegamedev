@@ -1,0 +1,111 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/facility/prop.gd" id="1_prop"]
+
+[sub_resource type="PhysicsMaterial" id="Phys_vfd"]
+friction = 0.6
+
+[sub_resource type="BoxShape3D" id="Shape_vfd"]
+size = Vector3(0.45, 0.6, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="Mat_case"]
+albedo_color = Color(0.16, 0.18, 0.21, 1)
+metallic = 0.4
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_fins"]
+albedo_color = Color(0.55, 0.58, 0.6, 1)
+metallic = 0.8
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_led"]
+albedo_color = Color(0.2, 1, 0.4, 1)
+shading_mode = 0
+roughness = 0.8
+emission_enabled = true
+emission = Color(0.1, 0.9, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_case"]
+material = SubResource("Mat_case")
+size = Vector3(0.45, 0.6, 0.8)
+
+[sub_resource type="BoxMesh" id="Mesh_fins"]
+material = SubResource("Mat_fins")
+size = Vector3(0.06, 0.5, 0.7)
+
+[sub_resource type="BoxMesh" id="Mesh_led"]
+material = SubResource("Mat_led")
+size = Vector3(0.02, 0.04, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_handle"]
+material = SubResource("Mat_fins")
+size = Vector3(0.05, 0.05, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="Mat_spark"]
+albedo_color = Color(1, 0.8, 0.3, 1)
+shading_mode = 0
+roughness = 0.8
+emission_enabled = true
+emission = Color(1, 0.6, 0.1, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_spark"]
+material = SubResource("Mat_spark")
+size = Vector3(0.04, 0.04, 0.04)
+
+[node name="VfdModule" type="RigidBody3D"]
+editor_description = "PRIMARY CONTRACT (Prop, role primary). 38 kg power module: one person can carry it (both hands, slowly). Fragile: hard knocks and water ruin it fast."
+collision_layer = 4
+collision_mask = 23
+mass = 38
+physics_material_override = SubResource("Phys_vfd")
+angular_damp = 2
+script = ExtResource("1_prop")
+display_name = "VFD power module"
+value = 1000
+role = "primary"
+buoyancy = 0.3
+height = 0.6
+dormant = true
+water_damage = 35
+fragility = 12
+damage_threshold = 2.2
+
+[node name="Shape" type="CollisionShape3D" parent="."]
+shape = SubResource("Shape_vfd")
+
+[node name="Case" type="MeshInstance3D" parent="."]
+mesh = SubResource("Mesh_case")
+
+[node name="Fins" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.25, 0, 0)
+mesh = SubResource("Mesh_fins")
+
+[node name="Led" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.23, 0.18, 0.2)
+mesh = SubResource("Mesh_led")
+
+[node name="Handle" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.24, 0.32, 0)
+mesh = SubResource("Mesh_handle")
+
+[node name="Label" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+billboard = 1
+modulate = Color(0.6, 1, 0.75, 1)
+font_size = 40
+outline_size = 10
+text = "VFD POWER MODULE"
+
+[node name="Sparks" type="CPUParticles3D" parent="."]
+editor_description = "Bursts when this takes damage (Prop._show_damage, on every peer)."
+emitting = false
+amount = 24
+lifetime = 0.5
+one_shot = true
+explosiveness = 1
+mesh = SubResource("Mesh_spark")
+direction = Vector3(0, 1, 0)
+spread = 180
+gravity = Vector3(0, -9.8, 0)
+initial_velocity_min = 2.5
+initial_velocity_max = 6

@@ -1,8 +1,9 @@
 extends CanvasLayer
 ## In-mission HUD for the local crew member. The layout is hud.tscn; this
-## script only fills it in each frame from the Mission and the local
-## CrewMember. Messages arrive through the IncidentLog signals connected to
-## _on_message and _on_client_event in the level scene.
+## script only fills it in each frame from the Mission's Contract (status,
+## objectives, banner) and the local CrewMember. [Tab] expands the manifest.
+## Messages arrive through the IncidentLog signals connected to _on_message
+## and _on_client_event in the level scene.
 
 const FEED_LINES := 6
 const KIND_COLORS := {
@@ -14,6 +15,7 @@ const KIND_COLORS := {
 
 var mission: Mission
 var _toast_time := 0.0
+var _manifest_open := false
 
 @onready var status: Label = %Status
 @onready var pressure_label: Label = %PressureLabel
@@ -27,10 +29,13 @@ var _toast_time := 0.0
 @onready var breath_bar: ProgressBar = %BreathBar
 @onready var knocked_label: Label = %KnockedLabel
 @onready var tool_slots: Array[Node] = %ToolBar.get_children()
+@onready var help: Label = %Help
 
 
 func _ready() -> void:
 	mission = Mission.of(self)
+	# Mission's @onready refs aren't set yet (children are ready first).
+	help.text = (mission.get_node("%Contract") as Contract).controls_hint()
 
 
 func _process(delta: float) -> void:
@@ -38,54 +43,32 @@ func _process(delta: float) -> void:
 		return
 	var me := mission.crew.local_member()
 	visible = me != null and mission.running()
-	_update_mission_panel()
-	_update_objectives()
-	_update_banner()
+	var contract := mission.contract
+	status.text = contract.status_text()
+	status.modulate = Color(1, 0.5, 0.4) if mission.clock.phase() >= 3 else Color.WHITE
+	_update_pressure()
+	objectives.text = "\n".join(contract.objective_lines(_manifest_open))
+	var b := contract.banner()
+	banner.text = b[0]
+	banner.modulate = b[1]
 	if me:
 		_update_player(me, delta)
 
 
-func _update_mission_panel() -> void:
-	var clock := mission.clock
-	status.text = "THE FLOODED REACTOR   ·   %s\nCollapse in %s\nWater: main hall %.1f m · storage %.1f m" % [
-		clock.phase_name(), MissionClock.format(clock.time_left()),
-		mission.get_node("%LowerFlood").level, mission.get_node("%BonusFlood").level]
-	status.modulate = Color(1, 0.5, 0.4) if clock.phase() >= 3 else Color.WHITE
-	var p := mission.pressure_network.pressure
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("manifest"):
+		_manifest_open = not _manifest_open
+
+
+func _update_pressure() -> void:
+	var net := mission.pressure_network
+	pressure_label.get_parent().visible = net != null
+	if net == null:
+		return
+	var p := net.pressure
 	pressure_label.text = "PRESSURE %d%%" % roundi(p)
 	pressure_bar.value = p
 	pressure_bar.modulate = Color(0.4, 0.9, 1.0).lerp(Color(1.0, 0.2, 0.1), clampf((p - 60.0) / 40.0, 0.0, 1.0))
-
-
-func _update_objectives() -> void:
-	var lines: Array[String] = []
-	var salvage := 0.0
-	for p in mission.props():
-		match p.role:
-			"primary":
-				lines.append("PRIMARY  %s  %s" % [p.display_name, "✔ on lift" if p.secured else "—"])
-			"optional":
-				lines.append("OPTIONAL  %s ($%d)  %s" % [p.display_name, roundi(p.current_value), "✔ on lift" if p.secured else "—"])
-			"salvage":
-				if p.secured:
-					salvage += p.current_value
-	var toolkit := mission.toolkit
-	lines.append("Salvage on lift: $%d" % roundi(salvage))
-	lines.append("Winch cables rigged: %d/%d" % [toolkit.active_cable_count(), toolkit.cables().size()])
-	objectives.text = "\n".join(lines)
-
-
-func _update_banner() -> void:
-	# Only the lift gets a banner: everything else you should see happen.
-	var lift := mission.extraction
-	if lift.is_counting():
-		banner.text = "LIFT IN %d — GET ON THE PAD" % ceili(lift.timer)
-		banner.modulate = Color(0.4, 1.0, 0.6)
-	elif lift.is_rising():
-		banner.text = "LIFT RISING — HOLD ON"
-		banner.modulate = Color(0.4, 1.0, 0.6)
-	else:
-		banner.text = ""
 
 
 func _update_player(me: CrewMember, delta: float) -> void:

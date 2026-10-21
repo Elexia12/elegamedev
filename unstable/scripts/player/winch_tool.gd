@@ -41,6 +41,10 @@ func secondary(target: InteractPoint) -> void:
 		crew.toast("Cable unhooked")
 
 
+func hold_kinds() -> PackedStringArray:
+	return ["reel"]
+
+
 func deselected() -> void:
 	has_pending = false
 
