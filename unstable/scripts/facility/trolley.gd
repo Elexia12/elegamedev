@@ -13,14 +13,16 @@ extends Prop
 ##     `skid_friction`, so a hard turn with a heavy load skids
 ##   - the casters at the far end swivel freely, so it pivots near your hands
 ##   - rolling resistance is low and constant: let go and it rolls on a little
-## Cargo on the deck (CargoArea) is held by deck friction only: brake, ram or
-## turn harder than `deck_friction` × g and it slides off. The wheels spin and
+## Cargo resting on the deck (CargoArea) sticks to it (static friction: a
+## joint, so the two move as one with no contact jitter). Brake, ram or corner
+## harder than `deck_friction` × g and it comes unstuck and slides; it sticks
+## again once it settles. The hoist or a crew member lifting it unsticks it. The wheels spin and
 ## the casters swivel to match (visual, every peer).
 
 @export_group("Pushing")
 ## Most force (N) and twisting torque (N·m) one crew member's hands can apply.
 @export var push_force := 1100.0
-@export var push_torque := 900.0
+@export var push_torque := 1400.0
 ## How stiffly the trolley is held in your hands (1/s): position and turning.
 @export var hold_stiffness := 12.0
 @export var turn_stiffness := 14.0
@@ -51,6 +53,12 @@ var _pusher_last := {}
 var _spin := 0.0
 var _caster_yaw := 0.0
 var _last_pos := Vector3.ZERO
+## Host: cargo stuck to the deck -> its joint; the deck's (smoothed) acceleration.
+var _joints := {}
+var _deck_last_v := Vector3.ZERO
+var _deck_accel := Vector3.ZERO
+## Host: stuck cargo's velocity last step (what it would keep if it broke loose).
+var _cargo_last_v := {}
 
 @onready var cargo_area: Area3D = $CargoArea
 @onready var deck: CollisionShape3D = $Deck
@@ -131,27 +139,112 @@ func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
 	if mission == null or not multiplayer.is_server() or freeze:
 		return
+	_cargo(delta)
 	var total := mass + cargo_mass()
 	_push(delta)
 	_wheels(total)
-	# Deck friction on cargo, and its reaction on the trolley.
-	# Measured and applied where the cargo meets the deck (not up at its centre,
-	# or a tiny roll of the trolley reads as the deck sliding out from under it).
+
+
+## Host: cargo on the deck either STICKS (static friction) or SLIDES.
+## Stuck cargo is locked to the trolley with a joint: they move and turn as
+## one rigid body, with no contact jitter between them. It comes unstuck when
+## friction couldn't hold it any more (the deck accelerating harder than
+## `deck_friction` × g: a ram, a dead stop, a hard corner) or when something
+## lifts it (the hoist, someone's hands). Sliding cargo gets kinetic friction
+## from the deck until it settles and sticks again.
+func _cargo(delta: float) -> void:
+	# The deck's horizontal acceleration (smoothed: one-frame spikes are noise).
+	var accel := (linear_velocity - _deck_last_v) / delta * Vector3(1, 0, 1)
+	_deck_last_v = linear_velocity
+	_deck_accel = _deck_accel.lerp(accel, 0.35)
+	# A crash is not noise: a huge one-frame change counts at once.
+	var jolt := accel.length() > deck_friction * 9.8 * 3.0
+	var bodies := cargo()
+	for b in _joints.keys():
+		if not is_instance_valid(b) or b.freeze or not b in bodies or _lifted(b):
+			release_cargo(b)
 	var deck_y := deck.global_position.y + 0.05
-	for b in cargo():
+	var hold := deck_friction * 9.8
+	for b in bodies:
 		var on_deck := Vector3(b.global_position.x, deck_y, b.global_position.z)
+		var r := on_deck - global_position
+		if _joints.has(b):
+			# What friction would have to supply to keep it riding along.
+			var need := (accel if jolt else _deck_accel) + angular_velocity.cross(angular_velocity.cross(r)) * Vector3(1, 0, 1)
+			if need.length() <= hold:
+				_cargo_last_v[b] = b.linear_velocity
+				continue
+			release_cargo(b)
+			# The joint already dragged it along with the trolley this step;
+			# friction could only have taken `hold` × delta off its speed, so
+			# give it back the rest of its momentum: it slides on.
+			var before: Vector3 = _cargo_last_v.get(b, b.linear_velocity)
+			var change := (b.linear_velocity - before) * Vector3(1, 0, 1)
+			b.linear_velocity -= change - change.limit_length(hold * delta)
 		var rel := (b.linear_velocity - point_velocity(on_deck)) * Vector3(1, 0, 1)
-		# Damp the slip using the pair's reduced mass (stable for a heavy load
-		# on a light trolley), capped at what friction can hold.
+		var spin := b.angular_velocity.y - angular_velocity.y
+		if rel.length() < 0.12 and absf(spin) < 0.3 and b.get_contact_count() > 0 and not _lifted(b):
+			_stick(b)
+			continue
+		# Sliding: kinetic friction, measured and applied where it meets the deck.
 		var reduced := b.mass * mass / (b.mass + mass)
 		var f := (-rel * reduced * 20.0).limit_length(deck_friction * b.mass * 9.8)
 		b.apply_force(f, on_deck - b.global_position)
 		apply_force(-f, on_deck - global_position)
-		# ...and turns it with the deck (friction over a ~0.3 m footprint).
-		var spin := b.angular_velocity.y - angular_velocity.y
-		var t := clampf(-spin * b.mass * 0.3, -deck_friction * b.mass * 9.8 * 0.3, deck_friction * b.mass * 9.8 * 0.3)
-		b.apply_torque(Vector3.UP * t)
-		apply_torque(Vector3.UP * -t)
+
+
+## Is something lifting this cargo off the deck (the hoist, a crew member)?
+func _lifted(b: Prop) -> bool:
+	for h in mission.machines():
+		if h is OverheadHoist and h.load_prop() == b and h.tension > b.mass * 9.8 * 0.15:
+			return true
+	for c in mission.crew.members():
+		if c.hands._prop == b:
+			return true
+	return false
+
+
+func _stick(b: Prop) -> void:
+	var j := Generic6DOFJoint3D.new()
+	j.name = "Grip_%s" % b.name
+	add_child(j)
+	j.global_position = b.global_position
+	# Every axis is locked by default (limits on, zero range), and the two
+	# bodies stop colliding with each other while joined.
+	j.node_a = j.get_path_to(self)
+	j.node_b = j.get_path_to(b)
+	_joints[b] = j
+
+
+## Host: let go of a piece of cargo (it slides, it's lifted, it's handed over).
+func release_cargo(b: Node) -> void:
+	var j: Node = _joints.get(b)
+	_joints.erase(b)
+	_cargo_last_v.erase(b)
+	if is_instance_valid(j):
+		j.free()
+
+
+## Mass and yaw inertia of the trolley plus everything stuck to it: what the
+## pushers and the wheels actually move (kg, kg·m²).
+func _rigid_mass() -> float:
+	var m := mass
+	for b: Node in _joints:
+		if is_instance_valid(b):
+			m += (b as Prop).mass
+	return m
+
+
+func _rigid_yaw_inertia() -> float:
+	var inertia := _own_yaw_inertia()
+	for node: Node in _joints:
+		if not is_instance_valid(node):
+			continue
+		var b := node as Prop
+		var inv := PhysicsServer3D.body_get_direct_state(b.get_rid()).inverse_inertia
+		var r := (b.global_position - global_position) * Vector3(1, 0, 1)
+		inertia += (1.0 / inv.y if inv.y > 0.0 else 0.0) + b.mass * r.length_squared()
+	return inertia
 
 
 ## Host: hold the trolley where (and how) the pushers hold it: handle just in
@@ -161,10 +254,11 @@ func _push(delta: float) -> void:
 	if pushers.is_empty():
 		return
 	var n := float(pushers.size())
-	# Gains are sized for the trolley body itself: the cargo is its own body,
-	# held by deck friction, so its weight shows up as friction the hands have
-	# to overcome (capped by push_force / push_torque), not as a stiffer spring.
-	var own_inertia := _own_yaw_inertia()
+	# Gains are sized for what actually moves: the trolley plus any cargo stuck
+	# to it (a heavy load answers more slowly; the hands' strength is capped by
+	# push_force / push_torque).
+	var rigid_mass := _rigid_mass()
+	var rigid_inertia := _rigid_yaw_inertia()
 	for i in range(pushers.size() - 1, -1, -1):
 		var id: int = pushers[i]
 		var c := mission.crew.member(id)
@@ -193,12 +287,12 @@ func _push(delta: float) -> void:
 		var k := hold_stiffness
 		var along := global_basis.x
 		var accel := (err * k * k + (pusher_v - linear_velocity * Vector3(1, 0, 1)) * 2.0 * k).dot(along)
-		var f := (along * accel * mass / n).limit_length(push_force)
+		var f := (along * accel * rigid_mass / n).limit_length(push_force)
 		# Heading: same on the yaw.
 		var heading := heading()
 		var yaw_err := angle_difference(heading, yaw)
 		var kt := turn_stiffness
-		var turn := (yaw_err * kt * kt + (pusher_w - angular_velocity.y) * 2.0 * kt) * own_inertia / n
+		var turn := (yaw_err * kt * kt + (pusher_w - angular_velocity.y) * 2.0 * kt) * rigid_inertia / n
 		sleeping = false
 		apply_central_force(f)
 		apply_torque(Vector3.UP * clampf(turn, -push_torque, push_torque))
@@ -216,21 +310,23 @@ func _own_yaw_inertia() -> float:
 
 
 ## Host: fixed-axle grip, caster drag, rolling resistance.
-## These forces act on the trolley body alone (the cargo is its own body), so
-## their gains use the trolley's own mass, or they overshoot every physics step
-## and the wheels jitter instead of gripping. How much grip there is (the
-## clamp) still scales with the whole load.
+## Their gains use what actually moves with the trolley (its body plus cargo
+## stuck to it, not cargo sliding loose on top), or they overshoot every
+## physics step and the wheels jitter instead of gripping. How much grip
+## there is (the clamp) scales with the whole load.
 func _wheels(total: float) -> void:
 	var weight := total * 9.8
+	var rigid := _rigid_mass()
 	var axle := fixed_axle.global_position
 	var axle_at := Vector3(axle.x, global_position.y, axle.z)
 	var side := global_basis.z
 	var slip := point_velocity(axle_at).dot(side)
-	var grip := clampf(-slip * mass * axle_grip, -skid_friction * weight * 0.5, skid_friction * weight * 0.5)
+	var grip := clampf(-slip * rigid * axle_grip, -skid_friction * weight * 0.5, skid_friction * weight * 0.5)
 	apply_force(side * grip, axle_at - global_position)
 	# On the centreline at the caster end.
 	var caster_at := global_position + global_basis.x * casters[0].position.x
 	var caster_slip := point_velocity(caster_at).dot(side)
+	# Swivel casters barely resist turning: sized by the trolley alone.
 	var caster_force := clampf(-caster_slip * mass * caster_grip, -caster_friction * weight * 0.5, caster_friction * weight * 0.5)
 	apply_force(side * caster_force, caster_at - global_position)
 	var v := linear_velocity * Vector3(1, 0, 1)
@@ -242,9 +338,9 @@ func _wheels(total: float) -> void:
 	# Static friction: left alone and nearly still, it stays put instead of
 	# creeping (half the slip per step, up to what the wheels can hold).
 	if pushers.is_empty() and speed < 0.1:
-		var hold := (-v * mass * 0.5 * Engine.physics_ticks_per_second).limit_length(rolling_resistance * 3.0 * weight)
+		var hold := (-v * rigid * 0.5 * Engine.physics_ticks_per_second).limit_length(rolling_resistance * 3.0 * weight)
 		apply_central_force(hold)
-		apply_torque(Vector3.UP * -angular_velocity.y * _own_yaw_inertia() * 0.5 * Engine.physics_ticks_per_second)
+		apply_torque(Vector3.UP * -angular_velocity.y * _rigid_yaw_inertia() * 0.5 * Engine.physics_ticks_per_second)
 
 
 func _process(delta: float) -> void:

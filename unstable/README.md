@@ -85,7 +85,9 @@ The loaded trolley fits neither 1 m door, so the motor goes out one of two ways:
   turns with you. It can't be shoved sideways: you line up behind it. The fixed wheels are at the handle end, the swivel
   casters at the far end. Your hands only have so much strength, so a loaded trolley is slow to get going, slow to turn
   and slow to stop, and you can't turn faster than it does. Let go and it rolls on a few metres, then stays put. The
-  deck is grippy (`deck_friction` 0.85): the motor rides steadily, and only a hard ram or a dead stop slides it.
+  deck is grippy (`deck_friction` 0.85). Cargo resting on it *sticks* (static friction: it's locked to the trolley and
+  they move and turn as one, with no jitter); a ram, a dead stop or a corner harder than the grip can hold breaks it
+  loose and it slides on, then sticks again once it settles. Lifting it (hoist, hands) unsticks it.
 - **The damaged corridor.** Its cracked deck spans a void over the pit. Its signs show stress and load. It holds about
   280 kg: two crew are fine; the trolley with the motor is not. Extend a **support jack** (two in the bay) at the **jack
   point** in the void under it (walk in from the pit), and it holds 800 kg. A big impact on the deck can make the jack slip.

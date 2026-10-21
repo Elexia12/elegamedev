@@ -106,6 +106,9 @@ func wake() -> void:
 ## Host: hand this over for good (a deposit zone). It's moved to `where`,
 ## frozen, and its value is locked in.
 func lock_secured(where: Transform3D) -> void:
+	# Let go of anything carrying it first (a trolley's grip on its cargo).
+	for t in get_tree().get_nodes_in_group("pushables"):
+		t.release_cargo(self)
 	_locked = true
 	secured = true
 	dormant = true
