@@ -123,7 +123,7 @@ BlackwaterStation (Mission)
 ├─ PumpHall
 │  ├─ OverheadHoist       rail, Carriage, Chain, Hook (+ Point), Pendant (+ Point): move the Pendant anywhere
 │  ├─ PumpMotor           450 kg Prop with a LiftingEye        MotorMounting (bolts, item = PumpMotor)
-│  ├─ Trolley             FrontAxle (fixed wheels), CargoArea (deck friction)
+│  ├─ Trolley             FixedAxle (fixed wheels, handle end), Grip (aim zone), CargoArea (cargo that sticks)
 │  └─ WaterMainPipe       PipeRun: ruptures on a heavy hit
 ├─ ControlRoom            VfdModule + VfdMounting, HallDoor (SwingDoor: 1 m, turns about its hinge)
 ├─ DamagedCorridor        Slabs (BridgeSlab ×3), LoadArea, JackPoint, Labels
@@ -170,47 +170,11 @@ Its scene is `scenes/facility/flooded_reactor.tscn` (rules in its `Contract` nod
 
 ---
 
-## Shared architecture
+## How it's built
 
-Every system is a node with one job. Its tuning is in the Inspector, and the reactions between nodes are signal
-connections you can see in the **Node → Signals** dock.
-
-**`scenes/main.tscn`**: session flow (`scripts/main.gd`). `missions` lists the playable levels in menu order; the host's
-pick is spawned under `World` and replicated by `MissionSpawner`.
-
-**The level root is a generic `Mission`.** It does three things: it receives player requests, runs the ending, and
-replicates state. Everything level-specific lives in its **`%Contract`** child (`Contract` subclasses):
-- the HUD status, the objectives/manifest and the banner
-- how the run ends and what the results screen shows
-- the controls hint
-
-`%PressureNetwork`, `%Toolkit` and `%ExtractionZone` are optional (only the reactor has them). The crew's tools come
-from `Crew.loadout`.
-
-**`scenes/player/player.tscn`**: one crew member. `Tools` holds Winch, Pressure and Wrench (the level's loadout picks
-which). `Hands` does grab/carry/drag/throw, `Vitals` handles breath and knockouts, and `Sync` replicates the player.
-
-**How a click becomes an effect:**
-1. Input calls `Mission.send(action, …)`. That RPC reaches the host's `Mission.request()`.
-2. `"use"` calls `use(player, target)` on the aimed node. For an `InteractPoint` (pendant, hook, lifting eye, ignition…),
-   that's the point's handler, the nearest ancestor that implements `use()`. Its `prompt_for()` writes the HUD prompt.
-3. `"drive"` sends the movement keys of whoever holds a machine's controls (group `machines`).
-4. Held actions (grab, reel, blast, wrench) run on the host every physics frame, using that player's replicated aim.
-
-**Collision shapes match what you see.** No invisible boxes: the motor is a cylinder on feet, the trolley handle is two
-posts and a bar (with a separate, generous aim zone for [E]), the support jack is a cylinder on a base plate. Whatever you
-carry doesn't collide with your own body. Check with Debug → Visible Collision Shapes.
-
-**Damage and knock-on effects:** every `Prop` measures impacts from its change in velocity over the last few physics
-steps. It applies its own condition damage and passes the blow to whatever it hit (`take_hit`): that's how a motor ruptures
-a pipe or cracks the corridor. Damage feedback (sparks, the `−N cr` popup) is driven by a replicated hit counter, so every
-peer sees it.
-
-**Replication:**
-- Any node in group `net` implements `net_get()` / `net_set()`. The host packs them all into `Mission.net_state`, and
-  StateSync sends it at 20 Hz in on-change (reliable) mode.
-- Clients apply it, and their props stay frozen and interpolate.
-- Player movement is the exception: each player's own `Sync` node sends it from their machine.
+Both levels share one generic `Mission` with a level-specific `Contract`, host-authoritative physics and a single
+replicated snapshot. See `ARCHITECTURE.md` for how input becomes an effect, the networking model, the damage model and
+the physics rules the code follows.
 
 ## Tests
 
@@ -239,9 +203,6 @@ godot --headless --path . -s res://tests/blackwater_net_test.gd -- --role=client
 These check over real ENet sockets that a remote player can unbolt salvage, take the hoist pendant and drive it, and that
 both machines see the same hoist position and the same salvage condition. `net_test.gd` does the same for the reactor.
 
-## Not yet / next steps
-- Playtest Blackwater with 2-4 people on separate machines (only localhost so far) and tune the feel: hoist braking and
-  swing, trolley grip, the corridor tolerance, fragility.
-- Ratchet straps for the trolley (the spec's deferred fourth tool), and an emergency drain pump.
-- Audio: metallic impacts, groaning steel, the hoist motor, rushing water. Nothing makes sound yet.
-- Proper low-poly art and a lighting pass.
+## Status and next steps
+
+See `PROGRESS.md`.

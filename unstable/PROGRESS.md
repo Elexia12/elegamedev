@@ -1,0 +1,52 @@
+# UNSTABLE — progress
+
+_Last updated 2026-10-21 · `main` at the commit that added this file (gameplay last changed in `502d41d`)._
+
+## Where things stand
+Two playable greybox missions (the main menu's Mission picker; details in `README.md`):
+- **Blackwater Station** (default, "prototype 01"). Built from the Blackwater Station spec and its top-down blockout:
+  bay / control room / pump hall / damaged corridor / maintenance pit.
+  - The wrench unbolts salvage and cranks valves.
+  - The fixed overhead hoist lifts the 450 kg motor onto a shopping-cart-style trolley.
+  - Two routes out: the short corridor (needs a support jack from the pit) or the long way through the pit.
+  - Rising water and a rupturable water main, condition-based salvage value, partial extraction, truck departure,
+    station failure at 15 min.
+- **The Flooded Reactor** (first prototype, GDD §8): winch / pressure tool, jammed gate, lift extraction.
+
+Tests, all passing on `main`:
+- `tests/blackwater_test.gd`: 88 checks.
+- `tests/smoke_test.gd`: 29 checks.
+- `tests/blackwater_net_test.gd` and `tests/net_test.gd`: host and client agree, over localhost ENet.
+
+## Recently settled (don't reopen without the owner)
+- Blackwater layout = the spec drawing, with "drawing + route choice": both doors into the pump hall are 1 m, so the
+  loaded trolley must take the corridor or the pit.
+- Minimal text: briefing hides on entering the station, labels only up close, instructions in aim prompts.
+- The trolley's feel is final:
+  - held rigidly like a shopping cart, steered with the mouse or A/D (A/D turns, it doesn't side-step)
+  - cargo sticks to the deck
+  - `deck_friction` 0.85, `push_torque` 1400
+  - it must not copy R.E.P.O.'s cart
+- Collision shapes match the meshes (motor, trolley handle, support jack).
+
+## Blockers / risks
+- No hard blockers.
+- Never tested on two real machines or with 3–4 players (localhost only). Remote-player smoothing is untested.
+- No audio at all yet.
+
+## Next steps (owner's call on order)
+1. Playtest Blackwater (ideally online) and tune from feel:
+   - hoist braking and swing
+   - corridor tolerance
+   - fragility and damage thresholds
+   - flood rates
+2. The spec's deferred tool: ratchet straps for the trolley. Also an emergency drain pump.
+3. Audio: impacts, groaning steel, hoist motor, water.
+4. Low-poly art and a lighting pass.
+
+## Sources
+- GDD v0.1: `C:\Users\XPC\Downloads\UNSTABLE_Game_Design_Document.pdf`.
+- Codecks backlog pack: `C:\Users\XPC\Downloads\UNSTABLE_Codecks_Import_Pack\`.
+- Blackwater Station spec: the owner's ChatGPT conversation
+  `https://chatgpt.com/share/6ad802e0-2b30-83e8-8fbd-deff1d1689fe`. WebFetch only shows the page title. Download the
+  HTML and JSON-decode the `enqueue("…")` stream to read it.
