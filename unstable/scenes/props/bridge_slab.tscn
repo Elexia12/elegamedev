@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/facility/bridge_slab.gd" id="1_bridge"]
 
 [sub_resource type="BoxShape3D" id="Shape_deck"]
-size = Vector3(3.29, 0.3, 3)
+size = Vector3(3.29, 0.3, 2.9)
 
 [sub_resource type="BoxShape3D" id="Shape_rail"]
 size = Vector3(3.29, 1, 0.1)
@@ -23,7 +23,7 @@ roughness = 0.6
 
 [sub_resource type="BoxMesh" id="Mesh_deck"]
 material = SubResource("Mat_concrete")
-size = Vector3(3.33, 0.3, 3)
+size = Vector3(3.29, 0.3, 2.9)
 
 [sub_resource type="BoxMesh" id="Mesh_crack"]
 material = SubResource("Mat_crack")
@@ -53,11 +53,11 @@ hit_speed = 2
 shape = SubResource("Shape_deck")
 
 [node name="RailA" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 1.45)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 1.38)
 shape = SubResource("Shape_rail")
 
 [node name="RailB" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, -1.45)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, -1.38)
 shape = SubResource("Shape_rail")
 
 [node name="Mesh" type="Node3D" parent="."]
@@ -71,25 +71,25 @@ transform = Transform3D(0.95106, 0, 0.30902, 0, 1, 0, -0.30902, 0, 0.95106, 0.4,
 mesh = SubResource("Mesh_crack")
 
 [node name="RailTopA" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 1.45)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 1.38)
 mesh = SubResource("Mesh_rail")
 
 [node name="RailTopB" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, -1.45)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, -1.38)
 mesh = SubResource("Mesh_rail")
 
 [node name="Post1" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0.65, 1.45)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0.65, 1.38)
 mesh = SubResource("Mesh_post")
 
 [node name="Post2" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.65, 1.45)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.65, 1.38)
 mesh = SubResource("Mesh_post")
 
 [node name="Post3" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0.65, -1.45)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0.65, -1.38)
 mesh = SubResource("Mesh_post")
 
 [node name="Post4" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.65, -1.45)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.65, -1.38)
 mesh = SubResource("Mesh_post")

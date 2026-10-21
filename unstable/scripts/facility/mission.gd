@@ -81,6 +81,13 @@ func jet_push_at(p: Vector3) -> Vector3:
 	return pressure_network.jet_push_at(p) if pressure_network else Vector3.ZERO
 
 
+## Distance from this machine's own crew member to `p` (INF if none yet).
+## Labels use it to show up only when you're close.
+func local_distance(p: Vector3) -> float:
+	var me := crew.local_member() if crew else null
+	return me.global_position.distance_to(p) if me else INF
+
+
 func money(amount: float) -> String:
 	return contract.money(amount)
 

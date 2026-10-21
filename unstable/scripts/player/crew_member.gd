@@ -86,7 +86,9 @@ func _ready() -> void:
 	interact_ray.enabled = mine
 	grab_ray.enabled = mine
 	if mine:
-		global_position = mission.crew.spawn_position(id)
+		var spawn := mission.crew.spawn_marker(id)
+		global_position = spawn.global_position
+		rotation.y = spawn.global_rotation.y
 		mission.incident_log.client_event.connect(func(kind: String, text: String) -> void:
 			if kind == "release":
 				hands.on_dropped(text)
@@ -274,6 +276,8 @@ func prompt() -> String:
 			return use
 		if t.is_grabbable():
 			var grab := "[E] %s %s" % ["carry" if hands.can_lift(t) else "drag", t.display_name]
+			if t.note != "":
+				grab += " · " + t.note
 			return grab + ("   ·   " + surface if surface != "" else "")
 		if t.note != "":
 			return "%s · %s" % [t.display_name, t.note]

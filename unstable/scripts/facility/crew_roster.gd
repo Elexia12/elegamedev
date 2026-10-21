@@ -59,7 +59,11 @@ func members() -> Array[CrewMember]:
 
 
 ## The host uses the first spawn point; other peers share the rest.
-func spawn_position(peer_id: int) -> Vector3:
+func spawn_marker(peer_id: int) -> Node3D:
 	var markers := spawn_points.get_children()
 	var i := 0 if peer_id == 1 else 1 + peer_id % (markers.size() - 1)
-	return markers[i].global_position
+	return markers[i]
+
+
+func spawn_position(peer_id: int) -> Vector3:
+	return spawn_marker(peer_id).global_position

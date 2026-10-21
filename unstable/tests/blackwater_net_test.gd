@@ -46,14 +46,14 @@ func _process(delta: float) -> bool:
 		m.tremors._next = 9999.0
 	if role == "client" and me:
 		if _once("go_vfd", 4.0):
-			me.global_position = Vector3(-13.9, 0.05, -9.0)
+			me.global_position = Vector3(-13.5, 0.05, -14.0)
 			me.rotation = Vector3(0, PI / 2.0, 0)
 		if _once("wrench", 4.5):
 			m.send("hold", "wrench", "ControlRoom/VfdMounting/Point", Vector3(-1, 0, 0))
 			print("[client] wrenching the VFD bolts")
 		if _once("go_pendant", 9.0):
 			m.send("hold", "")
-			me.global_position = Vector3(-2.0, 0.05, -12.3)
+			me.global_position = Vector3(6.0, 0.05, -15.3)
 			me.rotation = Vector3.ZERO
 		if _once("pendant", 9.5):
 			m.send("use", HOIST + "/Pendant/Point")
@@ -67,7 +67,7 @@ func _process(delta: float) -> bool:
 	if role == "host" and _once("drop", 13.0):
 		var vfd := m.get_node("ControlRoom/VfdModule") as Prop
 		print("[host] VFD loose before the drop: ", not vfd.dormant)
-		vfd.global_position = Vector3(-12.0, 2.5, -9.0)
+		vfd.global_position = Vector3(-12.0, 2.5, -14.0)
 		vfd.linear_velocity = Vector3.ZERO
 	if t > RUN_SECONDS + (3.0 if role == "host" else 0.0):
 		var h := m.get_node(HOIST) as OverheadHoist

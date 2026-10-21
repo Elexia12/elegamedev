@@ -30,6 +30,8 @@ var _manifest_open := false
 @onready var knocked_label: Label = %KnockedLabel
 @onready var tool_slots: Array[Node] = %ToolBar.get_children()
 @onready var help: Label = %Help
+@onready var briefing_panel: Control = %BriefingPanel
+@onready var briefing: Label = %Briefing
 
 
 func _ready() -> void:
@@ -51,6 +53,9 @@ func _process(delta: float) -> void:
 	var b := contract.banner()
 	banner.text = b[0]
 	banner.modulate = b[1]
+	var brief := contract.briefing()
+	briefing_panel.visible = brief != ""
+	briefing.text = brief
 	if me:
 		_update_player(me, delta)
 

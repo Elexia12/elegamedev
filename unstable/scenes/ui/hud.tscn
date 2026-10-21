@@ -108,6 +108,26 @@ text = "Message"
 horizontal_alignment = 2
 autowrap_mode = 3
 
+[node name="BriefingPanel" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 16.0
+offset_top = -110.0
+offset_right = 16.0
+offset_bottom = -110.0
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Briefing" type="Label" parent="Root/BriefingPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "THE JOB"
+
 [node name="Banner" type="Label" parent="Root"]
 unique_name_in_owner = true
 layout_mode = 1

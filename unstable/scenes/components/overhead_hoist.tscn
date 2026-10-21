@@ -113,7 +113,7 @@ modulate = Color(1, 0.85, 0.3, 1)
 font_size = 36
 outline_size = 10
 no_depth_test = true
-text = "OVERHEAD HOIST"
+text = ""
 
 [node name="Chain" type="MeshInstance3D" parent="."]
 editor_description = "Stretched between the carriage and the hook every frame."
@@ -159,4 +159,4 @@ billboard = 1
 modulate = Color(1, 0.85, 0.3, 1)
 font_size = 34
 outline_size = 10
-text = "HOIST PENDANT"
+text = "HOIST CONTROLS"

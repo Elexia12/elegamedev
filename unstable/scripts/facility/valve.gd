@@ -17,6 +17,10 @@ extends Node3D
 @export var crank_time := 8.0
 ## Wheel revolutions from shut to fully open (visual).
 @export var turns := 0.75
+## Only show the label within this distance (m) of your crew member (0 = always).
+@export var show_within := 0.0
+
+var _mission: Mission
 
 @onready var wheel: Node3D = $Wheel/Mesh
 @onready var label: Label3D = $Label
@@ -25,6 +29,7 @@ extends Node3D
 func _ready() -> void:
 	add_to_group("net")
 	add_to_group("valves")
+	_mission = Mission.of(self)
 
 
 ## Host: open (positive) or close (negative) by `step`, snapped to 25%.
@@ -40,6 +45,7 @@ func crank(dir: float, delta: float) -> void:
 func _process(delta: float) -> void:
 	wheel.rotation.y = lerp_angle(wheel.rotation.y, opening * TAU * turns, 1.0 - exp(-8.0 * delta)) \
 		if turns <= 1.0 else opening * TAU * turns
+	label.visible = show_within <= 0.0 or _mission == null or _mission.local_distance(global_position) <= show_within
 	label.text = "%s\n%d%% OPEN" % [display_name.to_upper(), roundi(opening * 100.0)]
 	if feeds != "":
 		label.text += "\n→ %s" % feeds.to_upper()

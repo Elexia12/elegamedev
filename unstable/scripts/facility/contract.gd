@@ -27,6 +27,11 @@ func controls_hint() -> String:
 	return "WASD move · Shift sprint · Space jump/swim · E grab · LMB tool or throw · R turn held item / detach cable · 1-2/Q/wheel tools · Esc menu"
 
 
+## HUD, centre left: a short briefing at the start ("" = hidden).
+func briefing() -> String:
+	return ""
+
+
 ## HUD, top left: level name, clock, the hazards worth watching.
 func status_text() -> String:
 	return ""

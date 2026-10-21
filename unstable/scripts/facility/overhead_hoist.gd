@@ -281,11 +281,11 @@ func _process(delta: float) -> void:
 		chain.global_transform = Transform3D(Basis(bx, y * len, bx.cross(y)), (a + target) / 2.0)
 	var p := load_prop()
 	var over := p != null and tension > capacity * 9.8
-	carriage_label.text = "%s\n%s" % [display_name.to_upper(),
-		"HOOK EMPTY" if p == null else "%s · %.1f kN" % [p.display_name.to_upper(), tension / 1000.0]]
+	carriage_label.visible = p != null and mission.local_distance(carriage.global_position) < 16.0
+	carriage_label.text = "%.1f kN" % (tension / 1000.0)
 	carriage_label.modulate = Color(1.0, 0.35, 0.25) if over else Color(1.0, 0.85, 0.3)
-	var who := "" if operator == 0 else "\n%s" % _member_name(operator)
-	pendant_label.text = "HOIST PENDANT\n%s%s" % [state_name(), who if operator != 0 else "\n[E] take the controls"]
+	pendant_label.visible = mission.local_distance(pendant.global_position) < 8.0
+	pendant_label.text = "HOIST CONTROLS" if operator == 0 else "HOIST · %s" % _member_name(operator)
 
 
 func net_get() -> Array:

@@ -24,8 +24,28 @@ and the collapse happens *to* you: the floor shakes, water rises, and the floor 
 
 *Four underqualified salvage workers try to remove expensive industrial equipment from a flooding pumping station.*
 
-The contract board in the yard explains the job. Recover what you can, then leave in the truck. Anything you secure gets
-paid, at whatever condition it's in when you secure it.
+A short briefing on screen explains the job; it disappears once you walk into the station ([Tab] shows the manifest any
+time). Recover what you can, then leave in the truck. Anything you secure gets paid, at whatever condition it's in when you
+secure it. Labels on things only appear when you're close, and the aim prompt tells you what [E] or the wrench will do.
+
+**The layout follows the spec's blockout** (north at the top):
+```
++------------- A  EXTRACTION BAY -------------+   truck, deposit zone, support jacks
++--opening--+---------------1 m door---------+
+| B CONTROL |  C PUMP HALL                    |
+|   ROOM   1 m door   hoist rail over the motor|
+|  (VFD)    |  trolley        water main pipe |
++--opening--+                                 |
+| D DAMAGED CORRIDOR  -> into the hall        |
++--ramp-----+---------------ramp--------------+
+| E LOWER MAINTENANCE PIT (floods first)      |
++---------------------------------------------+
+```
+The loaded trolley fits neither 1 m door, so the motor goes out one of two ways:
+- **Short:** hall → across the corridor's cracked deck → control room → bay. The deck only holds ~280 kg unless a support
+  jack holds it up from the pit below.
+- **Long:** hall → ramp down into the pit → across → ramp up to the corridor's solid end → control room → bay. The ramps
+  need two people to push the loaded trolley up, and the pit floods as time goes on.
 
 | Salvage | Where | Value | The problem |
 |---|---|---|---|
@@ -38,7 +58,7 @@ paid, at whatever condition it's in when you secure it.
 | Input | Action |
 |---|---|
 | WASD / Shift / Space | Move / sprint / jump (hold Space to swim up) |
-| E | Grab / let go (light things are carried, heavy things dragged). Use things: the hoist pendant, the hook, a support jack, the truck |
+| E | Grab / let go (light things are carried, heavy things dragged). Use things: the hoist pendant, the hook, a support jack, a door, the truck |
 | LMB while holding | Throw it |
 | R while holding | Turn it: free → upright → flat (stand a support jack up) |
 | **Wrench [1]** | Hold LMB on bolts to unbolt (stay on them). On a valve wheel: hold LMB to crank it shut, RMB to crank it open |
@@ -61,17 +81,19 @@ paid, at whatever condition it's in when you secure it.
   to clear it, or swing the motor into it and burst it.
 - **The trolley.** Grab its yellow handle and push. The far end has fixed wheels and the handle end swivels, so you steer by
   swinging the handle. Nothing is strapped down: slam it into something, or turn too hard, and the motor slides or falls off.
-- **Two routes to the yard.** The **damaged corridor** is a short bridge over the pit. Its signs show stress and load in
-  real time. It holds about 280 kg: two crew and the VFD are fine; the trolley with the motor is not. Extend a **support jack** (two
-  in the yard) at the **jack point** on the pit floor under it, and it holds 800 kg. A big impact on the deck can make the
-  jack slip. At 100% stress the deck falls into the pit. The **wide passage** is the long way round, with solid floor.
+- **The damaged corridor.** Its cracked deck spans a void over the pit. Its signs show stress and load. It holds about
+  280 kg: two crew are fine; the trolley with the motor is not. Extend a **support jack** (two in the bay) at the **jack
+  point** in the void under it (walk in from the pit), and it holds 800 kg. A big impact on the deck can make the jack slip.
+  At 100% stress the deck falls into the pit.
 - **Flooding.** One water level for the whole station, measured from the pit floor. It rises with seepage (faster as the
   station destabilises), through the **inlet valve** in the pit (crank it shut with the wrench), and much faster through a
   burst pipe (the inlet valve shuts that off too). The gauges show DRY / SHALLOW / DEEP / CRITICAL for the pit and the hall:
   shallow water slows you, deep water wrecks electronics, critical water is over your head.
+- **Doors.** The control room opens straight onto the bay. Its door to the pump hall is a heavy swing door: walk into it
+  or [E] to push it open, and it swings back into whoever is on the other side.
 - **Securing and leaving.** Leave salvage in the green **deposit zone** for a second, nearly still, and it's secured exactly
   once. It's loaded onto the truck and can't be damaged any more. [E] on the truck's ignition starts a 10 s departure (and
-  [E] cancels it). Everyone in the yard leaves; anyone left inside costs a 250 cr rescue fee.
+  [E] cancels it). Everyone in the bay leaves; anyone left inside costs a 250 cr rescue fee.
 - **Station failure.** After 15 minutes the station fails: the corridor drops, water surges, the ceiling comes down, and
   the run ends with whatever you secured, minus rescue fees for everyone still inside.
 - **Results:** CONTRACT COMPLETE + JACKPOT / CONTRACT COMPLETE / PARTIAL SALVAGE / NOTHING RECOVERED, with the payout, each
@@ -82,13 +104,13 @@ paid, at whatever condition it's in when you secure it.
 **`scenes/facility/blackwater_station.tscn`**
 ```
 BlackwaterStation (Mission)
-├─ Contract (SalvageContract)  the rules: HUD text, manifest, departure banner, results and payout
+├─ Contract (SalvageContract)  the rules: briefing_text, HUD text, manifest, departure banner, results and payout
 ├─ MissionClock           15 min to station failure; instability raises seepage and tremors
 ├─ Tremors                shakes cameras, shoves props, knocks wrenches off bolts, drops Rubble
 ├─ IncidentLog, Crew (loadout = Wrench), StateSync, HUD, Environment
-├─ Geometry               CSG greybox: yard, pump hall, control room, pit (+ ramp), passage, signs, contract board
+├─ Geometry               CSG greybox: bay, control room, hall, corridor, pit + two ramps; signs (ProximityLabel)
 ├─ Water
-│  ├─ StationFlood        one FloodZone (base = pit floor) with Pit / Hall / Passage volumes
+│  ├─ StationFlood        one FloodZone (base = pit floor) with Pit / Corridor / Hall / Control volumes
 │  ├─ WaterMain           inlet_flow through InletValve + leak_flow per burst PipeRun
 │  └─ PitGauge, HallGauge FloodGauge signs (DRY → CRITICAL)
 ├─ PumpHall
@@ -96,11 +118,11 @@ BlackwaterStation (Mission)
 │  ├─ PumpMotor           450 kg Prop with a LiftingEye        MotorMounting (bolts, item = PumpMotor)
 │  ├─ Trolley             FrontAxle (fixed wheels), CargoArea (deck friction)
 │  └─ WaterMainPipe       PipeRun: ruptures on a heavy hit
-├─ ControlRoom            VfdModule + VfdMounting, Door (SwingDoor on a hinge)
-├─ Pit                    InletValve, InletGush, Transmitter1-4 + their Mountings
+├─ ControlRoom            VfdModule + VfdMounting, HallDoor (SwingDoor: 1 m, turns about its hinge)
 ├─ DamagedCorridor        Slabs (BridgeSlab ×3), LoadArea, JackPoint, Labels
-├─ Extraction             DepositZone (truck_bed = Truck/TruckBed), Truck (TruckDeparture: Ignition, departed → Mission)
-├─ Equipment              SupportJack1-2
+├─ Pit                    InletValve, InletGush, Transmitter1-4 + their Mountings
+├─ Bay                    DepositZone (truck_bed = Truck/TruckBed), Truck (TruckDeparture: Ignition, yard = the bay,
+│                         departed → Mission), SupportJack1-2
 └─ Rubble
 ```
 Tune it in the Inspector:
@@ -109,6 +131,7 @@ Tune it in the Inspector:
 - Salvage: `fragility` / `damage_threshold` on each prop.
 - Water main: `inlet_flow`; the zone's `inflow`.
 - Mountings: `unbolt_time`.
+- Text: `label_range` on props, `show_within` on ProximityLabel signs, valves and gauges.
 
 ---
 

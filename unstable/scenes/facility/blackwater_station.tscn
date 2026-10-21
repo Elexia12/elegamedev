@@ -1,4 +1,4 @@
-[gd_scene load_steps=48 format=3]
+[gd_scene load_steps=49 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/mission.gd" id="1_missio"]
 [ext_resource type="Script" path="res://scripts/facility/salvage_contract.gd" id="2_salvag"]
@@ -9,23 +9,24 @@
 [ext_resource type="Script" path="res://scripts/facility/flood_zone.gd" id="7_flood_"]
 [ext_resource type="Script" path="res://scripts/facility/water_main.gd" id="8_water_"]
 [ext_resource type="Script" path="res://scripts/facility/flood_gauge.gd" id="9_flood_"]
-[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="10_player"]
-[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="11_hud"]
-[ext_resource type="PackedScene" path="res://scenes/components/flood_volume.tscn" id="12_flood_"]
-[ext_resource type="PackedScene" path="res://scenes/components/valve.tscn" id="13_valve"]
-[ext_resource type="PackedScene" path="res://scenes/components/overhead_hoist.tscn" id="14_overhe"]
-[ext_resource type="PackedScene" path="res://scenes/components/mounting.tscn" id="15_mounti"]
-[ext_resource type="PackedScene" path="res://scenes/components/pipe_run.tscn" id="16_pipe_r"]
-[ext_resource type="PackedScene" path="res://scenes/components/damaged_corridor.tscn" id="17_damage"]
-[ext_resource type="PackedScene" path="res://scenes/components/deposit_zone.tscn" id="18_deposi"]
-[ext_resource type="PackedScene" path="res://scenes/components/truck.tscn" id="19_truck"]
-[ext_resource type="PackedScene" path="res://scenes/props/pump_motor.tscn" id="20_pump_m"]
-[ext_resource type="PackedScene" path="res://scenes/props/vfd_module.tscn" id="21_vfd_mo"]
-[ext_resource type="PackedScene" path="res://scenes/props/pressure_transmitter.tscn" id="22_pressu"]
-[ext_resource type="PackedScene" path="res://scenes/props/trolley.tscn" id="23_trolle"]
-[ext_resource type="PackedScene" path="res://scenes/props/support_jack.tscn" id="24_suppor"]
-[ext_resource type="PackedScene" path="res://scenes/props/swing_door.tscn" id="25_swing_"]
-[ext_resource type="PackedScene" path="res://scenes/props/rubble.tscn" id="26_rubble"]
+[ext_resource type="Script" path="res://scripts/facility/proximity_label.gd" id="10_proxim"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="11_player"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="12_hud"]
+[ext_resource type="PackedScene" path="res://scenes/components/flood_volume.tscn" id="13_flood_"]
+[ext_resource type="PackedScene" path="res://scenes/components/valve.tscn" id="14_valve"]
+[ext_resource type="PackedScene" path="res://scenes/components/overhead_hoist.tscn" id="15_overhe"]
+[ext_resource type="PackedScene" path="res://scenes/components/mounting.tscn" id="16_mounti"]
+[ext_resource type="PackedScene" path="res://scenes/components/pipe_run.tscn" id="17_pipe_r"]
+[ext_resource type="PackedScene" path="res://scenes/components/damaged_corridor.tscn" id="18_damage"]
+[ext_resource type="PackedScene" path="res://scenes/components/deposit_zone.tscn" id="19_deposi"]
+[ext_resource type="PackedScene" path="res://scenes/components/truck.tscn" id="20_truck"]
+[ext_resource type="PackedScene" path="res://scenes/props/pump_motor.tscn" id="21_pump_m"]
+[ext_resource type="PackedScene" path="res://scenes/props/vfd_module.tscn" id="22_vfd_mo"]
+[ext_resource type="PackedScene" path="res://scenes/props/pressure_transmitter.tscn" id="23_pressu"]
+[ext_resource type="PackedScene" path="res://scenes/props/trolley.tscn" id="24_trolle"]
+[ext_resource type="PackedScene" path="res://scenes/props/support_jack.tscn" id="25_suppor"]
+[ext_resource type="PackedScene" path="res://scenes/props/swing_door.tscn" id="26_swing_"]
+[ext_resource type="PackedScene" path="res://scenes/props/rubble.tscn" id="27_rubble"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_mat"]
 sky_top_color = Color(0.22, 0.3, 0.4, 1)
@@ -58,6 +59,10 @@ roughness = 0.85
 
 [sub_resource type="StandardMaterial3D" id="Mat_control"]
 albedo_color = Color(0.28, 0.34, 0.4, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_corridor"]
+albedo_color = Color(0.36, 0.33, 0.27, 1)
 roughness = 0.9
 
 [sub_resource type="StandardMaterial3D" id="Mat_pit"]
@@ -95,10 +100,6 @@ albedo_color = Color(0.25, 0.45, 0.3, 1)
 roughness = 0.6
 metallic = 0.4
 
-[sub_resource type="StandardMaterial3D" id="Mat_board"]
-albedo_color = Color(0.1, 0.12, 0.14, 1)
-roughness = 0.9
-
 [sub_resource type="SceneReplicationConfig" id="Repl_mission"]
 properties/0/path = NodePath(".:net_state")
 properties/0/spawn = true
@@ -133,70 +134,66 @@ height = 1.2
 
 [node name="BlackwaterStation" type="Node3D"]
 editor_description = "LEVEL ROOT (Mission): BLACKWATER PUMPING STATION, prototype 01.
-An insurance salvage job in a flooding pumping station. The Contract node holds the rules; every system below is its own child node.
-Mission only receives player actions, runs the ending and replicates every node in group \"net\"."
+Layout follows the spec blockout: A extraction bay (north), B control room + C pump hall, D damaged corridor (under B), E maintenance pit (south).
+The Contract node holds the rules; every system below is its own child node."
 script = ExtResource("1_missio")
 
 [node name="Contract" type="Node" parent="." node_paths=PackedStringArray("deposit", "departure", "corridor", "flood_zone")]
 editor_description = "THE RULES OF THIS LEVEL (SalvageContract).
 CONTRACT: VFD power module · JACKPOT: pump motor · BONUS: pressure transmitters.
-Salvage counts once secured at the DepositZone (value = base × condition then). The run ends when the Truck leaves (or the station fails); anyone left inside costs rescue_fee."
+Salvage counts once secured at the DepositZone. The run ends when the Truck leaves (or the station fails).
+briefing_text shows on screen until you first walk into the station."
 unique_name_in_owner = true
 script = ExtResource("2_salvag")
-deposit = NodePath("../Extraction/DepositZone")
-departure = NodePath("../Extraction/Truck")
+deposit = NodePath("../Bay/DepositZone")
+departure = NodePath("../Bay/Truck")
 corridor = NodePath("../DamagedCorridor")
 flood_zone = NodePath("../Water/StationFlood")
+briefing_text = "THE JOB
+VFD module · control room
+Pump motor · pump hall (hoist it onto the trolley)
+Sensors · maintenance pit
+Bring salvage to the green zone.
+Start the truck to leave.
+Wrench [1]: hold LMB on bolts"
 
 [node name="MissionClock" type="Node" parent="."]
 unique_name_in_owner = true
 script = ExtResource("3_missio")
-editor_description = "Mission timer: instability 0 -> 1 over collapse_time (15 min), raising seepage and tremors. At the end the station fails (Contract.on_collapse: corridor drops, a flood surge).
+editor_description = "15 min to station failure. Instability 0 -> 1 raises seepage and tremors.
 Signals: phase_changed -> Mission (tremor), collapsed -> Mission."
 collapse_time = 900
 
 [node name="Tremors" type="Node3D" parent="." node_paths=PackedStringArray("sun")]
 unique_name_in_owner = true
 script = ExtResource("4_tremor")
-editor_description = "Periodic tremors (more often as instability rises): camera shake, shoves loose props, knocks wrenches off bolts, shakes Rubble loose."
+editor_description = "Periodic tremors: camera shake, shoves loose props, knocks wrenches off bolts, shakes Rubble loose."
 sun = NodePath("../Environment/Sun")
 calm_interval = 55
 unstable_interval = 14
 rubble_chance = 0.25
 support_damage = 0
 
-[node name="DustHallWest" type="CPUParticles3D" parent="Tremors"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 6.8, -6)
+[node name="DustHall" type="CPUParticles3D" parent="Tremors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 6.8, -10)
 emitting = false
-amount = 60
+amount = 80
 lifetime = 2.5
 mesh = SubResource("Mesh_dust")
 emission_shape = 3
-emission_box_extents = Vector3(4, 0.1, 6)
-direction = Vector3(0, -1, 0)
-gravity = Vector3(0, -2, 0)
-initial_velocity_max = 0.5
-
-[node name="DustHallEast" type="CPUParticles3D" parent="Tremors"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 6.8, -2)
-emitting = false
-amount = 60
-lifetime = 2.5
-mesh = SubResource("Mesh_dust")
-emission_shape = 3
-emission_box_extents = Vector3(4, 0.1, 5)
+emission_box_extents = Vector3(9, 0.1, 7)
 direction = Vector3(0, -1, 0)
 gravity = Vector3(0, -2, 0)
 initial_velocity_max = 0.5
 
 [node name="DustPit" type="CPUParticles3D" parent="Tremors"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 6.8, -8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 6.8, 2)
 emitting = false
-amount = 60
+amount = 80
 lifetime = 2.5
 mesh = SubResource("Mesh_dust")
 emission_shape = 3
-emission_box_extents = Vector3(4, 0.1, 5)
+emission_box_extents = Vector3(15, 0.1, 4)
 direction = Vector3(0, -1, 0)
 gravity = Vector3(0, -2, 0)
 initial_velocity_max = 0.5
@@ -204,13 +201,12 @@ initial_velocity_max = 0.5
 [node name="IncidentLog" type="Node" parent="."]
 unique_name_in_owner = true
 script = ExtResource("5_incide")
-editor_description = "Incident list for the results screen. Only a few things are announced as text (truck started, salvage secured, a burst main); the rest you see happen."
 
 [node name="Crew" type="Node3D" parent="."]
 unique_name_in_owner = true
 script = ExtResource("6_crew_r")
 editor_description = "Crew roster. loadout = the tools handed out here (just the WRENCH; the hoist, trolley and jacks are facility equipment)."
-player_scene = ExtResource("10_player")
+player_scene = ExtResource("11_player")
 loadout = PackedStringArray("Wrench")
 
 [node name="Members" type="Node3D" parent="Crew"]
@@ -222,23 +218,23 @@ spawn_path = NodePath("../Members")
 [node name="SpawnPoints" type="Node3D" parent="Crew"]
 
 [node name="Spawn1" type="Marker3D" parent="Crew/SpawnPoints"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 21.5, 0.1, 2.5)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -6, 0.1, -28.5)
 
 [node name="Spawn2" type="Marker3D" parent="Crew/SpawnPoints"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 23, 0.1, 2.5)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -4.5, 0.1, -28.5)
 
 [node name="Spawn3" type="Marker3D" parent="Crew/SpawnPoints"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 24.5, 0.1, 2.5)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -3, 0.1, -28.5)
 
 [node name="Spawn4" type="Marker3D" parent="Crew/SpawnPoints"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 26, 0.1, 2.5)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -1.5, 0.1, -28.5)
 
 [node name="StateSync" type="MultiplayerSynchronizer" parent="."]
 delta_interval = 0.05
 replication_config = SubResource("Repl_mission")
 editor_description = "Replicates Mission.net_state (snapshot of every node in group \"net\") from host to clients, on change (reliable)."
 
-[node name="HUD" parent="." instance=ExtResource("11_hud")]
+[node name="HUD" parent="." instance=ExtResource("12_hud")]
 
 [node name="Environment" type="Node3D" parent="."]
 
@@ -246,371 +242,363 @@ editor_description = "Replicates Mission.net_state (snapshot of every node in gr
 environment = SubResource("Env")
 
 [node name="Sun" type="DirectionalLight3D" parent="Environment"]
-transform = Transform3D(0.86603, -0.40958, 0.28679, 0, 0.57358, 0.81915, -0.5, -0.70941, 0.49673, 0, 20, 0)
+transform = Transform3D(-0.93969, 0.28017, -0.19617, 0, 0.57358, 0.81915, 0.34202, 0.76975, -0.53899, 0, 20, 0)
 light_energy = 1.1
 shadow_enabled = true
 
 [node name="OverviewCamera" type="Camera3D" parent="Environment"]
 unique_name_in_owner = true
-transform = Transform3D(0.64279, -0.47162, 0.60365, 0, 0.78801, 0.61566, -0.76604, -0.39574, 0.50652, 30, 16, 12)
+transform = Transform3D(-1, 0, 0, 0, 0.76604, 0.64279, 0, 0.64279, -0.76604, 1, 20, -40)
 current = true
 fov = 75
 
 [node name="Lights" type="Node3D" parent="Environment"]
 editor_description = "Work lights (group facility_lights). Tremors make them flicker."
 
-[node name="LampHallNorth" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 6.2, -10)
+[node name="LampControl" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 3.6, -12)
+light_color = Color(0.85, 0.95, 1, 1)
+light_energy = 1.5
+shadow_enabled = true
+omni_range = 10
+
+[node name="LampCorridor" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 3.1, -4)
+light_color = Color(1, 0.8, 0.55, 1)
+light_energy = 1.2
+shadow_enabled = true
+omni_range = 8
+
+[node name="LampHallWest" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 6.2, -12)
 light_color = Color(1, 0.9, 0.75, 1)
 light_energy = 1.8
 shadow_enabled = true
 omni_range = 14
 
-[node name="LampHallSouth" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.2, 0)
+[node name="LampHallEast" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 6.2, -8)
 light_color = Color(1, 0.9, 0.75, 1)
 light_energy = 1.6
 shadow_enabled = true
 omni_range = 13
 
-[node name="LampControl" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 3.6, -9)
-light_color = Color(0.85, 0.95, 1, 1)
-light_energy = 1.4
-shadow_enabled = true
-omni_range = 9
-
-[node name="LampPitNorth" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 4, -11)
+[node name="LampPitWest" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 3.5, 2)
 light_color = Color(0.6, 0.8, 1, 1)
 light_energy = 1.4
 shadow_enabled = true
-omni_range = 11
+omni_range = 12
 
-[node name="LampPitSouth" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 1.5, -4)
+[node name="LampPitEast" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.5, 3)
 light_color = Color(0.6, 0.8, 1, 1)
-light_energy = 1
+light_energy = 1.4
 shadow_enabled = true
-omni_range = 8
-
-[node name="LampPassage" type="OmniLight3D" parent="Environment/Lights" groups=["facility_lights"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.6, 1)
-light_color = Color(1, 0.9, 0.75, 1)
-light_energy = 1.3
-shadow_enabled = true
-omni_range = 10
+omni_range = 12
 
 [node name="Geometry" type="Node3D" parent="."]
-editor_description = "Greybox walls and floors (CSG boxes with collision). Floors are deep blocks so their faces are the pit walls."
+editor_description = "Greybox (CSG boxes with collision). Floors are deep blocks: their faces are the pit walls."
 
-[node name="HallFloor" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -2, -5)
+[node name="BayGround" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, -2, -25)
 use_collision = true
-size = Vector3(24, 4, 18)
-material = SubResource("Mat_floor")
+size = Vector3(40, 4, 14)
+material = SubResource("Mat_yard")
 
-[node name="ControlFloorTint" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.005, -9)
-size = Vector3(8, 0.01, 10)
+[node name="ControlFloor" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, -2, -11.75)
+use_collision = true
+size = Vector3(13, 4, 12.5)
 material = SubResource("Mat_control")
 
-[node name="PassageFloor" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, -2, 1)
+[node name="CorridorSolidFloor" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, -2, -4)
 use_collision = true
-size = Vector3(10, 4, 6)
+size = Vector3(3, 4, 3)
+material = SubResource("Mat_corridor")
+
+[node name="HallFloor" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, -2, -10.25)
+use_collision = true
+size = Vector3(21, 4, 15.5)
 material = SubResource("Mat_floor")
 
 [node name="PitFloor" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, -3.5, -8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, -3.5, 2.25)
 use_collision = true
-size = Vector3(10, 1, 12)
+size = Vector3(34, 1, 9.5)
 material = SubResource("Mat_pit")
 
-[node name="YardGround" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29, -2, -5)
+[node name="VoidFloor" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -3.5, -4)
 use_collision = true
-size = Vector3(22, 4, 30)
-material = SubResource("Mat_yard")
-
-[node name="PitRamp" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(0.89443, 0.44721, 0, -0.44721, 0.89443, 0, 0, 0, 1, 10.91, -1.679, -13)
-use_collision = true
-size = Vector3(6.708, 0.4, 2)
+size = Vector3(10, 1, 3)
 material = SubResource("Mat_pit")
 
-[node name="NorthWall" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.5, -14.3)
+[node name="HallRamp" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 0.94868, -0.31623, 0, 0.31623, 0.94868, 9.5, -1.68974, 1.93675)
 use_collision = true
-size = Vector3(35.2, 11, 0.6)
+size = Vector3(3, 0.4, 9.48683)
+material = SubResource("Mat_pit")
+
+[node name="WestRamp" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 0.94868, -0.31623, 0, 0.31623, 0.94868, -14.5, -1.68974, 1.93675)
+use_collision = true
+size = Vector3(3, 0.4, 9.48683)
+material = SubResource("Mat_pit")
+
+[node name="NorthWallWest" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.85, 3.5, -18.25)
+use_collision = true
+size = Vector3(5.3, 7, 0.5)
 material = SubResource("Mat_wall")
 
-[node name="SouthWall" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 3.5, 4.3)
+[node name="NorthWallMiddle" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 3.5, -18.25)
 use_collision = true
-size = Vector3(35.2, 7, 0.6)
+size = Vector3(20.8, 7, 0.5)
+material = SubResource("Mat_wall")
+
+[node name="NorthWallEast" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.75, 3.5, -18.25)
+use_collision = true
+size = Vector3(5.5, 7, 0.5)
+material = SubResource("Mat_wall")
+
+[node name="ControlOpeningLintel" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 5.1, -18.25)
+use_collision = true
+size = Vector3(2.4, 3.8, 0.5)
+material = SubResource("Mat_wall")
+
+[node name="HallDoorLintel" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 4.7, -18.25)
+use_collision = true
+size = Vector3(1, 4.6, 0.5)
 material = SubResource("Mat_wall")
 
 [node name="WestWall" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.3, 3.5, -5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.25, 1.5, -5.5)
 use_collision = true
-size = Vector3(0.6, 7, 19.2)
+size = Vector3(0.5, 11, 26)
+material = SubResource("Mat_wall")
+
+[node name="EastWall" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.25, 1.5, -5.5)
+use_collision = true
+size = Vector3(0.5, 11, 26)
+material = SubResource("Mat_wall")
+
+[node name="SouthWall" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.5, 7.25)
+use_collision = true
+size = Vector3(35, 11, 0.5)
 material = SubResource("Mat_wall")
 
 [node name="Roof" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 7.2, -5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 7.2, -5.5)
 use_collision = true
-size = Vector3(35.2, 0.4, 19.2)
+size = Vector3(35, 0.4, 26)
 material = SubResource("Mat_ceiling")
 
-[node name="ControlSouthWall" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 2, -4)
+[node name="ControlHallWallNorth" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 3.5, -15.35)
 use_collision = true
-size = Vector3(8, 4, 0.4)
+size = Vector3(0.5, 7, 5.3)
+material = SubResource("Mat_wall")
+
+[node name="ControlHallWallSouth" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 3.5, -8.6)
+use_collision = true
+size = Vector3(0.5, 7, 6.2)
+material = SubResource("Mat_wall")
+
+[node name="ControlHallDoorLintel" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 4.7, -12.2)
+use_collision = true
+size = Vector3(0.5, 4.6, 1)
 material = SubResource("Mat_wall")
 
 [node name="ControlCeiling" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 4.15, -9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.625, 4.15, -11.75)
 use_collision = true
-size = Vector3(8, 0.3, 10)
+size = Vector3(12.75, 0.3, 12.5)
 material = SubResource("Mat_ceiling")
 
-[node name="ControlEastWallNorth" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2, -10.6)
+[node name="ControlCorridorWallWest" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.85, 2, -5.75)
 use_collision = true
-size = Vector3(0.4, 4, 6.8)
+size = Vector3(0.3, 4, 0.5)
 material = SubResource("Mat_wall")
 
-[node name="ControlEastWallSouth" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2, -4.9)
+[node name="ControlCorridorWallEast" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.275, 2, -5.75)
 use_collision = true
-size = Vector3(0.4, 4, 1.8)
+size = Vector3(10.05, 4, 0.5)
 material = SubResource("Mat_wall")
 
-[node name="ControlDoorLintel" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 3.2, -6.5)
+[node name="ControlCorridorLintel" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 3.5, -5.75)
 use_collision = true
-size = Vector3(0.4, 1.6, 1.4)
+size = Vector3(2.4, 1, 0.5)
 material = SubResource("Mat_wall")
 
-[node name="HallWestWallHigh" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 5.5, -9)
+[node name="CorridorCeiling" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.625, 3.65, -4)
 use_collision = true
-size = Vector3(0.4, 3, 10)
+size = Vector3(12.75, 0.3, 3)
+material = SubResource("Mat_ceiling")
+
+[node name="CorridorSouthWall" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.125, 1.75, -2.3)
+use_collision = true
+size = Vector3(9.75, 3.5, 0.4)
 material = SubResource("Mat_wall")
 
-[node name="HallWestWallSouth" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 3.5, 0)
+[node name="CorridorHallLintel" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 5.1, -4)
 use_collision = true
-size = Vector3(0.4, 7, 8)
+size = Vector3(0.5, 3.8, 3)
 material = SubResource("Mat_wall")
-
-[node name="CabinetBack" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.8, 1.1, -9)
-use_collision = true
-size = Vector3(0.5, 2.2, 2)
-material = SubResource("Mat_cabinet")
-
-[node name="CabinetShelf" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.15, 0.4, -9)
-use_collision = true
-size = Vector3(0.9, 0.8, 1)
-material = SubResource("Mat_cabinet")
-
-[node name="CabinetSideNorth" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.4, 1.1, -9.75)
-use_collision = true
-size = Vector3(0.6, 2.2, 0.5)
-material = SubResource("Mat_cabinet")
-
-[node name="CabinetSideSouth" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.4, 1.1, -8.25)
-use_collision = true
-size = Vector3(0.6, 2.2, 0.5)
-material = SubResource("Mat_cabinet")
-
-[node name="CabinetTop" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.4, 2, -9)
-use_collision = true
-size = Vector3(0.6, 0.4, 1)
-material = SubResource("Mat_cabinet")
 
 [node name="PumpBase" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.3, -9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.3, -12)
 use_collision = true
 size = Vector3(1.8, 0.6, 1.4)
 material = SubResource("Mat_plinth")
 
 [node name="PumpBaseStripe" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.61, -9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.61, -12)
 size = Vector3(1.9, 0.02, 1.5)
 material = SubResource("Mat_hazard")
 
 [node name="PipePostNorth" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.1, -12.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.1, -16)
 use_collision = true
 size = Vector3(0.2, 2.2, 0.2)
 material = SubResource("Mat_pipe")
 
 [node name="PipePostSouth" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.1, 2.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.1, -4.5)
 use_collision = true
 size = Vector3(0.2, 2.2, 0.2)
 material = SubResource("Mat_pipe")
 
-[node name="PitRailNorth" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.55, -10)
+[node name="PitRailWest" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.625, 0.55, -2.575)
 use_collision = true
-size = Vector3(0.15, 1.1, 4)
+size = Vector3(10.75, 1.1, 0.15)
 material = SubResource("Mat_hazard")
 
-[node name="PitRailSouth" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.55, -3.5)
+[node name="PitRailEast" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.5, 0.55, -2.575)
 use_collision = true
-size = Vector3(0.15, 1.1, 3)
+size = Vector3(7, 1.1, 0.15)
 material = SubResource("Mat_hazard")
 
-[node name="PitSouthWall" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.5, -2)
+[node name="CabinetBack" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.75, 1.1, -14)
 use_collision = true
-size = Vector3(10, 7, 0.3)
+size = Vector3(0.5, 2.2, 2)
+material = SubResource("Mat_cabinet")
+
+[node name="CabinetShelf" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.15, 0.4, -14)
+use_collision = true
+size = Vector3(0.9, 0.8, 1)
+material = SubResource("Mat_cabinet")
+
+[node name="CabinetSideNorth" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.4, 1.1, -14.75)
+use_collision = true
+size = Vector3(0.6, 2.2, 0.5)
+material = SubResource("Mat_cabinet")
+
+[node name="CabinetSideSouth" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.4, 1.1, -13.25)
+use_collision = true
+size = Vector3(0.6, 2.2, 0.5)
+material = SubResource("Mat_cabinet")
+
+[node name="CabinetTop" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.4, 2, -14)
+use_collision = true
+size = Vector3(0.6, 0.4, 1)
+material = SubResource("Mat_cabinet")
+
+[node name="BayFenceNorth" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.75, -30.1)
+use_collision = true
+size = Vector3(34, 1.5, 0.2)
 material = SubResource("Mat_wall")
 
-[node name="PassageCeiling" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 4.15, 1)
+[node name="BayFenceWest" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.1, 0.75, -24.25)
 use_collision = true
-size = Vector3(10, 0.3, 6)
-material = SubResource("Mat_ceiling")
-
-[node name="FacadeNorth" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.3, 3.5, -11.3)
-use_collision = true
-size = Vector3(0.6, 7, 6.6)
+size = Vector3(0.2, 1.5, 11.5)
 material = SubResource("Mat_wall")
 
-[node name="FacadeMiddle" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.3, 3.5, -3.3)
+[node name="BayFenceEast" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.1, 0.75, -24.25)
 use_collision = true
-size = Vector3(0.6, 7, 3.4)
+size = Vector3(0.2, 1.5, 11.5)
 material = SubResource("Mat_wall")
-
-[node name="FacadeSouth" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.3, 3.5, 4.1)
-use_collision = true
-size = Vector3(0.6, 7, 1)
-material = SubResource("Mat_wall")
-
-[node name="CorridorLintel" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.3, 5, -6.5)
-use_collision = true
-size = Vector3(0.6, 4, 3)
-material = SubResource("Mat_wall")
-
-[node name="PassageLintel" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.3, 5.2, 1)
-use_collision = true
-size = Vector3(0.6, 3.6, 5.2)
-material = SubResource("Mat_wall")
-
-[node name="YardFenceEast" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.75, -5)
-use_collision = true
-size = Vector3(0.3, 1.5, 30)
-material = SubResource("Mat_hazard")
-
-[node name="YardFenceNorth" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29, 0.75, -20)
-use_collision = true
-size = Vector3(22, 1.5, 0.3)
-material = SubResource("Mat_hazard")
-
-[node name="YardFenceSouth" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29, 0.75, 10)
-use_collision = true
-size = Vector3(22, 1.5, 0.3)
-material = SubResource("Mat_hazard")
 
 [node name="JackRack" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.6, 0.15, 6.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.2, 0.15, -20.9)
 use_collision = true
-size = Vector3(1.2, 0.3, 2.4)
+size = Vector3(2.4, 0.3, 1.2)
 material = SubResource("Mat_rack")
 
-[node name="ContractBoard" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(0.42262, 0, 0.90631, 0, 1, 0, -0.90631, 0, 0.42262, 20.2, 1.9, 1.2)
-use_collision = true
-size = Vector3(4.6, 2.6, 0.1)
-material = SubResource("Mat_board")
-
-[node name="SignPumpHall" type="Label3D" parent="Geometry"]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 5.6, 3.95)
-modulate = Color(1, 0.85, 0.5, 1)
-font_size = 72
-outline_size = 12
-text = "PUMP HALL"
-
-[node name="SignControl" type="Label3D" parent="Geometry"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -7.75, 2.75, -6.5)
+[node name="SignControlRoom" type="Label3D" parent="Geometry"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -10, 3.7, -18.6)
 modulate = Color(0.6, 0.9, 1, 1)
-font_size = 44
+font_size = 56
 outline_size = 12
 text = "CONTROL ROOM"
+script = ExtResource("10_proxim")
+show_within = 18
+
+[node name="SignHallDoor" type="Label3D" parent="Geometry"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 12.5, 2.9, -18.6)
+modulate = Color(1, 0.85, 0.5, 1)
+font_size = 48
+outline_size = 12
+text = "PUMP HALL"
+script = ExtResource("10_proxim")
+show_within = 18
+
+[node name="SignCorridor" type="Label3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 3.3, -5.45)
+modulate = Color(1, 0.6, 0.4, 1)
+font_size = 36
+outline_size = 12
+text = "DAMAGED CORRIDOR"
+script = ExtResource("10_proxim")
+show_within = 9
 
 [node name="SignPit" type="Label3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.2, -13.95)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 9.5, 2.6, -2.75)
 modulate = Color(0.6, 0.85, 1, 1)
-font_size = 60
+font_size = 44
 outline_size = 12
 text = "MAINTENANCE PIT"
-
-[node name="SignShortcut" type="Label3D" parent="Geometry"]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 17.95, 3.4, -6.5)
-modulate = Color(1, 0.6, 0.4, 1)
-font_size = 40
-outline_size = 12
-text = "SHORTCUT
-damaged corridor"
-
-[node name="SignPassage" type="Label3D" parent="Geometry"]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 17.95, 3.75, 1)
-modulate = Color(0.6, 1, 0.7, 1)
-font_size = 40
-outline_size = 12
-text = "WIDE PASSAGE
-long way, solid floor"
+script = ExtResource("10_proxim")
+show_within = 12
 
 [node name="SignJacks" type="Label3D" parent="Geometry"]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 19.6, 1.2, 6.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.2, 1.2, -19.9)
 modulate = Color(1, 0.6, 0.5, 1)
-font_size = 30
+font_size = 36
 outline_size = 12
-text = "SUPPORT JACKS
-for the damaged corridor
-(its jack point is in the pit below it)"
-
-[node name="ContractText" type="Label3D" parent="Geometry"]
-transform = Transform3D(0.42262, 0, 0.90631, 0, 1, 0, -0.90631, 0, 0.42262, 19.35, 1.9, 3.17)
-modulate = Color(0.95, 0.95, 0.9, 1)
-font_size = 26
-outline_size = 6
-horizontal_alignment = 0
-width = 860
-autowrap_mode = 3
-text = "CONTRACT · BLACKWATER PUMPING STATION
-Scheduled for demolition. Recover what you can.
-
-CONTRACT   VFD power module · control room · 1,000 cr
-JACKPOT    pump motor · pump hall · 1,800 cr
-           too heavy to carry: hoist it onto the trolley
-BONUS      pressure transmitters · maintenance pit · 150 cr each
-
-Unbolt salvage with the WRENCH [1] (hold LMB on the bolts).
-Knocks and water cost value. Bring salvage to the DEPOSIT ZONE.
-Start the TRUCK to leave, any time: secured salvage gets paid."
+text = "SUPPORT JACKS"
+script = ExtResource("10_proxim")
+show_within = 9
 
 [node name="Water" type="Node3D" parent="."]
-editor_description = "One flood zone for the whole station, measured from the pit floor (y = -3). Its volumes under the hall and passage only show once the pit is full.
-WaterMain pours in through the inlet (and any burst pipe) until its valve is cranked shut; the zone's own seepage never stops."
+editor_description = "One flood zone for the whole station, measured from the pit floor (y = -3). The pit fills first (including the void under the damaged corridor); past 3 m it spreads over every floor.
+WaterMain pours in through the InletValve (and any burst pipe); the zone's seepage never stops."
 
 [node name="StationFlood" type="Node3D" parent="Water"]
 unique_name_in_owner = true
@@ -622,17 +610,21 @@ level = 0.35
 inflow = 0.0011
 inflow_unstable = 0.0028
 
-[node name="PitWater" parent="Water/StationFlood" instance=ExtResource("12_flood_")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, -8)
-size = Vector2(10, 12)
+[node name="PitWater" parent="Water/StationFlood" instance=ExtResource("13_flood_")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 2.25)
+size = Vector2(34, 9.5)
 
-[node name="HallWater" parent="Water/StationFlood" instance=ExtResource("12_flood_")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -5)
-size = Vector2(24, 18)
+[node name="CorridorWater" parent="Water/StationFlood" instance=ExtResource("13_flood_")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 0, -4)
+size = Vector2(13, 3)
 
-[node name="PassageWater" parent="Water/StationFlood" instance=ExtResource("12_flood_")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 1)
-size = Vector2(10, 6)
+[node name="HallWater" parent="Water/StationFlood" instance=ExtResource("13_flood_")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 0, -10.25)
+size = Vector2(21, 15.5)
+
+[node name="ControlWater" parent="Water/StationFlood" instance=ExtResource("13_flood_")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 0, -11.75)
+size = Vector2(13, 12.5)
 
 [node name="WaterMain" type="Node" parent="Water" node_paths=PackedStringArray("zone", "valve", "inlet_gush")]
 script = ExtResource("8_water_")
@@ -643,100 +635,109 @@ inlet_gush = NodePath("../../Pit/InletGush")
 inlet_flow = 0.0045
 
 [node name="PitGauge" type="Label3D" parent="Water" node_paths=PackedStringArray("zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.4, 1.9, -11.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.6, 6.6)
 billboard = 1
-font_size = 40
+font_size = 36
 outline_size = 10
 script = ExtResource("9_flood_")
 zone = NodePath("../StationFlood")
 room_name = "Pit"
 floor_y = -3
 thresholds = PackedFloat32Array(0.15, 0.8, 1.6)
+show_within = 18
 text = "PIT"
 
 [node name="HallGauge" type="Label3D" parent="Water" node_paths=PackedStringArray("zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 3.4, 3.9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 3.4, -17.9)
 billboard = 1
-font_size = 40
+font_size = 36
 outline_size = 10
 script = ExtResource("9_flood_")
 zone = NodePath("../StationFlood")
 room_name = "Hall"
 floor_y = 0
 thresholds = PackedFloat32Array(0.05, 0.4, 1)
+show_within = 18
 text = "HALL"
 
 [node name="PumpHall" type="Node3D" parent="."]
-editor_description = "The jackpot puzzle: unbolt the motor, hoist it over the water main (lift it high!), lower it onto the trolley, push the trolley out."
+editor_description = "C: the jackpot. Unbolt the motor, hoist it over the water main (lift it high!), lower it onto the trolley, then push the trolley out through the damaged corridor (short) or the pit (long).
+The hall's door to the bay is 1 m wide: crew and the VFD fit, the trolley does not."
 
-[node name="OverheadHoist" parent="PumpHall" instance=ExtResource("14_overhe")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.5, -9)
-start_x = 2
+[node name="OverheadHoist" parent="PumpHall" instance=ExtResource("15_overhe")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6.5, -12)
+start_x = -1
 start_length = 2
 
 [node name="Pendant" parent="PumpHall/OverheadHoist"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, -6.5, -4.2)
 
-[node name="PumpMotor" parent="PumpHall" instance=ExtResource("20_pump_m")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.1, -9)
+[node name="PumpMotor" parent="PumpHall" instance=ExtResource("21_pump_m")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 1.1, -12)
 
-[node name="MotorMounting" parent="PumpHall" node_paths=PackedStringArray("item") instance=ExtResource("15_mounti")]
-transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, -4, 0.62, -9)
+[node name="MotorMounting" parent="PumpHall" node_paths=PackedStringArray("item") instance=ExtResource("16_mounti")]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 12, 0.62, -12)
 item = NodePath("../PumpMotor")
 display_name = "Motor hold-down bolts"
 unbolt_time = 6
 bolt_spread = Vector2(0.6, 0.42)
 point_radius = 0.75
 
-[node name="Trolley" parent="PumpHall" instance=ExtResource("23_trolle")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 0.45, -5.6)
+[node name="Trolley" parent="PumpHall" instance=ExtResource("24_trolle")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 4.5, 0.45, -7.5)
 
-[node name="WaterMainPipe" parent="PumpHall" instance=ExtResource("16_pipe_r")]
-transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1, 2.4, -5)
+[node name="WaterMainPipe" parent="PumpHall" instance=ExtResource("17_pipe_r")]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 8, 2.4, -10.25)
 display_name = "Water main"
 rupture_impulse = 350
 leak_flow = 0.006
+length = 15.5
 
 [node name="ControlRoom" type="Node3D" parent="."]
-editor_description = "The primary contract: the VFD power module, bolted into its drive cabinet. Fragile. Mind the door on the way out."
+editor_description = "B: the contract. The VFD power module, bolted into its drive cabinet. Wide opening to the bay; a 1 m swing door to the pump hall; an opening south to the corridor."
 
-[node name="VfdModule" parent="ControlRoom" instance=ExtResource("21_vfd_mo")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.95, 1.1, -9)
+[node name="VfdModule" parent="ControlRoom" instance=ExtResource("22_vfd_mo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 1.1, -14)
 
-[node name="VfdMounting" parent="ControlRoom" node_paths=PackedStringArray("item") instance=ExtResource("15_mounti")]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -14.7, 1.1, -9)
+[node name="VfdMounting" parent="ControlRoom" node_paths=PackedStringArray("item") instance=ExtResource("16_mounti")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -14.75, 1.1, -14)
 item = NodePath("../VfdModule")
 display_name = "Cabinet bolts"
 unbolt_time = 4
 bolt_spread = Vector2(0.33, 0.24)
 point_radius = 0.5
 
-[node name="Door" parent="ControlRoom" instance=ExtResource("25_swing_")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -8, 0, -7.2)
+[node name="HallDoor" parent="ControlRoom" instance=ExtResource("26_swing_")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3, 0, -12.7)
+
+[node name="DamagedCorridor" parent="." instance=ExtResource("18_damage")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -4)
+editor_description = "D: the shortcut from the hall to the control room. Its cracked deck spans the void over the pit; the JackPoint is down there (reach it through the pit)."
 
 [node name="Pit" type="Node3D" parent="."]
-editor_description = "Lower maintenance pit (floor y = -3), down the ramp. Bonus transmitters, the InletValve (shut it to slow the flooding) and, under the corridor, its JackPoint. It floods first."
+editor_description = "E: lower maintenance pit (floor y = -3). Ramps down from the hall and up to the corridor's solid end. Water inlet + InletValve, four bonus sensors, the jack point under the corridor. It floods first."
 
-[node name="InletValve" parent="Pit" instance=ExtResource("13_valve")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.3, -1.9, -13.45)
+[node name="InletValve" parent="Pit" instance=ExtResource("14_valve")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 4, -1.9, 6.75)
 display_name = "Inlet valve"
 channel = "inlet"
 opening = 0.65
-feeds = "pit inlet + water main"
+feeds = "water inlet"
 crank_time = 9
 turns = 4
+show_within = 7
 
 [node name="InletPipe" type="MeshInstance3D" parent="Pit"]
-transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 12.5, -1.6, -13.5)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1, -1.6, 6.5)
 mesh = SubResource("Mesh_inlet")
 
 [node name="InletGush" type="CPUParticles3D" parent="Pit"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, -1.6, -12.9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, -1.6, 5.9)
 emitting = true
 amount = 90
 lifetime = 1
 mesh = SubResource("Mesh_gush")
-direction = Vector3(0, -0.3, 1)
+direction = Vector3(0, -0.3, -1)
 spread = 18
 gravity = Vector3(0, -9.8, 0)
 initial_velocity_min = 1
@@ -744,103 +745,96 @@ initial_velocity_max = 3.5
 scale_amount_min = 0.8
 scale_amount_max = 2
 
-[node name="Transmitter1" parent="Pit" instance=ExtResource("22_pressu")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 17.85, -2, -11)
+[node name="Transmitter1" parent="Pit" instance=ExtResource("23_pressu")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -6, -2, 6.85)
 
-[node name="Transmitter1Mounting" parent="Pit" node_paths=PackedStringArray("item") instance=ExtResource("15_mounti")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 17.85, -2, -11)
+[node name="Transmitter1Mounting" parent="Pit" node_paths=PackedStringArray("item") instance=ExtResource("16_mounti")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -6, -2, 6.85)
 item = NodePath("../Transmitter1")
 display_name = "Sensor clamp"
 unbolt_time = 1.5
 bolt_spread = Vector2(0.08, 0.12)
 point_radius = 0.35
 
-[node name="Transmitter2" parent="Pit" instance=ExtResource("22_pressu")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 17.85, -2.2, -3.6)
+[node name="Transmitter2" parent="Pit" instance=ExtResource("23_pressu")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 17.85, -2, 2)
 
-[node name="Transmitter2Mounting" parent="Pit" node_paths=PackedStringArray("item") instance=ExtResource("15_mounti")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 17.85, -2.2, -3.6)
+[node name="Transmitter2Mounting" parent="Pit" node_paths=PackedStringArray("item") instance=ExtResource("16_mounti")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 17.85, -2, 2)
 item = NodePath("../Transmitter2")
 display_name = "Sensor clamp"
 unbolt_time = 1.5
 bolt_spread = Vector2(0.08, 0.12)
 point_radius = 0.35
 
-[node name="Transmitter3" parent="Pit" instance=ExtResource("22_pressu")]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 8.15, -2, -9.5)
+[node name="Transmitter3" parent="Pit" instance=ExtResource("23_pressu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -2, -5.35)
 
-[node name="Transmitter3Mounting" parent="Pit" node_paths=PackedStringArray("item") instance=ExtResource("15_mounti")]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 8.15, -2, -9.5)
+[node name="Transmitter3Mounting" parent="Pit" node_paths=PackedStringArray("item") instance=ExtResource("16_mounti")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -2, -5.35)
 item = NodePath("../Transmitter3")
 display_name = "Sensor clamp"
 unbolt_time = 1.5
 bolt_spread = Vector2(0.08, 0.12)
 point_radius = 0.35
 
-[node name="Transmitter4" parent="Pit" instance=ExtResource("22_pressu")]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 12, -2.4, -2.25)
+[node name="Transmitter4" parent="Pit" instance=ExtResource("23_pressu")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 13, -2.2, 6.85)
 
-[node name="Transmitter4Mounting" parent="Pit" node_paths=PackedStringArray("item") instance=ExtResource("15_mounti")]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 12, -2.4, -2.25)
+[node name="Transmitter4Mounting" parent="Pit" node_paths=PackedStringArray("item") instance=ExtResource("16_mounti")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 13, -2.2, 6.85)
 item = NodePath("../Transmitter4")
 display_name = "Sensor clamp"
 unbolt_time = 1.5
 bolt_spread = Vector2(0.08, 0.12)
 point_radius = 0.35
 
-[node name="DamagedCorridor" parent="." instance=ExtResource("17_damage")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, -6.5)
+[node name="Bay" type="Node3D" parent="."]
+editor_description = "A: the extraction bay outside. DepositZone (secure salvage) and the Truck (leave; departed -> Mission). yard_offset/yard_size on the Truck = the whole bay."
 
-[node name="Extraction" type="Node3D" parent="."]
-editor_description = "The yard outside: the DepositZone (secure salvage) and the Truck (leave). Truck.departed -> Mission ends the run."
-
-[node name="DepositZone" parent="Extraction" node_paths=PackedStringArray("truck_bed") instance=ExtResource("18_deposi")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, -6.5)
+[node name="DepositZone" parent="Bay" node_paths=PackedStringArray("truck_bed") instance=ExtResource("19_deposi")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -1, 0, -23)
 truck_bed = NodePath("../Truck/TruckBed")
 
-[node name="Truck" parent="Extraction" instance=ExtResource("19_truck")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.5, 0, -6.5)
+[node name="Truck" parent="Bay" instance=ExtResource("20_truck")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 9, 0, -26.5)
+yard_offset = Vector3(-8, 0, 2.5)
+yard_size = Vector3(34, 8, 12)
 
-[node name="Equipment" type="Node3D" parent="."]
-editor_description = "Portable gear in the yard: two support jacks."
+[node name="SupportJack1" parent="Bay" instance=ExtResource("25_suppor")]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -14.8, 0.5, -20.9)
 
-[node name="SupportJack1" parent="Equipment" instance=ExtResource("24_suppor")]
-transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 19.6, 0.5, 6)
-
-[node name="SupportJack2" parent="Equipment" instance=ExtResource("24_suppor")]
-transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 19.6, 0.5, 7)
+[node name="SupportJack2" parent="Bay" instance=ExtResource("25_suppor")]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -13.6, 0.5, -20.9)
 
 [node name="Rubble" type="Node3D" parent="."]
 editor_description = "Ceiling chunks (group \"rubble\"), dormant until tremors shake them loose."
 
-[node name="Rubble1" parent="Rubble" instance=ExtResource("26_rubble")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 6.75, -11)
+[node name="Rubble1" parent="Rubble" instance=ExtResource("27_rubble")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 6.75, -15)
 
-[node name="Rubble2" parent="Rubble" instance=ExtResource("26_rubble")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 6.75, -6)
+[node name="Rubble2" parent="Rubble" instance=ExtResource("27_rubble")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 6.75, -6)
 
-[node name="Rubble3" parent="Rubble" instance=ExtResource("26_rubble")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 6.75, -10)
+[node name="Rubble3" parent="Rubble" instance=ExtResource("27_rubble")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 6.75, -15)
 
-[node name="Rubble4" parent="Rubble" instance=ExtResource("26_rubble")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 6.75, -2)
+[node name="Rubble4" parent="Rubble" instance=ExtResource("27_rubble")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 6.75, -5)
 
-[node name="Rubble5" parent="Rubble" instance=ExtResource("26_rubble")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 6.75, 1)
+[node name="Rubble5" parent="Rubble" instance=ExtResource("27_rubble")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 6.75, 3)
 
-[node name="Rubble6" parent="Rubble" instance=ExtResource("26_rubble")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 6.75, -10)
-
-[node name="Rubble7" parent="Rubble" instance=ExtResource("26_rubble")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 6.75, -4)
+[node name="Rubble6" parent="Rubble" instance=ExtResource("27_rubble")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 6.75, 4)
 
 [connection signal="phase_changed" from="MissionClock" to="." method="_on_phase_changed"]
 [connection signal="collapsed" from="MissionClock" to="." method="_on_facility_collapsed"]
 [connection signal="message" from="IncidentLog" to="HUD" method="_on_message"]
 [connection signal="client_event" from="IncidentLog" to="HUD" method="_on_client_event"]
-[connection signal="departed" from="Extraction/Truck" to="." method="_on_departed"]
+[connection signal="departed" from="Bay/Truck" to="." method="_on_departed"]
 
 [editable path="PumpHall/OverheadHoist"]
-[editable path="Extraction/Truck"]
+[editable path="Bay/Truck"]
 [editable path="DamagedCorridor"]
 [editable path="HUD"]

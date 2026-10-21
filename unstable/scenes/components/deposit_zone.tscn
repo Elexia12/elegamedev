@@ -1,6 +1,7 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/deposit_zone.gd" id="1_deposi"]
+[ext_resource type="Script" path="res://scripts/facility/proximity_label.gd" id="2_proxim"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_pad"]
 transparency = 1
@@ -57,4 +58,6 @@ billboard = 1
 modulate = Color(0.5, 1, 0.6, 1)
 font_size = 48
 outline_size = 12
-text = "DEPOSIT ZONE"
+text = "DROP SALVAGE HERE"
+script = ExtResource("2_proxim")
+show_within = 16

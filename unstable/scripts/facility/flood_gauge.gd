@@ -16,10 +16,15 @@ const COLORS := [Color(0.6, 1.0, 0.7), Color(0.6, 0.85, 1.0), Color(1.0, 0.8, 0.
 @export var floor_y := 0.0
 ## Depths (m) where SHALLOW, DEEP and CRITICAL begin.
 @export var thresholds := PackedFloat32Array([0.1, 0.6, 1.5])
+## Only show the sign within this distance (m) of your crew member (0 = always).
+@export var show_within := 0.0
+
+var _mission: Mission
 
 
 func _ready() -> void:
 	add_to_group("flood_gauges")
+	_mission = Mission.of(self)
 
 
 func depth() -> float:
@@ -41,5 +46,6 @@ func state_name() -> String:
 
 
 func _process(_delta: float) -> void:
+	visible = show_within <= 0.0 or _mission == null or _mission.local_distance(global_position) <= show_within
 	text = "%s\nWATER %.1f m · %s" % [room_name.to_upper(), depth(), state_name()]
 	modulate = COLORS[state()]

@@ -41,9 +41,9 @@ func _physics_process(delta: float) -> void:
 	if mission and multiplayer.is_server() and mission.running():
 		_simulate(delta)
 	if loading_name != "":
-		label.text = "DEPOSIT ZONE\nLOADING %s… %d%%" % [loading_name.to_upper(), roundi(loading * 100.0)]
+		label.text = "LOADING %s %d%%" % [loading_name.to_upper(), roundi(loading * 100.0)]
 	else:
-		label.text = "DEPOSIT ZONE\nleave salvage here · it goes on the truck"
+		label.text = "DROP SALVAGE HERE"
 
 
 func _simulate(delta: float) -> void:

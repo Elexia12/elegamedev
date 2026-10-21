@@ -1,7 +1,8 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/truck_departure.gd" id="1_truck_"]
 [ext_resource type="PackedScene" path="res://scenes/components/interact_point.tscn" id="2_intera"]
+[ext_resource type="Script" path="res://scripts/facility/proximity_label.gd" id="3_proxim"]
 
 [sub_resource type="BoxShape3D" id="Shape_cab"]
 size = Vector3(2.6, 2.6, 2.2)
@@ -131,3 +132,5 @@ modulate = Color(0.5, 1, 0.6, 1)
 font_size = 44
 outline_size = 12
 text = "TRUCK"
+script = ExtResource("3_proxim")
+show_within = 14

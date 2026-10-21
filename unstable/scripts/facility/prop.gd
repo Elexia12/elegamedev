@@ -27,6 +27,8 @@ extends RigidBody3D
 @export var water_damage := 0.0
 ## Speed above which hitting a crew member knocks them back.
 @export var hit_speed := 3.5
+## The floating label only shows within this distance (m) of your crew member.
+@export var label_range := 7.0
 @export_group("Impact damage")
 ## Condition lost (%) per m/s of impact speed above damage_threshold. 0 = sturdy.
 @export var fragility := 0.0
@@ -197,8 +199,10 @@ func _process(delta: float) -> void:
 		_shown_hits = hits
 		_show_damage()
 	if label:
-		label.global_position = global_position + Vector3.UP * (height / 2.0 + 0.6)
-		label.text = _label_text()
+		label.visible = mission.local_distance(global_position) <= label_range
+		if label.visible:
+			label.global_position = global_position + Vector3.UP * (height / 2.0 + 0.6)
+			label.text = _label_text()
 
 
 func _label_text() -> String:
@@ -211,8 +215,8 @@ func _label_text() -> String:
 		lines += "  ✔ %s" % mission.contract.secured_tag()
 	elif submerged > 0.5 and water_damage > 0.0:
 		lines += "  ⚠ WATER DAMAGE"
-	if note != "":
-		lines += "\n" + note
+	elif dormant and note != "":
+		lines += "\nBOLTED"
 	return lines
 
 

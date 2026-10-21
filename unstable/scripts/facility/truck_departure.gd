@@ -2,14 +2,17 @@ class_name TruckDeparture
 extends Node3D
 ## The crew's way out. [E] on the Ignition starts a countdown (and [E] again
 ## cancels it); when it runs out the truck leaves and `departed` fires, which
-## ends the run. Crew inside the yard (`yard_size` around this node) leave
-## with it; anyone else is left behind.
+## ends the run. Crew inside the yard (a world-aligned box of `yard_size`,
+## centred `yard_offset` from this node) leave with it; anyone else is left
+## behind.
 
 signal departed
 
 @export var countdown := 10.0
-## The yard (X, Y, Z box centred on this node) that counts as "with the truck".
+## The yard that counts as "with the truck": a world-aligned box of this size…
 @export var yard_size := Vector3(16.0, 6.0, 22.0)
+## …centred this far from the truck (world axes).
+@export var yard_offset := Vector3.ZERO
 
 enum Phase { PARKED, COUNTING, GONE }
 
@@ -31,7 +34,7 @@ func is_counting() -> bool:
 
 
 func contains(p: Vector3) -> bool:
-	var l := to_local(p)
+	var l := p - (global_position + yard_offset)
 	return absf(l.x) <= yard_size.x / 2.0 and absf(l.z) <= yard_size.z / 2.0 and absf(l.y) <= yard_size.y
 
 
@@ -61,12 +64,12 @@ func _physics_process(delta: float) -> void:
 			departed.emit()
 	match phase:
 		Phase.COUNTING:
-			label.text = "TRUCK LEAVING IN %d\n[E] cancel" % ceili(timer)
+			label.text = "LEAVING IN %d" % ceili(timer)
 			label.modulate = Color(1.0, 0.85, 0.2)
 		Phase.GONE:
 			label.text = "TRUCK GONE"
 		_:
-			label.text = "TRUCK\n[E] start and leave"
+			label.text = "TRUCK"
 			label.modulate = Color(0.5, 1.0, 0.6)
 
 

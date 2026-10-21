@@ -11,6 +11,8 @@ extends StaticBody3D
 @export var rupture_impulse := 350.0
 ## Extra flood level per second while ruptured and fed at 100%.
 @export var leak_flow := 0.006
+## Length of the run (m, along local Y). Resizes the Mesh and Shape.
+@export var length := 18.0
 
 var ruptured := false
 ## Fed share (0..1), set by the WaterMain each frame.
@@ -28,6 +30,11 @@ func _ready() -> void:
 	mission = Mission.of(self)
 	spray.emitting = false
 	spray.top_level = true
+	var shape := $Shape as CollisionShape3D
+	shape.shape = shape.shape.duplicate()
+	(shape.shape as CylinderShape3D).height = length
+	mesh.mesh = mesh.mesh.duplicate()
+	(mesh.mesh as CylinderMesh).height = length
 
 
 ## Called by a Prop that hit this pipe.

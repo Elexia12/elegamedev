@@ -30,6 +30,8 @@ signal collapsed
 @export_range(0.0, 1.0) var slip_chance := 0.5
 ## Crew count as this heavy on the deck.
 @export var crew_mass := 80.0
+## The stress signs only show within this distance (m).
+@export var label_range := 12.0
 
 var stress := 30.0
 var load_kg := 0.0
@@ -129,10 +131,9 @@ func status_line() -> String:
 func _update_visuals() -> void:
 	var c := Color(0.5, 1.0, 0.6).lerp(Color(1.0, 0.3, 0.15), clampf((stress - 30.0) / 60.0, 0.0, 1.0))
 	for l in labels:
-		l.visible = not is_collapsed
+		l.visible = not is_collapsed and mission.local_distance(l.global_position) <= label_range
 		l.modulate = c
-		l.text = "%s\nSTRESS %d%%  ·  LOAD %d / %d kg\n%s" % [display_name.to_upper(), roundi(stress), roundi(load_kg), roundi(safe_load()),
-			"JACKED FROM BELOW (+%d kg)" % roundi(jack_bonus) if jacked else "NOT JACKED · jack point is in the pit below"]
+		l.text = "WEAK FLOOR %d%%\n%d / %d kg%s" % [roundi(stress), roundi(load_kg), roundi(safe_load()), " · JACKED" if jacked else ""]
 	if is_collapsed:
 		return
 	# The deck trembles harder as it gets closer to giving way.

@@ -1,8 +1,9 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/damaged_corridor.gd" id="1_damage"]
 [ext_resource type="Script" path="res://scripts/facility/jack_point.gd" id="2_jack_p"]
 [ext_resource type="PackedScene" path="res://scenes/props/bridge_slab.tscn" id="3_bridge"]
+[ext_resource type="Script" path="res://scripts/facility/proximity_label.gd" id="4_proxim"]
 
 [sub_resource type="BoxShape3D" id="Shape_load"]
 size = Vector3(10, 2.2, 3)
@@ -66,8 +67,9 @@ billboard = 1
 modulate = Color(1, 0.85, 0.3, 1)
 font_size = 34
 outline_size = 10
-text = "JACK POINT
-stand a support jack here, [E] to extend it"
+text = "JACK POINT"
+script = ExtResource("4_proxim")
+show_within = 7
 
 [node name="Labels" type="Node3D" parent="."]
 
@@ -77,7 +79,7 @@ billboard = 1
 modulate = Color(0.5, 1, 0.6, 1)
 font_size = 34
 outline_size = 10
-text = "DAMAGED CORRIDOR"
+text = "WEAK FLOOR"
 
 [node name="EastEnd" type="Label3D" parent="Labels"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.6, 2.6, 0)
@@ -85,4 +87,4 @@ billboard = 1
 modulate = Color(0.5, 1, 0.6, 1)
 font_size = 34
 outline_size = 10
-text = "DAMAGED CORRIDOR"
+text = "WEAK FLOOR"
