@@ -22,6 +22,7 @@ var mission: Mission
 
 @onready var ignition: InteractPoint = $Ignition
 @onready var label: Label3D = $Label
+@onready var engine_sound: LoopSound = get_node_or_null("EngineSound")
 
 
 func _ready() -> void:
@@ -62,6 +63,9 @@ func _physics_process(delta: float) -> void:
 		if timer <= 0.0:
 			phase = Phase.GONE
 			departed.emit()
+	if engine_sound:
+		# Idling once started; revving as it pulls away.
+		engine_sound.level = 0.0 if phase == Phase.PARKED else (1.0 if phase == Phase.GONE or timer < 2.0 else 0.6)
 	match phase:
 		Phase.COUNTING:
 			label.text = "LEAVING IN %d" % ceili(timer)

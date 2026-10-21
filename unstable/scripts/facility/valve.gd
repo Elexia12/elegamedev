@@ -24,6 +24,9 @@ var _mission: Mission
 
 @onready var wheel: Node3D = $Wheel/Mesh
 @onready var label: Label3D = $Label
+@onready var crank_sound: LoopSound = get_node_or_null("CrankSound")
+var _heard_opening := -1.0
+var _crank_hold := 0.0
 
 
 func _ready() -> void:
@@ -43,6 +46,13 @@ func crank(dir: float, delta: float) -> void:
 
 
 func _process(delta: float) -> void:
+	# The wheel ratchets while it's being turned (every peer, from `opening`).
+	if _heard_opening >= 0.0 and absf(opening - _heard_opening) > 0.0001:
+		_crank_hold = 0.25
+	_heard_opening = opening
+	_crank_hold -= delta
+	if crank_sound:
+		crank_sound.level = 1.0 if _crank_hold > 0.0 else 0.0
 	wheel.rotation.y = lerp_angle(wheel.rotation.y, opening * TAU * turns, 1.0 - exp(-8.0 * delta)) \
 		if turns <= 1.0 else opening * TAU * turns
 	label.visible = show_within <= 0.0 or _mission == null or _mission.local_distance(global_position) <= show_within

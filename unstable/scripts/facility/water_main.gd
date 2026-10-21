@@ -10,6 +10,8 @@ extends Node
 ## Flood level per second at 100% open.
 @export var inlet_flow := 0.004
 @export var inlet_gush: CPUParticles3D
+## The inlet's rushing water (louder the wider the valve is open).
+@export var inlet_sound: LoopSound
 
 var mission: Mission
 
@@ -40,6 +42,8 @@ func _physics_process(delta: float) -> void:
 	if inlet_gush:
 		inlet_gush.emitting = open > 0.03
 		inlet_gush.initial_velocity_max = 1.0 + open * 4.0
+	if inlet_sound:
+		inlet_sound.level = open
 	for p in pipes():
 		p.pressure = open
 	if multiplayer.is_server() and mission.running():

@@ -1,7 +1,11 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/overhead_hoist.gd" id="1_overhe"]
 [ext_resource type="PackedScene" path="res://scenes/components/interact_point.tscn" id="2_intera"]
+[ext_resource type="AudioStream" uid="uid://da1khue81uilj" path="res://audio/sfx/hoist_motor_loop.wav" id="snd_1"]
+[ext_resource type="Script" path="res://scripts/audio/loop_sound.gd" id="snd_3"]
+[ext_resource type="AudioStream" uid="uid://b57s3ftukqeyf" path="res://audio/sfx/chain_loop.wav" id="snd_7"]
+[ext_resource type="AudioStream" uid="uid://d3kclg26yhc5l" path="res://audio/sfx/brake_clunk.wav" id="snd_11"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_beam"]
 albedo_color = Color(0.95, 0.72, 0.1, 1)
@@ -160,3 +164,26 @@ modulate = Color(1, 0.85, 0.3, 1)
 font_size = 34
 outline_size = 10
 text = "HOIST CONTROLS"
+
+[node name="MotorSound" type="AudioStreamPlayer3D" parent="Carriage"]
+script = ExtResource("snd_3")
+stream = ExtResource("snd_1")
+full_db = -6.0
+pitch_low = 0.75
+pitch_high = 1.1
+unit_size = 6.0
+max_distance = 45.0
+
+[node name="ChainSound" type="AudioStreamPlayer3D" parent="Carriage"]
+script = ExtResource("snd_3")
+stream = ExtResource("snd_7")
+full_db = -4.0
+pitch_low = 0.9
+pitch_high = 1.15
+unit_size = 6.0
+max_distance = 45.0
+
+[node name="BrakeSound" type="AudioStreamPlayer3D" parent="Carriage"]
+stream = ExtResource("snd_11")
+unit_size = 7.0
+max_distance = 45.0

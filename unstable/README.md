@@ -119,6 +119,20 @@ The loaded trolley fits neither 1 m door, so the motor goes out one of two ways:
 - **Results:** CONTRACT COMPLETE + JACKPOT / CONTRACT COMPLETE / PARTIAL SALVAGE / NOTHING RECOVERED, with the payout, each
   item's condition and value lost to damage, what was left behind, and the incident log.
 
+### Sound
+
+Everything you do makes the noise it should, and every player hears the same thing:
+- Things that hit something clang, thud or crunch (louder the harder they hit); salvage that loses value crunches.
+- The hoist motor whines (deeper under load), its chain rattles as it pays out, and the brake clunks when it stops.
+- The trolley's wheels rumble with speed. The wrench ratchets on bolts and valves; a freed item clanks loose.
+- Water rushes from the inlet (louder the wider the valve is open); a burst pipe bangs, then hisses.
+- The damaged corridor groans as its stress climbs and crashes down when it goes. Tremors rumble. The truck idles,
+  then revs as it leaves. The hall and control room hum, the pit laps, the tunnel drips.
+
+The sounds are synthesised placeholders (`tools/make_sfx.py` writes `audio/sfx/`). Replace any `.wav` with a real
+recording of the same name. Loudness and pitch are tuned on each sound node (`full_db`, `pitch_low`/`pitch_high` on
+`LoopSound`s).
+
 ### How it's built: read the scene tree
 
 **`scenes/facility/blackwater_station.tscn`**

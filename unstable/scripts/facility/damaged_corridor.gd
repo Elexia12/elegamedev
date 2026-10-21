@@ -47,6 +47,9 @@ var _crumbled := false
 @onready var load_area: Area3D = $LoadArea
 @onready var jack_point: JackPoint = $JackPoint
 @onready var labels: Array[Node] = $Labels.get_children()
+@onready var creak_sound: LoopSound = get_node_or_null("CreakSound")
+@onready var collapse_sound: AudioStreamPlayer3D = get_node_or_null("CollapseSound")
+var _heard_collapse := false
 
 
 func _ready() -> void:
@@ -153,6 +156,15 @@ func status_line() -> String:
 
 
 func _update_visuals() -> void:
+	# Every peer: the deck groans louder as stress climbs or it's overloaded,
+	# and crashes down when it goes.
+	if creak_sound:
+		var strain := clampf((stress - 35.0) / 55.0, 0.0, 1.0)
+		var over := clampf(load_kg / safe_load() - 0.75, 0.0, 0.6)
+		creak_sound.level = 0.0 if is_collapsed else clampf(strain + over, 0.0, 1.0)
+	if is_collapsed and not _heard_collapse and collapse_sound:
+		collapse_sound.play()
+	_heard_collapse = is_collapsed
 	var c := Color(0.5, 1.0, 0.6).lerp(Color(1.0, 0.3, 0.15), clampf((stress - 30.0) / 60.0, 0.0, 1.0))
 	for l in labels:
 		l.visible = not is_collapsed and mission.local_distance(l.global_position) <= label_range

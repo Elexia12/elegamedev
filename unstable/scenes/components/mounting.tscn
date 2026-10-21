@@ -1,7 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/mounting.gd" id="1_mounti"]
 [ext_resource type="PackedScene" path="res://scenes/components/interact_point.tscn" id="2_intera"]
+[ext_resource type="AudioStream" uid="uid://c0n07oxm4odih" path="res://audio/sfx/ratchet_loop.wav" id="snd_1"]
+[ext_resource type="Script" path="res://scripts/audio/loop_sound.gd" id="snd_3"]
+[ext_resource type="AudioStream" uid="uid://cnsw11bxyolgv" path="res://audio/sfx/bolt_free.wav" id="snd_7"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_bolt"]
 albedo_color = Color(0.75, 0.7, 0.6, 1)
@@ -40,3 +43,18 @@ mesh = SubResource("Mesh_bolt")
 [node name="Bolt4" type="MeshInstance3D" parent="Bolts"]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.02)
 mesh = SubResource("Mesh_bolt")
+
+[node name="RatchetSound" type="AudioStreamPlayer3D" parent="."]
+script = ExtResource("snd_3")
+stream = ExtResource("snd_1")
+full_db = -4.0
+pitch_low = 0.95
+pitch_high = 1.05
+response = 12.0
+unit_size = 4.0
+max_distance = 45.0
+
+[node name="BoltSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("snd_7")
+unit_size = 5.0
+max_distance = 45.0

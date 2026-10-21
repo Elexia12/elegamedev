@@ -21,6 +21,9 @@ var mission: Mission
 var _spray_at := Vector3.ZERO
 
 @onready var spray: CPUParticles3D = $Spray
+@onready var spray_sound: LoopSound = get_node_or_null("Spray/SpraySound")
+@onready var burst_sound: AudioStreamPlayer3D = get_node_or_null("Spray/BurstSound")
+var _heard_burst := false
 @onready var mesh: MeshInstance3D = $Mesh
 
 
@@ -49,6 +52,12 @@ func take_hit(by: Prop, impulse: float) -> void:
 
 
 func _process(_delta: float) -> void:
+	# Every peer: a bang when it bursts, then the spray hisses with the pressure.
+	if ruptured and not _heard_burst and burst_sound:
+		burst_sound.play()
+	_heard_burst = ruptured
+	if spray_sound:
+		spray_sound.level = (0.35 + 0.65 * pressure) if ruptured and pressure > 0.05 else 0.0
 	if not ruptured:
 		return
 	# Spray from the point on the pipe closest to where it was hit.

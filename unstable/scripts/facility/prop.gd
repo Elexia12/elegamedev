@@ -34,6 +34,10 @@ extends RigidBody3D
 @export var fragility := 0.0
 ## Impacts slower than this (m/s change in velocity) do no damage.
 @export var damage_threshold := 2.0
+@export_group("Sound")
+## Impact speed (m/s change in velocity) heard at full volume. Plays the
+## optional ImpactSound child on every peer; DamageSound plays when it costs value.
+@export var impact_full_speed := 4.0
 
 var condition := 100.0
 var current_value := 0.0
@@ -46,6 +50,10 @@ var mission: Mission
 ## "−120 cr" popup and sparks on every peer).
 var hits := 0
 var last_loss := 0.0
+## Replicated impact counter + how hard the last one was (0..1): drives the
+## ImpactSound on every peer.
+var bumps := 0
+var bump_strength := 0.0
 var _home: Transform3D
 var _net_pos := Vector3.ZERO
 var _net_rot := Quaternion.IDENTITY
@@ -55,6 +63,8 @@ var _impact_cooldown := 0.0
 ## Secured for good (handed over at a deposit zone): never moves again.
 var _locked := false
 var _shown_hits := 0
+var _heard_bumps := 0
+var _impact_pitch := 1.0
 ## Velocity before this step resolved contacts (impacts read this, not the bounce).
 var _last_velocity := Vector3.ZERO
 ## Velocities of the last few steps: a hit on something round or soft spreads
@@ -63,6 +73,8 @@ var _velocity_history: Array[Vector3] = [Vector3.ZERO, Vector3.ZERO, Vector3.ZER
 
 @onready var label: Label3D = get_node_or_null("Label")
 @onready var sparks: CPUParticles3D = get_node_or_null("Sparks")
+@onready var impact_sound: AudioStreamPlayer3D = get_node_or_null("ImpactSound")
+@onready var damage_sound: AudioStreamPlayer3D = get_node_or_null("DamageSound")
 
 
 func _ready() -> void:
@@ -71,6 +83,8 @@ func _ready() -> void:
 	mission = Mission.of(self)
 	current_value = value
 	_home = transform
+	if impact_sound:
+		_impact_pitch = impact_sound.pitch_scale
 	if label:
 		label.top_level = true
 	if sparks:
@@ -178,6 +192,8 @@ func _check_impact() -> void:
 	if dv < 0.6:
 		return
 	_impact_cooldown = 0.25
+	bumps += 1
+	bump_strength = clampf((dv - 0.6) / maxf(0.1, impact_full_speed - 0.6), 0.0, 1.0)
 	for b in get_colliding_bodies():
 		if b.has_method("take_hit"):
 			b.take_hit(self, dv * mass)
@@ -201,6 +217,13 @@ func _process(delta: float) -> void:
 	if hits != _shown_hits:
 		_shown_hits = hits
 		_show_damage()
+	if bumps != _heard_bumps:
+		_heard_bumps = bumps
+		if impact_sound:
+			# Soft knocks are quiet and a little higher; hard hits are loud and deep.
+			impact_sound.volume_db = linear_to_db(0.06 + 0.94 * bump_strength)
+			impact_sound.pitch_scale = _impact_pitch * randf_range(0.94, 1.06) * (1.08 - 0.16 * bump_strength)
+			impact_sound.play()
 	if label:
 		label.visible = mission.local_distance(global_position) <= label_range
 		if label.visible:
@@ -223,8 +246,10 @@ func _label_text() -> String:
 	return lines
 
 
-## Every peer: sparks and a floating "−120 cr" where it got hit.
+## Every peer: sparks, a crunch and a floating "−120 cr" where it got hit.
 func _show_damage() -> void:
+	if damage_sound:
+		damage_sound.play()
 	if sparks:
 		sparks.global_position = global_position
 		sparks.restart()
@@ -245,7 +270,7 @@ func _show_damage() -> void:
 
 
 func net_get() -> Array:
-	return [position, quaternion, dormant, condition, secured, submerged, hits, last_loss]
+	return [position, quaternion, dormant, condition, secured, submerged, hits, last_loss, bumps, bump_strength]
 
 
 func net_set(s: Array) -> void:
@@ -258,6 +283,12 @@ func net_set(s: Array) -> void:
 	submerged = s[5]
 	hits = s[6]
 	last_loss = s[7]
+	if not _has_net:
+		# Joining mid-run: don't replay old hits.
+		_shown_hits = hits
+		_heard_bumps = s[8]
+	bumps = s[8]
+	bump_strength = s[9]
 	if not _has_net or position.distance_to(_net_pos) > 4.0:
 		position = _net_pos
 		quaternion = _net_rot

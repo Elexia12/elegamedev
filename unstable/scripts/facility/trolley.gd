@@ -69,6 +69,7 @@ var _cargo_last_v := {}
 @onready var handle_point: Marker3D = $HandlePoint
 @onready var fixed_wheels: Array[Node3D] = [$Wheels/FixedLeft, $Wheels/FixedRight]
 @onready var casters: Array[Node3D] = [$Wheels/CasterLeft, $Wheels/CasterRight]
+@onready var roll_sound: LoopSound = $RollSound
 
 
 func _ready() -> void:
@@ -396,6 +397,8 @@ func _process(delta: float) -> void:
 	# Wheels spin with the rolling speed; the casters swing to trail the motion.
 	var v := linear_velocity if multiplayer.is_server() else (global_position - _last_pos) / maxf(delta, 0.0001)
 	_last_pos = global_position
+	# The wheels rumble with speed (louder and deeper with a load on).
+	roll_sound.level = clampf(Vector2(v.x, v.z).length() / 1.8, 0.0, 1.0)
 	_spin += v.dot(global_basis.x) * delta / wheel_radius
 	for w in fixed_wheels:
 		w.rotation.z = -_spin

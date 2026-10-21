@@ -86,6 +86,15 @@ How the code is organised, and the decisions behind it that should hold. Level l
     (`Trolley._resting_on_deck`): cargo that fell off and got rolled onto is never glued back on.
 - **Wrench** (`wrench_tool.gd`) works `Mounting`s (unbolting, faster with two people, slips in tremors) and cranks valves.
 
+## Sound
+- **Decision:** every sound is driven by replicated state, on every peer, the same way the visuals are. Nothing is sent
+  as an RPC. Impacts use a replicated counter (`Prop.bumps` + `bump_strength`; the `ImpactSound` / `DamageSound`
+  children play when it changes). Machines and hazards derive their sound from state they already replicate
+  (hoist `vx`/`input`/`tension`, mounting `progress`, valve `opening`, pipe `ruptured`, corridor `stress`, `shake`).
+- `LoopSound` (`scripts/audio/loop_sound.gd`) is a looping 3D player whose loudness and pitch follow a 0..1 `level`
+  set by its owner each frame (or `constant_level` for room tone). Sound nodes live in the scenes, tuned in the Inspector.
+- The Master bus has a light reverb (`default_bus_layout.tres`): concrete rooms.
+
 ## Presentation
 - Text is minimal by design: `ProximityLabel`, the `label_range` / `show_within` exports, a briefing that hides once you
   enter the station (`SalvageContract.briefing()`), and instructions in aim prompts.

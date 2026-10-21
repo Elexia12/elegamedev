@@ -63,6 +63,10 @@ var _hook_visual := Vector3.ZERO
 @onready var pendant: Node3D = $Pendant
 @onready var pendant_point: InteractPoint = $Pendant/Point
 @onready var pendant_label: Label3D = $Pendant/Label
+@onready var motor_sound: LoopSound = $Carriage/MotorSound
+@onready var chain_sound: LoopSound = $Carriage/ChainSound
+@onready var brake_sound: AudioStreamPlayer3D = $Carriage/BrakeSound
+var _last_speed := 0.0
 
 
 func _ready() -> void:
@@ -263,6 +267,7 @@ func _simulate(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	carriage.position.x = x
+	_update_sound()
 	var a := anchor_position()
 	var target := hook_position()
 	# An empty hook trails a little behind the carriage (visual only).
@@ -286,6 +291,26 @@ func _process(delta: float) -> void:
 	carriage_label.modulate = Color(1.0, 0.35, 0.25) if over else Color(1.0, 0.85, 0.3)
 	pendant_label.visible = mission.local_distance(pendant.global_position) < 8.0
 	pendant_label.text = "HOIST CONTROLS" if operator == 0 else "HOIST · %s" % _member_name(operator)
+
+
+## Every peer, from replicated state: the motor whines while the carriage
+## runs or the hook moves (deeper under load), the chain rattles while it
+## pays out or reels in, and a hard stop clunks.
+func _update_sound() -> void:
+	var reeling := absf(input.y) > 0.5 and length > min_length + 0.01 and length < max_length - 0.01
+	var run := absf(vx) / max_speed
+	var loaded := clampf(tension / (capacity * 9.8), 0.0, 1.0)
+	motor_sound.level = maxf(run, 0.8 if reeling else 0.0) * (1.0 - 0.25 * loaded)
+	chain_sound.level = 0.9 if reeling else run * 0.35
+	# The top speed of this run; when the carriage comes to rest after a
+	# proper run, the brake clunks (louder with a load or a fast stop).
+	var speed := absf(vx)
+	_last_speed = maxf(_last_speed, speed)
+	if speed < 0.05:
+		if _last_speed > 0.5:
+			brake_sound.volume_db = linear_to_db(0.4 + 0.6 * maxf(loaded, _last_speed / max_speed))
+			brake_sound.play()
+		_last_speed = 0.0
 
 
 func net_get() -> Array:

@@ -1,7 +1,9 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/valve.gd" id="1_va"]
 [ext_resource type="PackedScene" path="res://scenes/components/interact_point.tscn" id="2_ip"]
+[ext_resource type="AudioStream" uid="uid://c0n07oxm4odih" path="res://audio/sfx/ratchet_loop.wav" id="snd_1"]
+[ext_resource type="Script" path="res://scripts/audio/loop_sound.gd" id="snd_3"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_pipe"]
 albedo_color = Color(0.35, 0.4, 0.45, 1)
@@ -61,3 +63,13 @@ modulate = Color(0.6, 0.95, 1, 1)
 font_size = 36
 outline_size = 10
 text = "VALVE"
+
+[node name="CrankSound" type="AudioStreamPlayer3D" parent="."]
+script = ExtResource("snd_3")
+stream = ExtResource("snd_1")
+full_db = -6.0
+pitch_low = 0.7
+pitch_high = 0.8
+response = 12.0
+unit_size = 4.0
+max_distance = 45.0

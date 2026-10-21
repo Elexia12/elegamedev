@@ -27,6 +27,11 @@ var _workers := 0
 
 @onready var point: InteractPoint = $Point
 @onready var bolts: Node3D = get_node_or_null("Bolts")
+@onready var ratchet_sound: LoopSound = get_node_or_null("RatchetSound")
+@onready var bolt_sound: AudioStreamPlayer3D = get_node_or_null("BoltSound")
+var _heard_progress := 0.0
+var _ratchet_hold := 0.0
+var _heard_released := false
 
 
 func _ready() -> void:
@@ -70,7 +75,8 @@ func _release() -> void:
 		mission.incident_log.incident("%s unbolted" % item.display_name)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_update_sound(delta)
 	point.visible = not released
 	point.active = not released
 	if item and not item.is_locked():
@@ -79,6 +85,21 @@ func _process(_delta: float) -> void:
 		var n := bolts.get_child_count()
 		for i in n:
 			bolts.get_child(i).visible = not released and progress < float(i + 1) / n
+
+
+## Every peer: the wrench ratchets while progress is being made (replicated
+## progress arrives in steps, so it holds on briefly), and the item clanks
+## free when the last bolt comes out.
+func _update_sound(delta: float) -> void:
+	if progress > _heard_progress + 0.0001:
+		_ratchet_hold = 0.25
+	_heard_progress = progress
+	_ratchet_hold -= delta
+	if ratchet_sound:
+		ratchet_sound.level = 1.0 if _ratchet_hold > 0.0 and not released else 0.0
+	if released and not _heard_released and bolt_sound:
+		bolt_sound.play()
+	_heard_released = released
 
 
 func net_get() -> Array:

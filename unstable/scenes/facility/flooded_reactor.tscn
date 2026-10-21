@@ -1,4 +1,4 @@
-[gd_scene load_steps=61 format=3]
+[gd_scene load_steps=62 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/mission.gd" id="1_mi"]
 [ext_resource type="PackedScene" path="res://scenes/components/gate.tscn" id="2_gate"]
@@ -28,6 +28,7 @@
 [ext_resource type="PackedScene" path="res://scenes/props/frame_header.tscn" id="26_hdr"]
 [ext_resource type="PackedScene" path="res://scenes/props/skid_sled.tscn" id="27_sled"]
 [ext_resource type="Script" path="res://scripts/facility/reactor_contract.gd" id="28_rc"]
+[ext_resource type="AudioStream" uid="uid://di5rudw6r2j2l" path="res://audio/sfx/tremor_rumble.wav" id="snd_1"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_mat"]
 sky_top_color = Color(0.16, 0.2, 0.26, 1)
@@ -202,6 +203,9 @@ valve = NodePath("../Manifold/DrainValve")
 network = NodePath("../PressureNetwork")
 source = NodePath("../Water/BonusFlood")
 target = NodePath("../Water/LowerFlood")
+
+[node name="Rumble" type="AudioStreamPlayer" parent="Tremors"]
+stream = ExtResource("snd_1")
 
 [node name="IncidentLog" type="Node" parent="."]
 unique_name_in_owner = true

@@ -18,6 +18,9 @@ extends Node3D
 
 ## 0..1 current shaking, decays over time. Read by cameras, supports, dust.
 var shake := 0.0
+var _last_shake := 0.0
+## Optional non-positional rumble played when a tremor hits.
+@onready var rumble: AudioStreamPlayer = get_node_or_null("Rumble")
 var mission: Mission
 var _next := 25.0
 var _sun_energy := 1.0
@@ -64,6 +67,11 @@ func jolt(strength: float) -> void:
 
 
 func _update_effects() -> void:
+	# A rumble when a tremor hits (every peer: `shake` is replicated).
+	if rumble and shake > 0.25 and _last_shake <= 0.25:
+		rumble.volume_db = linear_to_db(clampf(shake, 0.3, 1.0))
+		rumble.play()
+	_last_shake = shake
 	for c in get_children():
 		if c is CPUParticles3D:
 			c.emitting = shake > 0.25

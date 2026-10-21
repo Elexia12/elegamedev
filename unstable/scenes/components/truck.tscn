@@ -1,8 +1,10 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/truck_departure.gd" id="1_truck_"]
 [ext_resource type="PackedScene" path="res://scenes/components/interact_point.tscn" id="2_intera"]
 [ext_resource type="Script" path="res://scripts/facility/proximity_label.gd" id="3_proxim"]
+[ext_resource type="AudioStream" uid="uid://cuqnnlfugmfo5" path="res://audio/sfx/truck_engine_loop.wav" id="snd_1"]
+[ext_resource type="Script" path="res://scripts/audio/loop_sound.gd" id="snd_3"]
 
 [sub_resource type="BoxShape3D" id="Shape_cab"]
 size = Vector3(2.6, 2.6, 2.2)
@@ -134,3 +136,14 @@ outline_size = 12
 text = "TRUCK"
 script = ExtResource("3_proxim")
 show_within = 14
+
+[node name="EngineSound" type="AudioStreamPlayer3D" parent="."]
+script = ExtResource("snd_3")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -4.1)
+stream = ExtResource("snd_1")
+full_db = -2.0
+pitch_low = 0.85
+pitch_high = 1.0
+response = 2.0
+unit_size = 10.0
+max_distance = 45.0

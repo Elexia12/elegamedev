@@ -1,0 +1,13 @@
+[gd_resource type="AudioBusLayout" format=3 uid="uid://cupctg2fy1x7p"]
+
+[sub_resource type="AudioEffectReverb" id="Reverb_station"]
+resource_name = "Reverb"
+room_size = 0.55
+damping = 0.6
+spread = 0.8
+hipass = 0.15
+wet = 0.18
+
+[resource]
+bus/0/effect/0/effect = SubResource("Reverb_station")
+bus/0/effect/0/enabled = true

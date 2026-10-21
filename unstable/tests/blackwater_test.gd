@@ -81,6 +81,7 @@ func _initialize() -> void:
 		[1.0, func() -> void:
 			var vfd := _n("ControlRoom/VfdModule") as Prop
 			_check(vfd.condition < mark_f - 5.0 and vfd.hits > 0, "dropping it from chest height damages it (%d%%, −%s)" % [roundi(vfd.condition), m.money(vfd.last_loss)])
+			_check(vfd.bumps > 0 and vfd.impact_sound != null and vfd.damage_sound != null, "and you hear it land, and crunch (%d impacts)" % vfd.bumps)
 			mark_f = vfd.condition],
 
 		# --- Deposit secures value, exactly once --------------------------------------
@@ -152,9 +153,11 @@ func _initialize() -> void:
 		[2.0, func() -> void:
 			var h := _hoist()
 			_check(h.x < -1.5 and h.vx < -1.0, "A/D runs the carriage along the rail with limited acceleration (x=%.2f, v=%.2f)" % [h.x, h.vx])
+			_check(h.motor_sound.playing, "the hoist motor whirs while the carriage runs")
 			_drive(Vector3.ZERO)],
 		[0.6, func() -> void:
 			_check(_hoist().vx == 0.0, "letting go brakes it hard (stopped within 0.6 s)")
+			_check(_hoist().brake_sound.playing, "with a clunk from the brake")
 			_seek_x(-6.5)],
 		[4.5, func() -> void:
 			tick = Callable()

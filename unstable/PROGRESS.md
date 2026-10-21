@@ -18,7 +18,7 @@ Two playable greybox missions (the main menu's Mission picker; details in `READM
 - **The Flooded Reactor** (first prototype, GDD §8): winch / pressure tool, jammed gate, lift extraction.
 
 Tests, all passing on `main`:
-- `tests/blackwater_test.gd`: 108 checks.
+- `tests/blackwater_test.gd`: 111 checks.
 - `tests/smoke_test.gd`: 29 checks.
 - `tests/blackwater_net_test.gd` and `tests/net_test.gd`: host and client agree, over localhost ENet.
 
@@ -37,7 +37,9 @@ Tests, all passing on `main`:
 ## Blockers / risks
 - No hard blockers.
 - Never tested on two real machines or with 3–4 players (localhost only). Remote-player smoothing is untested.
-- No audio at all yet.
+- Sound is synthesised placeholder audio (`tools/make_sfx.py`): it covers everything that matters, but should be
+  replaced with real recordings eventually. Not yet: footsteps, the swing door, the support jack, the reactor's
+  pressure network.
 
 ## Next steps (owner's call on order)
 1. Playtest Blackwater (ideally online) and tune from feel:
@@ -46,8 +48,8 @@ Tests, all passing on `main`:
    - corridor tolerance
    - fragility and damage thresholds
    - flood rates
-2. The spec's deferred tool: ratchet straps for the trolley. Also an emergency drain pump.
-3. Audio: impacts, groaning steel, hoist motor, water.
+2. Network readiness: a lag/packet-loss test, and a player disconnecting mid-run.
+3. The spec's deferred tool: ratchet straps for the trolley. Also an emergency drain pump.
 4. Low-poly art and a lighting pass.
 
 ## Sources

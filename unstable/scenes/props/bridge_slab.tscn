@@ -1,6 +1,7 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/bridge_slab.gd" id="1_bridge"]
+[ext_resource type="AudioStream" uid="uid://dptc460i6bkqr" path="res://audio/sfx/impact_concrete.wav" id="snd_1"]
 
 [sub_resource type="BoxShape3D" id="Shape_deck"]
 size = Vector3(3.29, 0.3, 2.9)
@@ -93,3 +94,9 @@ mesh = SubResource("Mesh_post")
 [node name="Post4" type="MeshInstance3D" parent="Mesh"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.65, -1.38)
 mesh = SubResource("Mesh_post")
+
+[node name="ImpactSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("snd_1")
+pitch_scale = 0.8
+unit_size = 10.0
+max_distance = 45.0

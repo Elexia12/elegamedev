@@ -90,6 +90,7 @@ func _process(delta: float) -> bool:
 			not vfd.dormant, vfd.condition, vfd.hits, vfd.global_position.x, vfd.global_position.y, vfd.global_position.z])
 		var trolley := m.get_node("PumpHall/Trolley") as Trolley
 		print("[%s] trolley=(%.1f, %.1f) pushers=%s" % [role, trolley.global_position.x, trolley.global_position.z, trolley.pushers])
+		print("[%s] vfd_bumps=%d" % [role, vfd.bumps])
 		print("[%s] %s" % [role, m.contract.status_text().replace("\n", " | ")])
 		root.get_node("Net").leave()
 		return true

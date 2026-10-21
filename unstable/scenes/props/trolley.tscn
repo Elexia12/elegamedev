@@ -1,8 +1,11 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=23 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/trolley.gd" id="1_trolle"]
 [ext_resource type="PackedScene" path="res://scenes/components/interact_point.tscn" id="2_intera"]
 [ext_resource type="PackedScene" path="res://scenes/components/lifting_eye.tscn" id="3_liftin"]
+[ext_resource type="AudioStream" uid="uid://c7a45gffftaim" path="res://audio/sfx/impact_heavy_metal.wav" id="snd_1"]
+[ext_resource type="AudioStream" uid="uid://lo1hch7n5wcb" path="res://audio/sfx/trolley_roll_loop.wav" id="snd_3"]
+[ext_resource type="Script" path="res://scripts/audio/loop_sound.gd" id="snd_5"]
 
 [sub_resource type="PhysicsMaterial" id="Phys_trolley"]
 friction = 0
@@ -224,5 +227,22 @@ modulate = Color(0.95, 0.85, 0.4, 1)
 font_size = 32
 outline_size = 10
 text = "TROLLEY"
+
+[node name="ImpactSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("snd_1")
+pitch_scale = 1.25
+unit_size = 5.0
+max_distance = 45.0
+
+[node name="RollSound" type="AudioStreamPlayer3D" parent="."]
+script = ExtResource("snd_5")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+stream = ExtResource("snd_3")
+full_db = -3.0
+pitch_low = 0.7
+pitch_high = 1.15
+response = 8.0
+unit_size = 5.0
+max_distance = 45.0
 
 [editable path="LiftingEye"]

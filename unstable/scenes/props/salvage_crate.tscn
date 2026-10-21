@@ -1,6 +1,8 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/prop.gd" id="1_pr"]
+[ext_resource type="AudioStream" uid="uid://dk41xa2ihv1bu" path="res://audio/sfx/impact_crate.wav" id="snd_1"]
+[ext_resource type="AudioStream" uid="uid://c4fg6xgwenfy6" path="res://audio/sfx/damage_crunch.wav" id="snd_4"]
 
 [sub_resource type="PhysicsMaterial" id="Phys_crate"]
 friction = 0.6
@@ -40,3 +42,14 @@ billboard = 1
 font_size = 32
 outline_size = 10
 text = "SALVAGE"
+
+[node name="ImpactSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("snd_1")
+pitch_scale = 1.0
+unit_size = 4.0
+max_distance = 45.0
+
+[node name="DamageSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("snd_4")
+unit_size = 4.0
+max_distance = 45.0

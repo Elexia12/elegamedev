@@ -1,6 +1,7 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/prop.gd" id="1_pr"]
+[ext_resource type="AudioStream" uid="uid://c7a45gffftaim" path="res://audio/sfx/impact_heavy_metal.wav" id="snd_1"]
 
 [sub_resource type="PhysicsMaterial" id="Phys_beam"]
 friction = 0.6
@@ -35,3 +36,9 @@ shape = SubResource("Shape_beam")
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 mesh = SubResource("Mesh_beam")
+
+[node name="ImpactSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("snd_1")
+pitch_scale = 0.75
+unit_size = 10.0
+max_distance = 45.0

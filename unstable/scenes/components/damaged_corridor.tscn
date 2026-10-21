@@ -1,9 +1,12 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/damaged_corridor.gd" id="1_damage"]
 [ext_resource type="Script" path="res://scripts/facility/jack_point.gd" id="2_jack_p"]
 [ext_resource type="PackedScene" path="res://scenes/props/bridge_slab.tscn" id="3_bridge"]
 [ext_resource type="Script" path="res://scripts/facility/proximity_label.gd" id="4_proxim"]
+[ext_resource type="AudioStream" uid="uid://h1ff1wi60tdw" path="res://audio/sfx/creak_loop.wav" id="snd_1"]
+[ext_resource type="Script" path="res://scripts/audio/loop_sound.gd" id="snd_3"]
+[ext_resource type="AudioStream" uid="uid://c41vg3l56wdvy" path="res://audio/sfx/collapse.wav" id="snd_7"]
 
 [sub_resource type="BoxShape3D" id="Shape_load"]
 size = Vector3(10, 2.2, 3)
@@ -88,3 +91,18 @@ modulate = Color(0.5, 1, 0.6, 1)
 font_size = 34
 outline_size = 10
 text = "WEAK FLOOR"
+
+[node name="CreakSound" type="AudioStreamPlayer3D" parent="."]
+script = ExtResource("snd_3")
+stream = ExtResource("snd_1")
+full_db = 0.0
+pitch_low = 1.1
+pitch_high = 0.85
+response = 2.0
+unit_size = 8.0
+max_distance = 45.0
+
+[node name="CollapseSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("snd_7")
+unit_size = 14.0
+max_distance = 80.0

@@ -1,4 +1,4 @@
-[gd_scene load_steps=51 format=3]
+[gd_scene load_steps=55 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/mission.gd" id="1_missio"]
 [ext_resource type="Script" path="res://scripts/facility/salvage_contract.gd" id="2_salvag"]
@@ -28,6 +28,10 @@
 [ext_resource type="PackedScene" path="res://scenes/props/swing_door.tscn" id="26_swing_"]
 [ext_resource type="PackedScene" path="res://scenes/props/rubble.tscn" id="27_rubble"]
 [ext_resource type="PackedScene" path="res://scenes/props/salvage_crate.tscn" id="28_crate"]
+[ext_resource type="AudioStream" uid="uid://di5rudw6r2j2l" path="res://audio/sfx/tremor_rumble.wav" id="snd_1"]
+[ext_resource type="AudioStream" uid="uid://vlwjgu5nt02" path="res://audio/sfx/water_gush_loop.wav" id="snd_4"]
+[ext_resource type="Script" path="res://scripts/audio/loop_sound.gd" id="snd_6"]
+[ext_resource type="AudioStream" uid="uid://dyvmu02e1n011" path="res://audio/sfx/hum_loop.wav" id="snd_10"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_mat"]
 sky_top_color = Color(0.22, 0.3, 0.4, 1)
@@ -204,6 +208,9 @@ emission_box_extents = Vector3(15, 0.1, 5.5)
 direction = Vector3(0, -1, 0)
 gravity = Vector3(0, -2, 0)
 initial_velocity_max = 0.5
+
+[node name="Rumble" type="AudioStreamPlayer" parent="Tremors"]
+stream = ExtResource("snd_1")
 
 [node name="IncidentLog" type="Node" parent="."]
 unique_name_in_owner = true
@@ -822,12 +829,13 @@ size = Vector2(2.5, 19.25)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.9, 0, 4.25)
 size = Vector2(4.8, 6.5)
 
-[node name="WaterMain" type="Node" parent="Water" node_paths=PackedStringArray("zone", "valve", "inlet_gush")]
+[node name="WaterMain" type="Node" parent="Water" node_paths=PackedStringArray("zone", "valve", "inlet_gush", "inlet_sound")]
 script = ExtResource("8_water_")
 editor_description = "The water main: inlet_flow through the open InletValve, plus leak_flow per ruptured pipe. Crank the valve shut (WRENCH, hold LMB) to stop both."
 zone = NodePath("../StationFlood")
 valve = NodePath("../../Pit/InletValve")
 inlet_gush = NodePath("../../Pit/InletGush")
+inlet_sound = NodePath("../../Pit/InletSound")
 inlet_flow = 0.0045
 
 [node name="PitGauge" type="Label3D" parent="Water" node_paths=PackedStringArray("zone")]
@@ -855,6 +863,53 @@ floor_y = 0
 thresholds = PackedFloat32Array(0.05, 0.4, 1)
 show_within = 18
 text = "HALL"
+
+[node name="Ambience" type="Node3D" parent="."]
+editor_description = "Room tone (LoopSound, constant_level 1): machinery hum in the hall and control room, water lapping in the pit, drips in the tunnel."
+
+[node name="HallHum" type="AudioStreamPlayer3D" parent="Ambience"]
+script = ExtResource("snd_6")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 4, -10)
+stream = ExtResource("snd_10")
+constant_level = 1.0
+full_db = -12.0
+pitch_low = 1.0
+pitch_high = 1.0
+unit_size = 9.0
+max_distance = 45.0
+
+[node name="ControlHum" type="AudioStreamPlayer3D" parent="Ambience"]
+script = ExtResource("snd_6")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 2.5, -12)
+stream = ExtResource("snd_10")
+constant_level = 1.0
+full_db = -18.0
+pitch_low = 1.5
+pitch_high = 1.5
+unit_size = 6.0
+max_distance = 45.0
+
+[node name="PitWater" type="AudioStreamPlayer3D" parent="Ambience"]
+script = ExtResource("snd_6")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.6, 4)
+stream = ExtResource("snd_4")
+constant_level = 1.0
+full_db = -20.0
+pitch_low = 0.55
+pitch_high = 0.55
+unit_size = 9.0
+max_distance = 45.0
+
+[node name="TunnelDrips" type="AudioStreamPlayer3D" parent="Ambience"]
+script = ExtResource("snd_6")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.75, -1.5, -4)
+stream = ExtResource("snd_4")
+constant_level = 1.0
+full_db = -24.0
+pitch_low = 0.45
+pitch_high = 0.45
+unit_size = 6.0
+max_distance = 45.0
 
 [node name="PumpHall" type="Node3D" parent="."]
 editor_description = "C: the jackpot. The motor sits on its pump base down in the pit, under the hoist rail. Unbolt it, hoist it up through the gap in the railing and over the water main (lift it high!), lower it onto the trolley, then push the trolley out through the damaged corridor (short) or back down through the pit and the service tunnel (long, steep, floods).
@@ -982,6 +1037,16 @@ initial_velocity_min = 1
 initial_velocity_max = 3.5
 scale_amount_min = 0.8
 scale_amount_max = 2
+
+[node name="InletSound" type="AudioStreamPlayer3D" parent="Pit"]
+script = ExtResource("snd_6")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, -1.6, 9.3)
+stream = ExtResource("snd_4")
+full_db = 2.0
+pitch_low = 0.8
+pitch_high = 1.05
+unit_size = 7.0
+max_distance = 45.0
 
 [node name="Transmitter1" parent="Pit" instance=ExtResource("23_pressu")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -6, -2, 9.85)

@@ -1,7 +1,9 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/prop.gd" id="1_prop"]
 [ext_resource type="PackedScene" path="res://scenes/components/lifting_eye.tscn" id="2_liftin"]
+[ext_resource type="AudioStream" uid="uid://c7a45gffftaim" path="res://audio/sfx/impact_heavy_metal.wav" id="snd_1"]
+[ext_resource type="AudioStream" uid="uid://c4fg6xgwenfy6" path="res://audio/sfx/damage_crunch.wav" id="snd_4"]
 
 [sub_resource type="PhysicsMaterial" id="Phys_motor"]
 friction = 0.95
@@ -140,3 +142,14 @@ spread = 180
 gravity = Vector3(0, -9.8, 0)
 initial_velocity_min = 2.5
 initial_velocity_max = 6
+
+[node name="ImpactSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("snd_1")
+pitch_scale = 0.9
+unit_size = 8.0
+max_distance = 45.0
+
+[node name="DamageSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("snd_4")
+unit_size = 8.0
+max_distance = 45.0
