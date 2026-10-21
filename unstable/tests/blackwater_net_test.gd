@@ -7,7 +7,7 @@ extends SceneTree
 ## and drives the carriage, then lets go. The host drops the module to damage
 ## it. Each side prints what it sees so the two views can be compared.
 
-const RUN_SECONDS := 18.0
+const RUN_SECONDS := 20.0
 const HOIST := "PumpHall/OverheadHoist"
 
 var main: Node
@@ -64,6 +64,18 @@ func _process(delta: float) -> bool:
 			m.send("drive", HOIST, "", Vector3.ZERO)
 		if _once("let_go", 12.5):
 			m.send("release_controls")
+		if _once("go_trolley", 13.0):
+			# Behind the trolley's handle (it faces +X), facing along it.
+			me.global_position = Vector3(6.25, 0.05, -7.5)
+			me.rotation = Vector3(0, PI / 2.0, 0)
+		if _once("take_trolley", 13.5):
+			m.send("use", "PumpHall/Trolley")
+		if _once("push", 14.0):
+			print("[client] pushing the trolley: ", me.pushing() != null)
+			me.bot_input = Vector2(0, -1)
+		if _once("stop_push", 16.0):
+			me.bot_input = Vector2.ZERO
+			m.send("use", "PumpHall/Trolley")
 	if role == "host" and _once("drop", 13.0):
 		var vfd := m.get_node("ControlRoom/VfdModule") as Prop
 		print("[host] VFD loose before the drop: ", not vfd.dormant)
@@ -75,6 +87,8 @@ func _process(delta: float) -> bool:
 		print("[%s] peers=%d crew=%d hoist_x=%.2f operator=%d vfd_loose=%s vfd_condition=%.1f vfd_hits=%d vfd_pos=(%.1f, %.1f, %.1f)" % [
 			role, root.multiplayer.get_peers().size(), m.crew.members().size(), h.x, h.operator,
 			not vfd.dormant, vfd.condition, vfd.hits, vfd.global_position.x, vfd.global_position.y, vfd.global_position.z])
+		var trolley := m.get_node("PumpHall/Trolley") as Trolley
+		print("[%s] trolley=(%.1f, %.1f) pushers=%s" % [role, trolley.global_position.x, trolley.global_position.z, trolley.pushers])
 		print("[%s] %s" % [role, m.contract.status_text().replace("\n", " | ")])
 		root.get_node("Net").leave()
 		return true

@@ -63,6 +63,7 @@ The loaded trolley fits neither 1 m door, so the motor goes out one of two ways:
 | R while holding | Turn it: free → upright → flat (stand a support jack up) |
 | **Wrench [1]** | Hold LMB on bolts to unbolt (stay on them). On a valve wheel: hold LMB to crank it shut, RMB to crank it open |
 | Hoist pendant | [E] takes the controls. Then A/D run the carriage along the rail, W raises, S lowers, [E] lets go |
+| Trolley | [E] takes the handle. Walk to push, turn to steer, [E] lets go |
 | Tab | Salvage manifest (condition, value, where each item is) |
 | Esc | Menu (the station keeps running) |
 
@@ -79,8 +80,11 @@ The loaded trolley fits neither 1 m door, so the motor goes out one of two ways:
   load that's resting on something. The carriage accelerates gently and brakes hard, so stopping makes the load swing.
   Teammates can grab the motor to steady it. The **water main** crosses the hall at head height: lift the motor high enough
   to clear it, or swing the motor into it and burst it.
-- **The trolley.** Grab its yellow handle and push. The far end has fixed wheels and the handle end swivels, so you steer by
-  swinging the handle. Nothing is strapped down: slam it into something, or turn too hard, and the motor slides or falls off.
+- **The trolley.** [E] takes the handle (two people can push together), [E] again lets go. Then just walk: you push it
+  from where you stand, and turning swings the handle to steer. The far end has fixed wheels, the handle end swivel
+  casters. Your hands are on the handle, so a heavy trolley holds you back: empty it goes at a brisk walk, loaded with the
+  motor it's slow to get going and slow to stop. Let go and it rolls on a few metres. Nothing is strapped down: ram it
+  into something, or corner hard, and the motor slides or falls off.
 - **The damaged corridor.** Its cracked deck spans a void over the pit. Its signs show stress and load. It holds about
   280 kg: two crew are fine; the trolley with the motor is not. Extend a **support jack** (two in the bay) at the **jack
   point** in the void under it (walk in from the pit), and it holds 800 kg. A big impact on the deck can make the jack slip.
@@ -214,7 +218,7 @@ follows the spec's acceptance tests:
 - securing exactly once, and cranking the inlet valve
 - the hoist: controls, hard braking, the swing and how it dies down, unhooking only when supported, a burst pipe, a gentle
   set-down on the trolley
-- pushing the trolley, and cargo sliding in a crash
+- pushing the trolley by its handle (tracking, staying at the handle, coasting after letting go), and cargo sliding in a crash
 - departure and the payout
 - the swing door, the jack holding the corridor and slipping on impact, the corridor collapsing, and station failure with
   a rescue fee

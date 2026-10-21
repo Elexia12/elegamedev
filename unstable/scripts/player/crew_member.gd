@@ -40,6 +40,9 @@ var mission: Mission
 var aim_target: Node = null
 var aim_point := Vector3.ZERO
 
+## Tests (and later, bot crew) can drive this crew member: a Vector2 of
+## movement input (like the move keys). null = read the keyboard.
+var bot_input = null
 var _held_button := ""
 ## Owner: the last drive input sent to the machine we operate.
 var _drive_sent := Vector3.ZERO
@@ -100,6 +103,14 @@ func _ready() -> void:
 
 func current_tool() -> CrewTool:
 	return tools[tool]
+
+
+## The trolley (group "pushables") this crew member is pushing, if any.
+func pushing() -> Node:
+	for t in get_tree().get_nodes_in_group("pushables"):
+		if mission.is_ancestor_of(t) and t.is_pushed_by(self):
+			return t
+	return null
 
 
 ## The machine whose controls this crew member holds, if any.
@@ -188,6 +199,10 @@ func _interact() -> void:
 	if hands.holding:
 		hands.release()
 		return
+	var pushed := pushing()
+	if pushed:
+		mission.send("use", path_to(pushed))
+		return
 	var t := aim_target
 	if t is InteractPoint:
 		if t.kind == "lever" and mission.extraction:
@@ -254,6 +269,8 @@ func prompt() -> String:
 		return machine.operator_prompt()
 	if hands.holding:
 		return hands.prompt()
+	if pushing():
+		return "Pushing the trolley · walk to push, turn to steer · [E] let go"
 	var t := aim_target
 	if t is InteractPoint:
 		if t.kind == "lever" and mission.extraction:
@@ -339,11 +356,11 @@ func _move(delta: float) -> void:
 	_stun = maxf(0.0, _stun - delta)
 	var surface := mission.water_surface_at(global_position + Vector3.UP * 0.1)
 	var depth := surface - global_position.y
-	var can_act := not helpless() and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+	var can_act := not helpless() and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or bot_input != null)
 
 	var input := Vector2.ZERO
 	if can_act:
-		input = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+		input = bot_input if bot_input != null else Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var machine := operated_machine()
 	if machine:
 		_drive(machine, input)
@@ -356,6 +373,9 @@ func _move(delta: float) -> void:
 		speed *= water_slow
 	if hands.holding:
 		speed *= 0.7
+	var pushed := pushing()
+	if pushed:
+		speed *= pushed.push_speed_factor()
 	# Stunned bodies slide; standing ones grip the floor.
 	var accel := (12.0 if is_on_floor() else 3.0) * (0.15 if helpless() else 1.0)
 	velocity.x = move_toward(velocity.x, dir.x * speed, accel * speed * delta)
@@ -381,9 +401,26 @@ func _move(delta: float) -> void:
 		velocity.y = jump_velocity
 	move_and_slide()
 
+	if pushed:
+		_tether_to(pushed)
+
 	if global_position.y < -20.0:
 		_on_recovered()
 	_shake_camera(delta)
+
+
+## Owner: your hands are on the trolley's handle. You can't walk away from it:
+## if it lags (it's heavy, it's stuck, you turned too fast) it holds you back.
+func _tether_to(pushed: Node) -> void:
+	var fwd := (-global_basis.z * Vector3(1, 0, 1)).normalized()
+	var stand: Vector3 = pushed.handle_for(self) - fwd * pushed.handle_reach
+	var off := (global_position - stand) * Vector3(1, 0, 1)
+	var slack := 0.3
+	if off.length() <= slack:
+		return
+	var dir := off.normalized()
+	global_position -= dir * (off.length() - slack)
+	velocity -= dir * maxf(0.0, velocity.dot(dir))
 
 
 ## Owner: movement keys drive the machine. x = A/D, y = W (+1) / S (-1).

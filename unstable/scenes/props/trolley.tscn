@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/trolley.gd" id="1_trolle"]
 
@@ -26,6 +26,11 @@ roughness = 0.5
 albedo_color = Color(0.08, 0.08, 0.08, 1)
 roughness = 0.9
 
+[sub_resource type="StandardMaterial3D" id="Mat_hub"]
+albedo_color = Color(0.75, 0.75, 0.72, 1)
+metallic = 0.8
+roughness = 0.3
+
 [sub_resource type="StandardMaterial3D" id="Mat_handle"]
 albedo_color = Color(0.95, 0.75, 0.1, 1)
 roughness = 0.5
@@ -40,6 +45,14 @@ top_radius = 0.12
 bottom_radius = 0.12
 height = 0.08
 
+[sub_resource type="BoxMesh" id="Mesh_spoke"]
+material = SubResource("Mat_hub")
+size = Vector3(0.2, 0.03, 0.09)
+
+[sub_resource type="BoxMesh" id="Mesh_fork"]
+material = SubResource("Mat_hub")
+size = Vector3(0.12, 0.1, 0.1)
+
 [sub_resource type="BoxMesh" id="Mesh_bar"]
 material = SubResource("Mat_handle")
 size = Vector3(0.06, 0.06, 1)
@@ -49,13 +62,14 @@ material = SubResource("Mat_handle")
 size = Vector3(0.06, 0.6, 0.06)
 
 [node name="Trolley" type="RigidBody3D"]
-editor_description = "TRANSPORT TROLLEY (Trolley). [E] on the yellow handle to grab it and push. The far end (FrontAxle) has fixed wheels, the handle end swivels: steer by swinging the handle.
-Cargo on the deck is held by deck_friction only (no straps): brake or turn too hard and the motor slides off."
+editor_description = "PLATFORM TROLLEY (Trolley). [E] takes the handle (two crew can push), [E] again lets go. Walk to push it, turn to steer: the far end (FrontAxle) has fixed wheels, the handle end has swivel casters.
+Cargo on the deck is held by deck_friction only (no straps): brake, ram or turn too hard and the motor slides off.
+Tuning: push_force / push_stiffness (how it follows you), axle_grip / skid_friction (cornering), rolling_resistance / drag (how far it coasts)."
 collision_layer = 4
 collision_mask = 23
 mass = 70
 physics_material_override = SubResource("Phys_trolley")
-angular_damp = 3
+angular_damp = 1.5
 script = ExtResource("1_trolle")
 display_name = "Trolley"
 role = "equipment"
@@ -91,21 +105,64 @@ shape = SubResource("Shape_handle")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 mesh = SubResource("Mesh_deck")
 
-[node name="WheelMesh1" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0.75, -0.33, 0.5)
+[node name="Wheels" type="Node3D" parent="."]
+editor_description = "Visual wheels. FrontLeft/Right spin; the casters swivel (y) and spin (their Wheel child)."
+
+[node name="FrontLeft" type="Node3D" parent="Wheels"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, -0.33, 0.5)
+
+[node name="Tyre" type="MeshInstance3D" parent="Wheels/FrontLeft"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
 mesh = SubResource("Mesh_wheel")
 
-[node name="WheelMesh2" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0.75, -0.33, -0.5)
+[node name="Spoke" type="MeshInstance3D" parent="Wheels/FrontLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_spoke")
+
+[node name="FrontRight" type="Node3D" parent="Wheels"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, -0.33, -0.5)
+
+[node name="Tyre" type="MeshInstance3D" parent="Wheels/FrontRight"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
 mesh = SubResource("Mesh_wheel")
 
-[node name="WheelMesh3" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -0.75, -0.33, 0.5)
+[node name="Spoke" type="MeshInstance3D" parent="Wheels/FrontRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_spoke")
+
+[node name="CasterLeft" type="Node3D" parent="Wheels"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, -0.25, 0.5)
+
+[node name="Wheel" type="Node3D" parent="Wheels/CasterLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.07, -0.08, 0)
+
+[node name="Tyre" type="MeshInstance3D" parent="Wheels/CasterLeft/Wheel"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
 mesh = SubResource("Mesh_wheel")
 
-[node name="WheelMesh4" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -0.75, -0.33, -0.5)
+[node name="Spoke" type="MeshInstance3D" parent="Wheels/CasterLeft/Wheel"]
+mesh = SubResource("Mesh_spoke")
+
+[node name="Fork" type="MeshInstance3D" parent="Wheels/CasterLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.02, 0.03, 0)
+mesh = SubResource("Mesh_fork")
+
+[node name="CasterRight" type="Node3D" parent="Wheels"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, -0.25, -0.5)
+
+[node name="Wheel" type="Node3D" parent="Wheels/CasterRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.07, -0.08, 0)
+
+[node name="Tyre" type="MeshInstance3D" parent="Wheels/CasterRight/Wheel"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
 mesh = SubResource("Mesh_wheel")
+
+[node name="Spoke" type="MeshInstance3D" parent="Wheels/CasterRight/Wheel"]
+mesh = SubResource("Mesh_spoke")
+
+[node name="Fork" type="MeshInstance3D" parent="Wheels/CasterRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.02, 0.03, 0)
+mesh = SubResource("Mesh_fork")
 
 [node name="HandleBar" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, 0.68, 0)
@@ -118,6 +175,10 @@ mesh = SubResource("Mesh_post")
 [node name="HandlePostB" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, 0.38, -0.47)
 mesh = SubResource("Mesh_post")
+
+[node name="HandlePoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, 0.4, 0)
+editor_description = "Where the pusher pushes. Their force is applied here (at the height of the centre of mass)."
 
 [node name="FrontAxle" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, -0.33, 0)

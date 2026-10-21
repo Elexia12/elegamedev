@@ -233,17 +233,35 @@ func _initialize() -> void:
 
 		# --- The trolley ------------------------------------------------------------------
 		[0.2, func() -> void:
-			_place(p2, Vector3(5.5, 0.05, -12.0), PI / 2.0, -0.4)
-			p2.set_hold("grab", "PumpHall/Trolley", Vector3(-0.95, 0.4, 0.0), 1.5)
+			# Stand behind the handle (it faces +X) and take it.
+			_place(p, Vector3(4.75, 0.05, -12.0), PI / 2.0, -0.75)
+			mark = (_n("PumpHall/Trolley") as Prop).global_position],
+		[0.1, func() -> void:
+			_check(p.prompt().contains("push the trolley"), "aiming at the trolley says how to push it (\"%s\")" % p.prompt())
+			_req("use", "PumpHall/Trolley")],
+		[0.1, func() -> void:
+			_check(p.pushing() != null, "[E] takes the handle")
+			p.head.rotation.x = 0.0
 			mark = (_n("PumpHall/Trolley") as Prop).global_position
-			walkers[p2] = Vector3(-1.0, 0, 0)],
+			p.bot_input = Vector2(0, -1)],
 		[3.0, func() -> void:
-			walkers.erase(p2)
 			var trolley := _n("PumpHall/Trolley") as Trolley
 			var moved := mark.x - trolley.global_position.x
-			_check(moved > 1.5, "one crew member pushes the loaded trolley by its handle (moved %.1f m)" % moved)
+			var drift := absf(trolley.global_position.z - mark.z)
+			_check(moved > 2.5, "walking pushes the loaded trolley (moved %.1f m)" % moved)
+			_check(drift < 0.5, "it rolls straight on its fixed wheels (drift %.2f m over %.1f m)" % [drift, moved])
 			_check(_n("PumpHall/PumpMotor") in trolley.cargo(), "the motor rides along on the deck")
-			p2.set_hold("", "", Vector3.ZERO, 0.0)],
+			var stand: Vector3 = trolley.handle_for(p) - (-p.global_basis.z) * trolley.handle_reach
+			_check(((p.global_position - stand) * Vector3(1, 0, 1)).length() < 0.45, "the pusher stays at the handle")
+			p.bot_input = Vector2.ZERO
+			_req("use", "PumpHall/Trolley")],
+		[0.1, func() -> void:
+			var trolley := _n("PumpHall/Trolley") as Trolley
+			_check(p.pushing() == null and trolley.linear_velocity.length() > 0.3, "[E] lets go, and the loaded trolley rolls on (%.1f m/s)" % trolley.linear_velocity.length())],
+		[3.0, func() -> void:
+			var trolley := _n("PumpHall/Trolley") as Trolley
+			_check(trolley.linear_velocity.length() < 0.05, "then rolls to a stop")
+			p.bot_input = null],
 		[0.5, func() -> void:
 			# Reckless: ram the loaded trolley at the 1 m door to the control room.
 			var trolley := _n("PumpHall/Trolley") as Trolley
