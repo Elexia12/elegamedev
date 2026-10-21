@@ -16,6 +16,21 @@ const MARKER_COLORS := {
 
 @export_enum("cable", "valve", "lever", "pendant", "hook", "eye", "bolts", "ignition", "handle") var kind := "valve"
 
+## Off: the crosshair passes straight through (spent bolts, a stowed cable
+## end). Clearing `monitorable` alone isn't enough: Jolt's raycasts still hit
+## the area, so the point also leaves its collision layer.
+var active := true:
+	set(v):
+		if _layer < 0:
+			_layer = collision_layer
+		elif v == active:
+			return
+		active = v
+		monitorable = v
+		collision_layer = _layer if v else 0
+
+var _layer := -1
+
 @onready var marker: MeshInstance3D = $Marker
 
 

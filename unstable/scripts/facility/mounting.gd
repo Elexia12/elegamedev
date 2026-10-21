@@ -72,7 +72,7 @@ func _release() -> void:
 
 func _process(_delta: float) -> void:
 	point.visible = not released
-	point.monitorable = not released
+	point.active = not released
 	if item and not item.is_locked():
 		item.note = "" if released else "BOLTED · hold LMB with the WRENCH (%d%%)" % roundi(progress * 100.0)
 	if bolts:

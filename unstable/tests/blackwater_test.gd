@@ -55,6 +55,8 @@ func _initialize() -> void:
 
 		# --- Carrying fragile salvage ------------------------------------------------
 		[0.3, func() -> void:
+			p._update_aim()
+			_check(p.aim_target == _n("ControlRoom/VfdModule") and p.prompt().contains("carry"), "once unbolted, aiming at the module offers to carry it (\"%s\")" % p.prompt())
 			_place(p, Vector3(-13.8, 0.05, -14.0), PI / 2.0, 0.0)
 			_req("hold", "grab", "ControlRoom/VfdModule", Vector3.ZERO, 1.4)],
 		[1.0, func() -> void:

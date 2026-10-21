@@ -189,7 +189,7 @@ func _snap(how: String) -> void:
 func _process(delta: float) -> void:
 	for i in 2:
 		ends[i].visible = active
-		ends[i].monitorable = active
+		ends[i].active = active
 		if active:
 			ends[i].global_position = end_position(i)
 	line.visible = active
