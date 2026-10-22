@@ -384,6 +384,14 @@ func _initialize() -> void:
 
 		# --- Damaged corridor, support jack ----------------------------------------------
 		[0.2, func() -> void:
+			mark_g = (_n("DamagedCorridor") as DamagedCorridor).groans
+			_place(p, Vector3(-7.0, 0.05, -4.0), PI / 2.0, 0.0)],
+		[0.6, func() -> void:
+			var cor := _n("DamagedCorridor") as DamagedCorridor
+			_check(cor.groans > int(mark_g) and cor.groan_sound.playing, "one person stepping on makes the deck settle under them (a creak, a crunch)")
+			_check(cor.creak_sound.level >= 0.3 and (cor.get_node("CrackDust") as CPUParticles3D).emitting, "it keeps creaking under them, and shakes dust out (%.2f)" % cor.creak_sound.level)
+			_place(p, Vector3(-4.6, 0.05, -12.2), 0.0, 0.0)],
+		[0.2, func() -> void:
 			# Overloaded (the motor alone, gently, no jack): it should warn, loudly, before it goes.
 			var motor := _n("PumpHall/PumpMotor") as Prop
 			motor.wake()
@@ -429,14 +437,12 @@ func _initialize() -> void:
 			_check(not cor.is_collapsed and cor.stress < mark_f + 5.0, "jacked, it holds the 450 kg motor (stress %d%%, load %d kg)" % [roundi(cor.stress), roundi(cor.load_kg)])
 			_check(cor.groans > 0 and cor.creak_sound.level > 0.2, "the deck groans as the motor's weight comes on, and creaks under it (%.2f)" % cor.creak_sound.level)
 			cor.slip_chance = 1.0
-			mark_g = cor.cracks
 			var motor := _n("PumpHall/PumpMotor") as Prop
 			motor.global_transform = Transform3D(Basis(), Vector3(-9.0, 2.2, -4.0))
 			motor.linear_velocity = Vector3(0, -2.0, 0)],
 		[0.6, func() -> void:
 			var jack := _n("Bay/SupportJack1") as SupportJack
-			_check(not jack.installed, "dropping the motor on the deck knocks the jack loose")
-			_check((_n("DamagedCorridor") as DamagedCorridor).cracks > int(mark_g), "slammed down on it, the deck cracks")],
+			_check(not jack.installed, "dropping the motor on the deck knocks the jack loose")],
 		[2.5, func() -> void:
 			var cor := _n("DamagedCorridor") as DamagedCorridor
 			_check(cor.is_collapsed, "unjacked and overloaded, the corridor gives way")

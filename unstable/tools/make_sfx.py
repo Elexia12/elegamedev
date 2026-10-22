@@ -5,10 +5,14 @@
 Everything here is generated (no samples, no licences). Swap any file for a
 real recording with the same name and the game picks it up. Loops (names
 ending in _loop) are built to repeat seamlessly; their .import files set
-loop_mode so Godot plays them on repeat.
+loop_mode so Godot plays them on repeat. Import them uncompressed
+(compress/mode=0): Godot's lossy QOA makes noisy sounds grainy.
+Bodies ring through their resonant modes (`strike`, `stick_slip`), which
+sounds far more natural than pure sine partials.
 """
 import os
 import wave
+import zlib
 
 import numpy as np
 
@@ -49,6 +53,52 @@ def ring(seconds, freqs, taus, amps=None):
     for f, tau, a in zip(freqs, taus, amps):
         out += a * np.sin(2 * np.pi * f * tt + rng.uniform(0, 6.28)) * np.exp(-tt / tau)
     return out
+
+
+def convolve(a, b):
+    """Linear convolution via FFT (numpy only)."""
+    n = len(a) + len(b) - 1
+    size = 1 << (n - 1).bit_length()
+    return np.fft.irfft(np.fft.rfft(a, size) * np.fft.rfft(b, size), size)[:n]
+
+
+def modes_ir(seconds, modes, detune=0.03):
+    """Impulse response of a resonant body: (freq, decay tau, amplitude) modes,
+    each detuned a little so no two generated sounds are identical."""
+    tt = t(seconds)
+    out = np.zeros_like(tt)
+    for f, tau, a in modes:
+        f *= 1.0 + rng.uniform(-detune, detune)
+        out += a * np.sin(2 * np.pi * f * tt + rng.uniform(0, 6.28)) * np.exp(-tt / tau)
+    return out
+
+
+def strike(seconds, modes, hardness=6000.0, contact=0.004):
+    """A body struck once: a short noise burst ringing its modes."""
+    exc = lowpass(noise(contact * 4), hardness) * decay(contact * 4, contact)
+    return convolve(exc, modes_ir(seconds, modes))[: int(seconds * SR)]
+
+
+def stick_slip(seconds, rate0, rate1, modes, jitter=0.25, env=None):
+    """A creak: friction sticking and slipping, a train of tiny impulses whose
+    rate sweeps rate0 -> rate1 (Hz), ringing the structure's modes."""
+    n = int(seconds * SR)
+    imp = np.zeros(n)
+    pos = 0.0
+    while True:
+        frac = pos / seconds
+        rate = rate0 + (rate1 - rate0) * frac
+        rate *= 1.0 + 0.15 * np.sin(2 * np.pi * 3.0 * pos)
+        pos += max(0.002, rng.normal(1.0, jitter)) / rate
+        if pos >= seconds:
+            break
+        imp[int(pos * SR)] += rng.uniform(0.4, 1.0)
+    shape = np.sin(np.pi * np.linspace(0, 1, n)) ** 0.7 if env is None else env
+    return convolve(imp * shape, modes_ir(0.12, modes))[:n]
+
+
+# The deck: steel and concrete under load.
+DECK_MODES = [(160, 0.025, 1.0), (380, 0.018, 0.8), (790, 0.012, 0.6), (1450, 0.008, 0.45), (2600, 0.005, 0.3)]
 
 
 def thump(seconds, f0, f1, tau):
@@ -119,26 +169,32 @@ def tick(freq_lo, freq_hi, tau):
 # --- Impacts -------------------------------------------------------------------------
 
 def impact_heavy_metal():
-    s = 1.2
-    x = 1.2 * thump(s, 140, 48, 0.18)
-    x += 0.6 * lowpass(noise(s), 500) * decay(s, 0.05)
-    x += 0.35 * ring(s, [173, 418, 771, 1149, 1622], [0.5, 0.35, 0.25, 0.18, 0.12])
+    """A heavy steel casing: deep body thud, long inharmonic ring, rattle."""
+    s = 1.4
+    x = 1.0 * thump(s, 130, 46, 0.16)
+    x += 1.4 * strike(s, [(118, 0.55, 1.0), (251, 0.42, 0.8), (397, 0.33, 0.7), (611, 0.25, 0.55), (884, 0.18, 0.45),
+                          (1213, 0.13, 0.35), (1660, 0.09, 0.25), (2270, 0.06, 0.18), (3050, 0.04, 0.12)], hardness=5000)
+    x += 0.35 * band(noise(s), 150, 2500) * decay(s, 0.03)
     return x
 
 
 def impact_light_metal():
-    s = 0.6
-    x = 0.6 * thump(s, 300, 120, 0.05)
-    x += 0.5 * band(noise(s), 1500, 7000) * decay(s, 0.012)
-    x += 0.5 * ring(s, [612, 1347, 2210, 3170, 4420], [0.25, 0.18, 0.12, 0.08, 0.05])
+    """A smaller steel part: bright clank, shorter ring."""
+    s = 0.8
+    x = 0.5 * thump(s, 320, 140, 0.04)
+    x += 1.3 * strike(s, [(530, 0.28, 1.0), (1210, 0.2, 0.8), (1990, 0.14, 0.65), (2920, 0.1, 0.5), (3950, 0.07, 0.35),
+                          (5300, 0.05, 0.25)], hardness=9000, contact=0.002)
+    x += 0.3 * band(noise(s), 2000, 9000) * decay(s, 0.008)
     return x
 
 
 def impact_crate():
-    s = 0.45
-    x = 0.9 * thump(s, 180, 85, 0.07)
-    x += 0.7 * band(noise(s), 200, 1800) * decay(s, 0.04)
-    x += 0.15 * ring(s, [310, 655], [0.05, 0.04])
+    """Wood: a dull knock with short, heavily damped body modes."""
+    s = 0.5
+    x = 0.8 * thump(s, 170, 80, 0.06)
+    x += 1.2 * strike(s, [(142, 0.05, 1.0), (318, 0.035, 0.8), (531, 0.025, 0.6), (790, 0.018, 0.45), (1120, 0.012, 0.3),
+                          (1650, 0.008, 0.2)], hardness=4000, contact=0.003)
+    x += 0.4 * band(noise(s), 300, 3000) * decay(s, 0.02)
     return x
 
 
@@ -250,13 +306,17 @@ def groan(seconds, f0, f1):
 
 
 def creak_loop():
-    s = 5.0
+    """The deck under load: stressed creaks of different pitch and length,
+    small ticks, and a faint low strain underneath."""
+    s = 6.0
     buf = np.zeros(int(s * SR))
-    wrap_add(buf, groan(1.4, 85, 120), 0.3)
-    wrap_add(buf, 0.7 * groan(1.1, 140, 95), 2.6)
-    for _ in range(9):
-        wrap_add(buf, 0.6 * band(noise(0.03), 600, 4000) * decay(0.03, 0.006), rng.uniform(0, s))
-    return buf
+    for at, length, r0, r1, amp in [(0.2, 1.1, 35, 70, 1.0), (1.7, 0.6, 90, 60, 0.6), (2.6, 1.4, 22, 48, 0.9),
+                                   (4.3, 0.8, 55, 110, 0.7), (5.3, 0.5, 70, 40, 0.5)]:
+        wrap_add(buf, amp * stick_slip(length, r0, r1, DECK_MODES), at)
+    for _ in range(12):
+        wrap_add(buf, 0.35 * band(noise(0.03), 900, 6000) * decay(0.03, 0.004), rng.uniform(0, s))
+    under = crossfade_loop(lowpass(noise(s + 0.5), 90), 0.5)
+    return buf + 0.08 * under / (np.max(np.abs(under)) or 1.0)
 
 
 def collapse():
@@ -294,11 +354,19 @@ def crack_snap():
 
 
 def deck_groan():
-    """The deck taking weight: a long, heavy, uneasy groan."""
-    s = 1.8
-    x = groan(s, 70, 52) + 0.5 * groan(s, 105, 88)
-    tt = t(s)
-    return x + 0.25 * lowpass(noise(s), 300) * np.sin(np.pi * tt / s)
+    """Weight coming onto the deck: it settles - a slow, deep stressed creak
+    that tightens, a crunch, then grit trickling."""
+    s = 2.0
+    n = int(s * SR)
+    env = np.concatenate([np.linspace(0, 1, n // 5), np.ones(n // 2), np.linspace(1, 0, n - n // 5 - n // 2)])
+    creak = stick_slip(s, 14, 52, [(110, 0.03, 1.0), (260, 0.022, 0.8), (560, 0.015, 0.6), (1100, 0.009, 0.4),
+                                   (2100, 0.006, 0.25)], jitter=0.35, env=env)
+    x = 1.0 * creak
+    place(x, 0.5 * thump(0.4, 120, 55, 0.06), 0.02)
+    crunch = np.zeros(n)
+    for _ in range(18):
+        place(crunch, band(noise(0.03), 1500, 8000) * decay(0.03, 0.005) * rng.uniform(0.1, 0.7), abs(rng.normal(0.9, 0.35)))
+    return x + 0.5 * crunch
 
 
 def grit_loop():
@@ -375,4 +443,6 @@ SOUNDS = {
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     for name, make in SOUNDS.items():
+        # Each sound has its own random stream, so changing one never changes another.
+        rng = np.random.default_rng(zlib.crc32(name.encode()))
         save(name, make())

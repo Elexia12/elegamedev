@@ -25,7 +25,7 @@ Read first, as needed:
 ```
 $g = "C:\Program Files\Godot\Godot.exe"
 & $g --headless --path . --editor --quit-after 150      # build the class cache (needed in a fresh checkout/worktree)
-& $g --headless --path . --fixed-fps 60 -s res://tests/blackwater_test.gd   # Blackwater acceptance run (117 checks)
+& $g --headless --path . --fixed-fps 60 -s res://tests/blackwater_test.gd   # Blackwater acceptance run (118 checks)
 & $g --headless --path . --fixed-fps 60 -s res://tests/smoke_test.gd        # Flooded Reactor (29 checks)
 ```
 Network tests run two processes in real time (no `--fixed-fps`, or the host finishes before the client joins): start `-s res://tests/blackwater_net_test.gd -- --role=host` with `Start-Process`,
@@ -33,7 +33,8 @@ then the same with `--role=client`. Compare the `[host]` / `[client]` lines; the
 reactor. Run all four before committing gameplay changes.
 
 Sounds are placeholders synthesised by `tools/make_sfx.py` into `audio/sfx/` (`python tools/make_sfx.py`). Files named
-`*_loop.wav` need `edit/loop_mode=2` in their `.import`. Headless runs can't be listened to: check `playing` instead.
+`*_loop.wav` need `edit/loop_mode=2` in their `.import`; all of them import uncompressed (`compress/mode=0`: lossy QOA
+makes noisy sounds grainy). Headless runs can't be listened to: check `playing` instead.
 
 To check visuals, run a windowed script (`--path . --windowed -s <script>`) that saves
 `get_viewport().get_texture().get_image()` to a PNG, then look at it. Set `debug_collisions_hint = true` to see

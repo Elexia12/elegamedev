@@ -58,7 +58,9 @@ var _crumbled := false
 var cracks := 0
 var crack_slab := 0
 var groans := 0
+var groan_slab := 1
 var _last_load := 0.0
+var _on_deck := {}
 var _heard_cracks := 0
 var _heard_groans := 0
 var _synced := false
@@ -112,19 +114,32 @@ func _physics_process(delta: float) -> void:
 func _simulate(delta: float) -> void:
 	jacked = installed_jack() != null
 	load_kg = 0.0
+	var arriving: Node3D = null
+	var on_now := {}
 	for b in load_area.get_overlapping_bodies():
+		var kg := 0.0
 		if b is CrewMember:
-			load_kg += crew_mass
+			kg = crew_mass
 		elif b is RigidBody3D and not b.freeze:
-			load_kg += b.mass
+			kg = b.mass
+		if kg <= 0.0:
+			continue
+		load_kg += kg
+		on_now[b] = true
+		if not _on_deck.has(b) and (arriving == null or kg > _mass_of(arriving)):
+			arriving = b
+	_on_deck = on_now
 	var ratio := load_kg / safe_load()
 	if ratio > 1.0:
 		stress += (ratio - 1.0) * overload_rate * delta
 	elif ratio > 0.75:
 		stress += creak_rate * delta
 	# Warning signs (every peer plays them from these replicated counters).
+	# Weight coming on makes the deck settle under it, at the slab it's on.
 	if load_kg > _last_load + 40.0 and ratio > warn_from:
 		groans += 1
+		if arriving:
+			groan_slab = _slab_index_at(arriving.global_position)
 	_last_load = load_kg
 	if randf() < crack_rate(ratio) * delta:
 		cracks += 1
@@ -132,6 +147,24 @@ func _simulate(delta: float) -> void:
 		crack_slab = 1 if randf() < 0.5 else (0 if randf() < 0.5 else 2)
 	if stress >= 100.0:
 		collapse()
+
+
+func _mass_of(b: Node) -> float:
+	return crew_mass if b is CrewMember else (b as RigidBody3D).mass
+
+
+## Which slab is under `p` (nearest along the corridor).
+func _slab_index_at(p: Vector3) -> int:
+	var best := 0
+	var best_d := INF
+	var i := 0
+	for s in slabs.get_children():
+		var d := absf(slabs.to_local(p).x - (s as Node3D).position.x)
+		if d < best_d:
+			best = i
+			best_d = d
+		i += 1
+	return best
 
 
 ## Cracks per second at this load ratio (and how worn the deck already is).
@@ -210,7 +243,8 @@ func _update_visuals() -> void:
 	# stressed it is, and crashes down when it goes.
 	var ratio := load_kg / safe_load()
 	var strain := clampf((stress - 35.0) / 55.0, 0.0, 1.0)
-	var weight := clampf((ratio - warn_from) / (1.1 - warn_from), 0.0, 1.0)
+	# Any real weight on it creaks audibly; it gets louder toward the limit.
+	var weight := 0.0 if ratio < warn_from else 0.3 + 0.7 * clampf((ratio - warn_from) / (1.1 - warn_from), 0.0, 1.0)
 	var pouring := 0.0 if is_collapsed else clampf(maxf((ratio - 0.85) / 0.6, (stress - 75.0) / 25.0), 0.0, 1.0)
 	if creak_sound:
 		creak_sound.level = 0.0 if is_collapsed else clampf(strain * 0.6 + weight, 0.0, 1.0)
@@ -222,9 +256,22 @@ func _update_visuals() -> void:
 	if groans != _heard_groans:
 		_heard_groans = groans
 		if groan_sound and not is_collapsed:
-			groan_sound.volume_db = linear_to_db(0.35 + 0.65 * weight)
+			# It settles under the new weight: a creak, a small crunch, dust
+			# shaken out from that slab.
+			var slab := slabs.get_child(clampi(groan_slab, 0, slabs.get_child_count() - 1)) as Node3D
+			groan_sound.global_position = slab.global_position
+			groan_sound.volume_db = linear_to_db(0.5 + 0.5 * weight)
 			groan_sound.pitch_scale = randf_range(0.95, 1.05) * (1.1 - 0.25 * clampf(ratio, 0.0, 1.5) / 1.5)
 			groan_sound.play()
+			if crack_sound and not crack_sound.playing:
+				crack_sound.global_position = slab.global_position
+				crack_sound.volume_db = linear_to_db(0.25 + 0.35 * weight)
+				crack_sound.pitch_scale = randf_range(1.2, 1.5)
+				crack_sound.play()
+			if crack_dust:
+				crack_dust.global_position = slab.global_position + Vector3.UP * 0.2
+				crack_dust.restart()
+			_dip[slab] = 0.01
 	if cracks != _heard_cracks:
 		_heard_cracks = cracks
 		if not is_collapsed:
@@ -275,7 +322,7 @@ func _crack_at(slab: Node3D, ratio: float) -> void:
 
 
 func net_get() -> Array:
-	return [stress, load_kg, jacked, is_collapsed, cracks, crack_slab, groans]
+	return [stress, load_kg, jacked, is_collapsed, cracks, crack_slab, groans, groan_slab]
 
 
 func net_set(s: Array) -> void:
@@ -284,6 +331,7 @@ func net_set(s: Array) -> void:
 	jacked = s[2]
 	is_collapsed = s[3]
 	crack_slab = s[5]
+	groan_slab = s[7]
 	if not _synced:
 		# Joining mid-run: don't replay old cracks and groans.
 		_heard_cracks = s[4]

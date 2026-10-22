@@ -99,8 +99,8 @@ The loaded trolley fits neither 1 m door, so the motor goes out one of two ways:
 - **The damaged corridor.** Its cracked deck spans a void over the pit. Its signs show stress and load. It holds about
   280 kg: two crew are fine; the trolley with the motor is not. Extend a **support jack** (two in the bay) at the **jack
   point** in the void under it (walk in from the pit), and it holds 800 kg. A big impact on the deck can make the jack slip.
-  **It warns you, without words, louder the closer you are to its limit:** weight coming on makes it groan (one person:
-  softly); it creaks under load; near the limit it cracks (a snap, a puff of dust, the slab dips); over the limit it
+  **It warns you, without words, louder the closer you are to its limit:** weight coming on makes it settle under you
+  (a stressed creak, a small crunch, dust shaken out of that slab - even for one person); it keeps creaking under load; near the limit it cracks (a snap, a puff of dust, the slab dips); over the limit it
   groans hard, cracks fast, grit and dust pour from the seams and the slabs tremble. The cracks in the slabs widen and
   multiply as stress builds, and stay. Overloaded, you have a few seconds (a loaded trolley: ~3.5 s) to back off: take
   the weight off in time and it holds, weaker than before. Slam something heavy onto it and it can go at once.
