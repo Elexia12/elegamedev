@@ -1,7 +1,7 @@
 [gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/bridge_slab.gd" id="1_bridge"]
-[ext_resource type="AudioStream" uid="uid://dptc460i6bkqr" path="res://audio/sfx/impact_concrete.wav" id="snd_1"]
+[ext_resource type="AudioStream" path="res://audio/sfx/impact_concrete.tres" id="snd_1"]
 
 [sub_resource type="BoxShape3D" id="Shape_deck"]
 size = Vector3(3.29, 0.3, 2.9)

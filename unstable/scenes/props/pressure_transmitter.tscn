@@ -1,8 +1,8 @@
 [gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/prop.gd" id="1_prop"]
-[ext_resource type="AudioStream" uid="uid://brt2og5owrwls" path="res://audio/sfx/impact_light_metal.wav" id="snd_1"]
-[ext_resource type="AudioStream" uid="uid://c4fg6xgwenfy6" path="res://audio/sfx/damage_crunch.wav" id="snd_4"]
+[ext_resource type="AudioStream" path="res://audio/sfx/impact_light_metal.tres" id="snd_1"]
+[ext_resource type="AudioStream" path="res://audio/sfx/damage_crunch.tres" id="snd_4"]
 
 [sub_resource type="BoxShape3D" id="Shape_tx"]
 size = Vector3(0.22, 0.3, 0.18)

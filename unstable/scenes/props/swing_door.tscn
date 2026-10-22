@@ -1,7 +1,7 @@
 [gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/facility/swing_door.gd" id="1_swing_"]
-[ext_resource type="AudioStream" uid="uid://c7a45gffftaim" path="res://audio/sfx/impact_heavy_metal.wav" id="snd_1"]
+[ext_resource type="AudioStream" path="res://audio/sfx/impact_heavy_metal.tres" id="snd_1"]
 
 [sub_resource type="BoxShape3D" id="Shape_door"]
 size = Vector3(0.96, 2.3, 0.08)

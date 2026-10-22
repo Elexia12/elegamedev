@@ -7,8 +7,8 @@
 [ext_resource type="AudioStream" uid="uid://h1ff1wi60tdw" path="res://audio/sfx/creak_loop.wav" id="snd_1"]
 [ext_resource type="Script" path="res://scripts/audio/loop_sound.gd" id="snd_3"]
 [ext_resource type="AudioStream" uid="uid://c41vg3l56wdvy" path="res://audio/sfx/collapse.wav" id="snd_7"]
-[ext_resource type="AudioStream" uid="uid://q5nxisvbwdd7" path="res://audio/sfx/deck_groan.wav" id="snd_7"]
-[ext_resource type="AudioStream" uid="uid://tqa1n50bh7b3" path="res://audio/sfx/crack_snap.wav" id="snd_10"]
+[ext_resource type="AudioStream" path="res://audio/sfx/deck_groan.tres" id="snd_groan"]
+[ext_resource type="AudioStream" path="res://audio/sfx/crack_snap.tres" id="snd_10"]
 [ext_resource type="AudioStream" uid="uid://c5yt1jdxwdh3v" path="res://audio/sfx/grit_loop.wav" id="snd_13"]
 
 [sub_resource type="BoxShape3D" id="Shape_load"]
@@ -173,7 +173,7 @@ unit_size = 14.0
 max_distance = 80.0
 
 [node name="GroanSound" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("snd_7")
+stream = ExtResource("snd_groan")
 unit_size = 9.0
 max_distance = 45.0
 

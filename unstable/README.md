@@ -135,8 +135,9 @@ Everything you do makes the noise it should, and every player hears the same thi
   seams when overloaded), and crashes down when it goes. Tremors rumble. The truck idles,
   then revs as it leaves. The hall and control room hum, the pit laps, the tunnel drips.
 
-The sounds are synthesised placeholders (`tools/make_sfx.py` writes `audio/sfx/`). Replace any `.wav` with a real
-recording of the same name. Loudness and pitch are tuned on each sound node (`full_db`, `pitch_low`/`pitch_high` on
+The sounds are CC0 recordings from Kenney and OpenGameArt (`audio/sfx/CREDITS.md`), trimmed, loudness-matched and
+looped by `tools/build_sfx.py`. Impacts pick one of several variations each time. Replace any `.wav` with another
+recording of the same name to change it. Loudness and pitch are tuned on each sound node (`full_db`, `pitch_low`/`pitch_high` on
 `LoopSound`s).
 
 ### How it's built: read the scene tree

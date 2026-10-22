@@ -94,6 +94,8 @@ How the code is organised, and the decisions behind it that should hold. Level l
 - `LoopSound` (`scripts/audio/loop_sound.gd`) is a looping 3D player whose loudness and pitch follow a 0..1 `level`
   set by its owner each frame (or `constant_level` for room tone). Sound nodes live in the scenes, tuned in the Inspector.
 - The Master bus has a light reverb (`default_bus_layout.tres`): concrete rooms.
+- Sound files are slots with stable names (`audio/sfx/<slot>.wav`, or `<slot>.tres` = an `AudioStreamRandomizer` of
+  variations). Scenes reference slots, so swapping or rebuilding a sound never touches a scene. All import uncompressed.
 
 ## Presentation
 - Text is minimal by design: `ProximityLabel`, the `label_range` / `show_within` exports, a briefing that hides once you

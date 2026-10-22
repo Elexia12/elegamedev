@@ -635,6 +635,12 @@ func _check_spawn() -> void:
 	p = m.crew.local_member()
 	_check(p != null and p.tools.size() == 1 and p.tools[0] is WrenchTool, "the crew gets one tool: the WRENCH")
 	_check(m.contract.briefing().begins_with("THE JOB"), "a short briefing shows at the start, in the bay")
+	var silent := []
+	for n in m.find_children("*", "AudioStreamPlayer3D", true, false):
+		if (n as AudioStreamPlayer3D).stream == null:
+			silent.append(n.name)
+	_check(silent.is_empty(), "every sound in the station has a sound file (%s)" % ", ".join(silent))
+	_check((_n("DamagedCorridor/CollapseSound") as AudioStreamPlayer3D).stream.resource_path.ends_with("collapse.wav"), "the corridor's collapse plays the collapse sound")
 	_quiet()
 
 

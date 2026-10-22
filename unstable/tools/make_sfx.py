@@ -1,4 +1,4 @@
-"""Synthesise UNSTABLE's placeholder sound effects into audio/sfx/*.wav.
+"""Synthesise UNSTABLE's original placeholder sound effects into audio/synth/*.wav.
 
     python tools/make_sfx.py
 
@@ -17,7 +17,9 @@ import zlib
 import numpy as np
 
 SR = 44100
-OUT = os.path.join(os.path.dirname(__file__), "..", "audio", "sfx")
+# The game now uses recorded sounds (tools/build_sfx.py). This writes the old
+# synthesised set somewhere harmless; copy files over a slot to use one.
+OUT = os.path.join(os.path.dirname(__file__), "..", "audio", "synth")
 rng = np.random.default_rng(7)
 
 
